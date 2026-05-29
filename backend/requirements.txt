@@ -1,0 +1,11 @@
+fastapi==0.136.3
+uvicorn[standard]==0.35.0
+pydantic==2.13.4
+fonttools==4.59.0
+uharfbuzz==0.54.1
+freetype-py==2.5.1
+svgwrite==1.4.3
+cairosvg==2.8.2
+pillow==12.2.0
+pytest==8.4.1
+httpx==0.28.1

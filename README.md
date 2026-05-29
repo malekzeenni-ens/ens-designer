@@ -17,6 +17,76 @@ Future versions will provide a complete AI-powered design studio for laser busin
 
 ---
 
+# Current Application
+
+Phase 1A is implemented as a local deterministic text-to-vector MVP.
+
+Current workflow:
+
+```text
+Text Input
+-> Font Selection
+-> Generate
+-> Preview
+-> Download SVG
+-> Download PNG
+```
+
+Phase 1A intentionally does not include welding, bridge generation, material validation, cake toppers, SVG import and repair, AI features, DXF export, decorative assets, batch processing, or SaaS/cloud features.
+
+---
+
+# Running Locally
+
+## Backend
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+cd backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+If PowerShell treats the Python path above oddly, run this equivalent command from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
+```
+
+## Frontend
+
+```powershell
+cd frontend
+npm.cmd install
+npm.cmd run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173
+```
+
+---
+
+# Testing
+
+Backend tests:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+```
+
+Frontend build:
+
+```powershell
+cd frontend
+npm.cmd run build
+```
+
+---
+
 # Vision
 
 Reduce the time required to create laser-ready artwork from minutes to seconds while maintaining manufacturing quality and structural integrity.
@@ -74,26 +144,31 @@ Frontend
 - React
 - TypeScript
 - Vite
-- Tailwind CSS
 
 Backend
 
 - Python
+- FastAPI
+- Pydantic
 
 Geometry
 
-- Shapely
-- PyClipper
+- Canonical Geometry Model
 
 Fonts
 
 - FontTools
-- FreeType
 - HarfBuzz
+- uharfbuzz
 
 SVG
 
 - svgwrite
+
+PNG
+
+- CairoSVG when native Cairo is available
+- Pillow fallback for local Windows environments without Cairo
 
 ---
 
@@ -147,21 +222,21 @@ Delivery:
 
 # Release Strategy
 
-v0.1.0 → Phase 1A Core Text Generation
+v0.1.0 -> Phase 1A Core Text Generation
 
-v0.2.0 → Phase 1B Welding & Validation
+v0.2.0 -> Phase 1B Welding & Validation
 
-v0.3.0 → Phase 1C Production Hardening
+v0.3.0 -> Phase 1C Production Hardening
 
-v0.4.0 → Cake Topper Generator
+v0.4.0 -> Cake Topper Generator
 
-v0.5.0 → SVG Import & Repair
+v0.5.0 -> SVG Import & Repair
 
-v0.6.0 → Decorative Asset Library
+v0.6.0 -> Decorative Asset Library
 
-v0.7.0 → AI Graphic Generator
+v0.7.0 -> AI Graphic Generator
 
-v1.0.0 → AI Design Studio
+v1.0.0 -> AI Design Studio
 
 ---
 

@@ -1,0 +1,154 @@
+# phase-1a-completion-report.md
+
+## 1. Executive Summary
+
+Phase 1A Core Text Generation is complete.
+
+The repository now contains a working local application that generates SVG and PNG outputs from user-entered text and a selected local/system font.
+
+The implementation follows the approved Phase 1A scope and does not introduce welding, bridge generation, material validation, cake topper generation, SVG import and repair, AI features, DXF export, decorative assets, batch processing, SaaS, cloud, or multi-user functionality.
+
+Recommendation:
+
+GO WITH CONDITIONS for Phase 1B planning review.
+
+---
+
+# 2. Scope Delivered
+
+- Local FastAPI backend.
+- Lightweight React and TypeScript frontend.
+- Font discovery from `/fonts` and Windows system fonts.
+- Unicode NFC normalisation.
+- HarfBuzz shaping through `uharfbuzz`.
+- Font outline extraction through FontTools pens.
+- Minimum Phase 1A Canonical Geometry Model.
+- SVG export with millimetre dimensions and path geometry.
+- PNG export with CairoSVG when Cairo is available and Pillow fallback when native Cairo is unavailable.
+- Browser preview.
+- Download SVG.
+- Download PNG.
+- Automated backend tests for required Phase 1A names.
+- Frontend production build validation.
+
+---
+
+# 3. Acceptance Criteria Results
+
+| Acceptance Criterion | Result |
+|---|---|
+| User can enter text | Passed |
+| User can select a font | Passed |
+| Text is Unicode-normalised | Passed |
+| Text is shaped through HarfBuzz | Passed |
+| Font outlines are extracted | Passed |
+| Canonical geometry is created | Passed |
+| SVG is generated | Passed |
+| PNG is generated | Passed |
+| Preview displays generated output | Passed |
+| Outputs are downloadable locally | Passed |
+| Tests pass | Passed |
+| Documentation is updated | Passed |
+| No future-phase features implemented | Passed |
+
+---
+
+# 4. Testing Performed
+
+## Automated Backend Tests
+
+Command:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+```
+
+Result:
+
+```text
+9 passed
+```
+
+Coverage included:
+
+- Oliver
+- Amelia
+- Muhammad
+- O'Connor
+- Lea with combining accent normalised to Léa
+- Léa
+- Empty text rejection
+- Unknown font rejection
+- PNG byte validation
+- SVG path validation
+
+## Frontend Build
+
+Command:
+
+```powershell
+cd frontend
+npm.cmd run build
+```
+
+Result:
+
+```text
+Build passed
+```
+
+## Manual API Smoke Test
+
+Generated:
+
+- Text: Oliver
+- Font: Arial
+- SVG path output: Passed
+- PNG output header: Passed
+- Dimensions: 114.22mm x 37.11mm
+
+## LightBurn-Oriented Validation
+
+The generated SVG includes:
+
+- `width` in millimetres
+- `height` in millimetres
+- `viewBox`
+- path-only geometry
+
+Manual LightBurn import remains recommended before Phase 1B planning sign-off because LightBurn is not installed or automated in this execution environment.
+
+---
+
+# 5. Known Issues
+
+| Issue | Severity | Impact | Recommendation |
+|---|---|---|---|
+| CairoSVG requires native Cairo on Windows | Medium | CairoSVG may fail on clean Windows machines without Cairo DLLs | Pillow fallback is implemented. Keep SVG as production source of truth and reassess PNG renderer during packaging. |
+| Pillow PNG fallback does not preserve complex path holes as accurately as a full SVG renderer | Medium | PNG preview/export may differ visually for some fonts with counters or complex overlaps | Use CairoSVG/native renderer where available; revisit renderer in Phase 1C production hardening. |
+| `uharfbuzz` required source build workaround on Python 3.14 | Medium | Fresh Python 3.14 environments may need build tooling if no compatible wheel is available | Prefer Python 3.13 for simplest setup, or document Python 3.14 build prerequisites. |
+| LightBurn validation was structural, not direct import-tested | Medium | Real LightBurn import behaviour still needs confirmation | Manually import generated SVG before Phase 1B starts. |
+
+---
+
+# 6. Phase 1B Readiness
+
+Phase 1A provides the required deterministic foundation for Phase 1B.
+
+Phase 1B should not begin until:
+
+- A generated Phase 1A SVG has been manually opened in LightBurn.
+- The team accepts the PNG fallback limitation.
+- Python runtime guidance is confirmed for development machines.
+
+---
+
+# 7. Final Recommendation
+
+GO WITH CONDITIONS
+
+Conditions:
+
+- Complete manual LightBurn SVG import validation.
+- Keep Phase 1B focused on welding and validation only.
+- Do not introduce AI, DXF, batch, cloud, or decorative asset scope.

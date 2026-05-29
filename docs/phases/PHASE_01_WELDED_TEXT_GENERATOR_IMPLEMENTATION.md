@@ -8,7 +8,7 @@ Name: Core Text Generation
 
 Target Release: v0.1.0
 
-Status: Ready For Development
+Status: Completed
 
 ---
 
