@@ -3,7 +3,7 @@ export interface FontInfo {
   family: string;
   full_name: string;
   style: string;
-  source: "project" | "system";
+  source: "project" | "system" | "external";
 }
 
 export interface GenerateResponse {

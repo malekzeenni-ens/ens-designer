@@ -5,6 +5,7 @@ import base64
 import pytest
 from fastapi.testclient import TestClient
 
+from app.font_loader import EXTERNAL_FONT_LIBRARY
 from app.main import create_app
 from app.unicode_normalisation import normalise_text
 
@@ -57,6 +58,15 @@ def test_unknown_font_is_rejected(client: TestClient) -> None:
     response = client.post("/api/generate", json={"text": "Oliver", "font_id": "missing-font"})
 
     assert response.status_code == 400
+
+
+def test_external_font_library_is_available_when_present(client: TestClient) -> None:
+    response = client.get("/api/fonts")
+
+    assert response.status_code == 200
+    fonts = response.json()
+    if EXTERNAL_FONT_LIBRARY.exists():
+        assert any(font["source"] == "external" for font in fonts)
 
 
 def test_normalise_text_rejects_empty_string() -> None:

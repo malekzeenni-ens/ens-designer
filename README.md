@@ -36,6 +36,25 @@ Phase 1A intentionally does not include welding, bridge generation, material val
 
 ---
 
+# Font Sources
+
+Phase 1A discovers fonts from:
+
+- `/fonts` inside this repository
+- `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts`
+- `C:\Windows\Fonts`
+
+Supported font files:
+
+- `.ttf`
+- `.otf`
+
+The Dropbox font library is scanned recursively. Zip files are not unpacked by the application.
+
+Restart the backend after adding or removing fonts.
+
+---
+
 # Running Locally
 
 ## Backend

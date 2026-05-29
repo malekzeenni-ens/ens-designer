@@ -9,6 +9,7 @@ from fontTools.ttLib import TTFont
 from .models import FontInfo
 
 FONT_EXTENSIONS = {".ttf", ".otf"}
+EXTERNAL_FONT_LIBRARY = Path("C:/Users/malek/Dropbox/_Etch_n_Shine/Fonts")
 
 
 @dataclass(frozen=True)
@@ -45,7 +46,7 @@ class FontCatalog:
         for source, directory in self._font_directories():
             if not directory.exists():
                 continue
-            for path in directory.iterdir():
+            for path in directory.rglob("*"):
                 if path.suffix.lower() not in FONT_EXTENSIONS or not path.is_file():
                     continue
                 record = self._read_font(source, path)
@@ -57,6 +58,8 @@ class FontCatalog:
 
     def _font_directories(self) -> list[tuple[str, Path]]:
         directories: list[tuple[str, Path]] = [("project", self.project_root / "fonts")]
+        if EXTERNAL_FONT_LIBRARY.exists():
+            directories.append(("external", EXTERNAL_FONT_LIBRARY))
         windows_fonts = Path("C:/Windows/Fonts")
         if windows_fonts.exists():
             directories.append(("system", windows_fonts))

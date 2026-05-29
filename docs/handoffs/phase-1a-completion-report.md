@@ -18,7 +18,7 @@ GO WITH CONDITIONS for Phase 1B planning review.
 
 - Local FastAPI backend.
 - Lightweight React and TypeScript frontend.
-- Font discovery from `/fonts` and Windows system fonts.
+- Font discovery from `/fonts`, `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts`, and Windows system fonts.
 - Unicode NFC normalisation.
 - HarfBuzz shaping through `uharfbuzz`.
 - Font outline extraction through FontTools pens.
@@ -128,6 +128,7 @@ Manual LightBurn import remains recommended before Phase 1B planning sign-off be
 | Pillow PNG fallback does not preserve complex path holes as accurately as a full SVG renderer | Medium | PNG preview/export may differ visually for some fonts with counters or complex overlaps | Use CairoSVG/native renderer where available; revisit renderer in Phase 1C production hardening. |
 | `uharfbuzz` required source build workaround on Python 3.14 | Medium | Fresh Python 3.14 environments may need build tooling if no compatible wheel is available | Prefer Python 3.13 for simplest setup, or document Python 3.14 build prerequisites. |
 | LightBurn validation was structural, not direct import-tested | Medium | Real LightBurn import behaviour still needs confirmation | Manually import generated SVG before Phase 1B starts. |
+| Dropbox font library path is machine-specific | Low | Other contributors may not have the same folder | Keep `/fonts` as the portable project font source and document the local Etch 'N' Shine path. |
 
 ---
 

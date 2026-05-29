@@ -34,6 +34,7 @@ Welding, bridge generation, material validation, and production hardening are ha
 
 - Name input
 - Font selection
+- Recursive font discovery from repository, Etch 'N' Shine Dropbox font library, and Windows system fonts
 - Font preview
 - Unicode normalisation
 - HarfBuzz text shaping

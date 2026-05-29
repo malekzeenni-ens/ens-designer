@@ -14,7 +14,7 @@ The current project state is ready for Phase 1A review and conditional approval 
 
 - Text input implemented.
 - Font selection implemented.
-- Local font discovery implemented.
+- Local font discovery implemented from repository fonts, Etch 'N' Shine Dropbox font library, and Windows system fonts.
 - Unicode normalisation implemented.
 - HarfBuzz shaping implemented.
 - Font outline extraction implemented.
@@ -37,6 +37,7 @@ The current project state is ready for Phase 1A review and conditional approval 
 - Single-screen local app.
 - Text input.
 - Font selector.
+- Recursive `.ttf` and `.otf` discovery from the Etch 'N' Shine Dropbox font library.
 - Generate button.
 - SVG preview.
 - Download SVG.
@@ -123,6 +124,18 @@ It matches the approved local API architecture and keeps the backend small.
 Alternative:
 
 A file-only local script was rejected because the approved user workflow requires a browser preview and downloads.
+
+Decision:
+
+Add `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts` as an external recursive font source.
+
+Reason:
+
+Etch 'N' Shine keeps a larger operational font library outside the repository.
+
+Alternative:
+
+Copying all fonts into `/fonts` was rejected because it would bloat the repository and duplicate the business font library.
 
 Decision:
 
@@ -249,6 +262,7 @@ Passed.
 
 - Decorative fonts may expose outline edge cases.
 - Some fonts may lack glyphs for user input.
+- The external Dropbox font path is machine-specific and may not exist for future contributors.
 - PNG rendering may differ from SVG for complex fonts when CairoSVG is unavailable.
 - LightBurn import needs direct manual confirmation.
 
