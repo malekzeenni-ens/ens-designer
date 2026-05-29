@@ -8,7 +8,7 @@ Name: Repository & Architecture Assessment
 
 Target Release: Pre-Development
 
-Status: Ready For Execution
+Status: Complete
 
 ---
 
@@ -122,17 +122,29 @@ Verify:
 
 Architecture Assessment Report
 
+Created:
+
+/docs/handoffs/phase-00-architecture-assessment-report.md
+
 ---
 
 ## Deliverable 2
 
 Repository Assessment Report
 
+Created:
+
+/docs/handoffs/phase-00-repository-assessment-report.md
+
 ---
 
 ## Deliverable 3
 
 Risk Register
+
+Created:
+
+/docs/handoffs/phase-00-risk-register.md
 
 ---
 
@@ -146,6 +158,20 @@ Prioritised:
 - High
 - Medium
 - Low
+
+Created:
+
+/docs/handoffs/phase-00-recommendations-list.md
+
+---
+
+## Deliverable 5
+
+Technology Evaluation
+
+Created:
+
+/docs/handoffs/phase-00-technology-evaluation.md
 
 ---
 
@@ -167,6 +193,8 @@ Create:
 
 /docs/handoffs/phase-00-discovery-handoff.md
 
+Created.
+
 ---
 
 # Commit Message
@@ -183,7 +211,7 @@ After Phase 00:
 
 STOP
 
-Wait for approval before Phase 01 begins.
+Wait for approval before Phase 1A begins.
 
 ---
 
