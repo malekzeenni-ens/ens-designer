@@ -1,0 +1,229 @@
+# PRODUCT_BACKLOG_AND_FUTURE_ENHANCEMENTS.md
+
+## Purpose
+
+This document maintains the future product backlog for the AI SVG Generator project.
+
+Items in this document are intentionally outside the currently approved delivery scope but may be evaluated in future releases.
+
+---
+
+# Backlog Prioritisation
+
+## P1 - High Priority
+
+Strong business value.
+
+Candidate for next release.
+
+---
+
+## P2 - Medium Priority
+
+Useful enhancement.
+
+Evaluate after core roadmap delivery.
+
+---
+
+## P3 - Low Priority
+
+Nice-to-have capability.
+
+Implement only if justified.
+
+---
+
+# P1 Backlog
+
+## BL-001
+
+Font Upload Support
+
+Description:
+
+Allow users to upload custom TTF and OTF fonts.
+
+Business Value:
+
+Reduces dependency on pre-installed fonts.
+
+---
+
+## BL-002
+
+Bulk Name Generation
+
+Description:
+
+Generate multiple SVG files from CSV input.
+
+Business Value:
+
+Supports school, corporate, and event orders.
+
+---
+
+## BL-003
+
+Batch Export
+
+Description:
+
+Export multiple SVG and PNG files in a single operation.
+
+Business Value:
+
+Improves production efficiency.
+
+---
+
+## BL-004
+
+Material Profiles
+
+Description:
+
+Store material-specific rules.
+
+Examples:
+
+- 3mm plywood
+- 3mm cast acrylic
+- 3mm mirror acrylic
+
+Business Value:
+
+Improves cut success rates.
+
+---
+
+# P2 Backlog
+
+## BL-005
+
+Multi-Line Text Layout
+
+Description:
+
+Support stacked names and phrases.
+
+---
+
+## BL-006
+
+Circular Text Generator
+
+Description:
+
+Generate circular text layouts.
+
+Examples:
+
+- Signs
+- Ornaments
+- Coasters
+
+---
+
+## BL-007
+
+Monogram Generator
+
+Description:
+
+Generate monogram designs automatically.
+
+---
+
+## BL-008
+
+Nursery Sign Generator
+
+Description:
+
+Create layered nursery sign layouts.
+
+---
+
+# P3 Backlog
+
+## BL-009
+
+Cloud Sync
+
+Description:
+
+Synchronise projects between devices.
+
+---
+
+## BL-010
+
+Marketplace
+
+Description:
+
+Share and sell templates.
+
+---
+
+## BL-011
+
+Community Asset Library
+
+Description:
+
+Shared decorative asset repository.
+
+---
+
+# Future AI Backlog
+
+## AI-001
+
+Automatic Font Recommendation
+
+Based on:
+
+- Product type
+- Occasion
+- Material
+
+---
+
+## AI-002
+
+Automatic Layout Optimisation
+
+Improve balance and aesthetics.
+
+---
+
+## AI-003
+
+Automatic Manufacturing Review
+
+Analyse designs before export.
+
+---
+
+## AI-004
+
+AI Design Critique
+
+Provide recommendations to improve cutability and appearance.
+
+---
+
+# Review Process
+
+Review backlog:
+
+- At the end of every phase
+- Before roadmap planning
+- Before major releases
+
+---
+
+# End of Document
