@@ -77,27 +77,31 @@ Prioritise production-ready outputs.
 
 ---
 
-# Phase 1
+# Phase 1A
 
-## Welded Text Generator (MVP)
+## Core Text Generation
 
 ### Objectives
 
-Create the first production-ready SVG generator.
+Create the first deterministic text-to-geometry and export foundation.
 
 ### Features
 
 - Name input
 - Font selection
+- Unicode normalisation
+- HarfBuzz text shaping
+- Font outline extraction
+- Canonical Geometry Model
 - SVG generation
 - PNG generation
 - Preview engine
-- Automatic welding
-- Basic bridge generation
-- Structural validation
 
 ### Out of Scope
 
+- Welding
+- Bridge generation
+- Material validation
 - Cake toppers
 - AI generation
 - Decorative libraries
@@ -115,7 +119,7 @@ Create the first production-ready SVG generator.
 - User selects font
 - SVG generated
 - SVG imports into LightBurn
-- Letters remain connected
+- Text shape and dimensions are preserved
 
 ### Success Metrics
 
@@ -127,34 +131,72 @@ Create the first production-ready SVG generator.
 
 ---
 
-# Phase 2
+# Phase 1B
 
-## Advanced Structural Intelligence
+## Welding & Validation
 
 ### Objectives
 
-Improve production quality.
+Create connected, manufacturable text geometry.
 
 ### Features
 
-- Advanced bridge placement
-- Connection scoring
-- Structural scoring
-- Geometry repair
+- Welding engine
+- Bridge generation
+- Connectivity validation
+- Geometry validation
+- Material validation
+- Production readiness scoring
 
 ### Deliverables
 
-- Improved validation engine
-- Improved bridge engine
+- Welding engine
+- Bridge engine
+- Validation engine
+- Material profiles for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood
 
 ### Acceptance Criteria
 
-- Better handling of decorative fonts
-- Reduced failed cuts
+- Letters remain connected
+- Material validation is applied
+- SVG imports into LightBurn
+- Validation reports generated
 
 ---
 
-# Phase 3
+# Phase 1C
+
+## Production Hardening
+
+### Objectives
+
+Harden the MVP for real Etch 'N' Shine production workflows.
+
+### Features
+
+- Golden test corpus
+- LightBurn validation process
+- Manual bridge override
+- Production presets
+- Production workflow improvements
+
+### Deliverables
+
+- Golden test corpus
+- LightBurn validation evidence
+- Manual bridge controls
+- Presets for Name Sign, Cake Topper, Ornament, and Nursery Sign
+
+### Acceptance Criteria
+
+- Golden corpus passes
+- LightBurn validation documented
+- User can add, remove, and adjust bridges
+- MVP workflow remains simple
+
+---
+
+# Phase 2
 
 ## Cake Topper Generator
 
@@ -178,6 +220,33 @@ Generate production-ready cake toppers.
 
 - Stakes generated correctly
 - Structural integrity maintained
+
+---
+
+# Phase 3
+
+## SVG Import & Repair
+
+### Objectives
+
+Allow users to validate, repair, and re-export existing SVG files.
+
+### Features
+
+- SVG import
+- Geometry validation
+- Repair workflow
+- Re-export
+
+### Deliverables
+
+- SVG import and repair module
+
+### Acceptance Criteria
+
+- Existing SVG files can be validated
+- Repairable issues are reported or fixed
+- Re-exported SVG files remain LightBurn compatible
 
 ---
 
@@ -334,6 +403,8 @@ v0.2.0
 v0.3.0
 v0.4.0
 v0.5.0
+v0.6.0
+v0.7.0
 v1.0.0
 
 ---

@@ -2,36 +2,23 @@
 
 ## Phase Information
 
-Phase: 04
+Phase: 02
 
-Name: Decorative Asset Library
+Name: Cake Topper Generator
 
 Target Release: v0.4.0
 
-Status: Ready For Development
+Status: Ready For Development After Phase 1C Approval
+
+Note: Filename retained for repository continuity. This document now represents approved Phase 02 scope.
 
 ---
 
 # Objective
 
-Create a reusable decorative asset library that allows users to enhance laser-cut designs with production-ready decorative elements.
+Extend the MVP platform to automatically create production-ready cake toppers from generated names and designs.
 
-The system must intelligently attach decorative assets while preserving structural integrity and maintaining SVG quality.
-
----
-
-# Business Outcome
-
-Reduce manual design effort when creating:
-
-- Cake toppers
-- Name signs
-- Nursery signs
-- Wedding signs
-- Seasonal products
-- Personalised gifts
-
-The user should be able to create professional-looking designs without requiring graphic design skills.
+The cake topper engine must create structurally sound stake systems while preserving the aesthetics of the design.
 
 ---
 
@@ -39,252 +26,58 @@ The user should be able to create professional-looking designs without requiring
 
 ## Included
 
-- Decorative asset library
-- Decorative asset categories
-- Asset preview
-- Asset placement engine
-- Asset scaling controls
-- Asset positioning controls
-- SVG integration
-- Structural validation
+- Single stake support
+- Double stake support
+- Adjustable stake length
+- Adjustable stake width
+- Automatic stake positioning
+- Structural reinforcement
+- Topper preview
 - SVG export
 - PNG export
+- Validation support
 
 ---
 
 ## Excluded
 
-- AI-generated graphics
-- OpenAI integration
-- User-created assets
-- Asset marketplace
-- Multi-layer assembly generation
-
----
-
-# Decorative Categories
-
-## Category 1
-
-Hearts
-
-Examples:
-
-- Outline hearts
-- Solid hearts
-- Decorative hearts
-
----
-
-## Category 2
-
-Stars
-
-Examples:
-
-- Outline stars
-- Solid stars
-- Decorative stars
-
----
-
-## Category 3
-
-Crowns
-
-Examples:
-
-- Princess crowns
-- Royal crowns
-
----
-
-## Category 4
-
-Seasonal Elements
-
-Examples:
-
-- Christmas
-- Easter
-- Halloween
-- Ramadan
-
----
-
-## Category 5
-
-Baby & Nursery
-
-Examples:
-
-- Teddy bears
-- Clouds
-- Moons
-- Balloons
-
----
-
-## Category 6
-
-Wedding Elements
-
-Examples:
-
-- Rings
-- Floral flourishes
-- Leaves
-- Decorative frames
+- Decorative asset library
+- AI-generated artwork
+- SVG import and repair
+- DXF implementation
+- Commercial templates marketplace
 
 ---
 
 # Functional Requirements
 
-## FR-401
+## FR-201
 
-User can browse asset categories.
-
----
-
-## FR-402
-
-User can preview assets.
+User can select single stake or double stake mode.
 
 ---
 
-## FR-403
+## FR-202
 
-User can select an asset.
-
----
-
-## FR-404
-
-User can scale an asset.
+User can configure stake dimensions.
 
 ---
 
-## FR-405
+## FR-203
 
-User can position an asset.
-
----
-
-## FR-406
-
-System automatically merges asset with design.
+System automatically positions stakes.
 
 ---
 
-## FR-407
+## FR-204
+
+System merges stakes with canonical geometry.
+
+---
+
+## FR-205
 
 System validates structural integrity.
-
----
-
-## FR-408
-
-System exports SVG.
-
----
-
-## FR-409
-
-System exports PNG.
-
----
-
-## FR-410
-
-System warns users of unsupported placements.
-
----
-
-# Asset Placement Engine
-
-Responsibilities:
-
-- Attach decorations
-- Detect collisions
-- Prevent geometry overlap issues
-- Maintain SVG integrity
-
----
-
-# Structural Rules
-
-Every decoration must:
-
-- Remain connected to final geometry
-- Pass validation checks
-- Maintain production readiness
-
-No floating decorative elements permitted.
-
----
-
-# UI Enhancements
-
-Add:
-
-- Decorative Library Panel
-- Category Filters
-- Asset Search
-- Asset Preview
-- Asset Placement Controls
-
----
-
-# Suggested Asset Storage
-
-/assets
-
-/assets/hearts
-
-/assets/stars
-
-/assets/crowns
-
-/assets/wedding
-
-/assets/seasonal
-
-/assets/nursery
-
----
-
-# Testing Requirements
-
-## Unit Tests
-
-Required Coverage:
-
-- Asset loading
-- Asset placement
-- Scaling engine
-- Validation engine
-
----
-
-## Integration Tests
-
-Required Coverage:
-
-Design
-→ Asset Placement
-→ Validation
-→ Export
-
----
-
-## Manual Tests
-
-Validate:
-
-- Every category
-- Every asset type
-- Multiple fonts
-- Multiple design sizes
 
 ---
 
@@ -292,28 +85,14 @@ Validate:
 
 The phase is complete when:
 
-- Assets load correctly
-- Assets attach correctly
+- Stakes generated automatically
+- Stakes positioned correctly
 - Structural validation passes
-- SVG exports successfully
-- LightBurn imports successfully
+- SVG exports correctly
+- LightBurn import successful
 - Tests pass
 - Documentation updated
 - Handoff completed
-
----
-
-# Documentation Updates Required
-
-Update:
-
-- /docs/architecture/UX_UI_SOLUTION_DESIGN.md
-- /docs/architecture/TECHNICAL_ARCHITECTURE_AND_SOLUTION_DESIGN.md
-- /docs/governance/PHASED_DELIVERY_PLAN.md
-
-Create:
-
-/docs/handoffs/phase-04-decorative-library-handoff.md
 
 ---
 
@@ -321,7 +100,7 @@ Create:
 
 Recommended:
 
-feat: phase 04 decorative asset library
+feat: phase 02 cake topper generator
 
 ---
 
@@ -335,11 +114,11 @@ v0.4.0
 
 # Stop Condition
 
-After completing Phase 04:
+After completing Phase 02:
 
 STOP
 
-Do not begin Phase 05.
+Do not begin Phase 03.
 
 Wait for approval and QA review.
 

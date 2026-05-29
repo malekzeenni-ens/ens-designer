@@ -265,6 +265,7 @@ Before release:
 Future phases will introduce:
 
 - Cake topper generation
+- SVG import and repair
 - Asset libraries
 - AI artwork generation
 - AI design studio capabilities

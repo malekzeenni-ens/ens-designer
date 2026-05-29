@@ -92,6 +92,20 @@ When welding alone is insufficient:
 
 ---
 
+## Manual Bridge Override
+
+Automatic bridge generation remains the default.
+
+Users must also be able to:
+
+- Add a bridge
+- Remove a bridge
+- Adjust a bridge
+
+This must remain lightweight and must not become a CAD editor.
+
+---
+
 # Connection Strategy Priority
 
 ## Strategy 1
@@ -249,26 +263,27 @@ Check:
 - Bridge count
 - Weak regions
 - Unsupported islands
+- Material-specific minimum feature rules
 
 ---
 
 # Future AI Enhancements
 
-## Phase 2
+## Phase 1B
 
-AI bridge placement suggestions.
-
----
-
-## Phase 5
-
-AI-assisted structural optimisation.
+Welding, bridge generation, connectivity validation, and material validation.
 
 ---
 
-## Phase 6
+## Phase 1C
 
-Material-aware bridge recommendations.
+Manual bridge override and production hardening.
+
+---
+
+## Future AI Phases
+
+AI-assisted structural optimisation may be evaluated later.
 
 ---
 

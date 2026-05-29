@@ -108,6 +108,17 @@ Required review:
 - /docs/governance/PHASED_DELIVERY_PLAN.md
 - /docs/governance/HANDOFF_DOCUMENTATION_STANDARD.md
 
+Approved MVP sequencing:
+
+- Phase 1A: Core Text Generation
+- Phase 1B: Welding & Validation
+- Phase 1C: Production Hardening
+- Phase 2: Cake Topper Generator
+- Phase 3: SVG Import & Repair
+- Phase 4: Decorative Asset Library
+- Phase 5: AI Graphic Generator
+- Phase 6: AI Design Studio
+
 ---
 
 Step 2
@@ -291,6 +302,8 @@ AI not required.
 
 Prefer deterministic logic.
 
+Phase 1A, Phase 1B, and Phase 1C must remain deterministic.
+
 ---
 
 Future Phases
@@ -356,6 +369,10 @@ v0.3.0
 v0.4.0
 
 v0.5.0
+
+v0.6.0
+
+v0.7.0
 
 v1.0.0
 

@@ -2,9 +2,9 @@
 
 ## Phase Information
 
-Phase: 02
+Phase: 1B
 
-Name: Advanced Structural Intelligence
+Name: Welding & Validation
 
 Target Release: v0.2.0
 
@@ -14,7 +14,7 @@ Status: Ready For Development
 
 # Objective
 
-Enhance the SVG generation engine with advanced structural analysis and intelligent reinforcement capabilities.
+Enhance the Phase 1A core geometry with welding, bridge generation, geometry validation, connectivity validation, and material validation.
 
 This phase focuses on improving manufacturing reliability, reducing failed cuts, and increasing confidence in automatically generated designs.
 
@@ -32,14 +32,15 @@ The system should proactively identify weak geometry and either repair it automa
 
 ## Included
 
-- Advanced structural scoring
+- Welding engine
+- Bridge generation
+- Geometry validation
+- Material validation
 - Connectivity scoring
 - Production readiness scoring
 - Weak bridge detection
 - Weak geometry detection
-- Intelligent reinforcement engine
-- Auto-fix recommendations
-- Auto-repair framework
+- Lightweight reinforcement recommendations
 - Enhanced validation reporting
 - Visual validation feedback
 
@@ -131,13 +132,14 @@ Implement:
 
 ---
 
-## Reinforcement Engine
+## Material Validation Engine
 
 Implement:
 
-- Weak area detection
-- Suggested reinforcement locations
-- Repair recommendation framework
+- Material profiles for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood
+- Minimum bridge width checks
+- Minimum feature size checks
+- Material-specific warning output
 
 ---
 
@@ -258,7 +260,7 @@ Create:
 
 Recommended:
 
-feat: phase 02 advanced structural intelligence
+feat: phase 1b welding and validation
 
 ---
 
@@ -272,11 +274,11 @@ v0.2.0
 
 # Stop Condition
 
-After completing Phase 02:
+After completing Phase 1B:
 
 STOP
 
-Do not begin Phase 03.
+Do not begin Phase 1C.
 
 Wait for approval and QA review.
 

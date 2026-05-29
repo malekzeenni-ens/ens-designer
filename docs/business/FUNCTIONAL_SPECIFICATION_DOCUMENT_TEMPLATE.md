@@ -36,11 +36,12 @@ The system automatically:
 
 1. User enters text
 2. User selects font
-3. System converts text to vector paths
-4. System performs welding operations
-5. System validates geometry
-6. System generates preview
-7. System exports SVG and PNG
+3. System normalises text
+4. System shapes text using HarfBuzz
+5. System creates canonical geometry
+6. Phase 1B performs welding and validation
+7. Phase 1C hardens the production workflow
+8. System exports SVG and PNG
 
 ---
 
@@ -396,13 +397,17 @@ Cake Topper Generator
 
 ## Phase 3
 
-Decorative Element Library
+SVG Import & Repair
 
 ## Phase 4
 
-AI Graphic Generator
+Decorative Element Library
 
 ## Phase 5
+
+AI Graphic Generator
+
+## Phase 6
 
 AI Design Studio
 

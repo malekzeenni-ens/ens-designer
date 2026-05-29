@@ -32,7 +32,6 @@ Benefits:
 
 - Easier testing
 - Future desktop packaging
-- Future SaaS expansion
 - Better separation of concerns
 
 ---
@@ -91,6 +90,34 @@ Represents generation inputs.
   "status": "PASS"
 }
 ```
+
+---
+
+## Canonical Geometry Model
+
+Represents the internal design geometry before export.
+
+```json
+{
+  "geometryId": "uuid",
+  "units": "mm",
+  "dimensions": {
+    "width": 120,
+    "height": 45
+  },
+  "paths": [],
+  "connections": [],
+  "bridges": [],
+  "materialProfileId": "cast-acrylic-3mm"
+}
+```
+
+Rules:
+
+- SVG is an export format, not the working geometry model.
+- Validation engines operate on canonical geometry.
+- Export engines convert canonical geometry to SVG or PNG.
+- DXF remains future evaluation only.
 
 ---
 
@@ -238,8 +265,8 @@ POST
 
 ```json
 {
-  "glyphs": [],
-  "paths": []
+  "shapedGlyphs": [],
+  "outlineGeometry": []
 }
 ```
 
@@ -250,6 +277,7 @@ POST
 ```json
 {
   "connectedGeometry": true,
+  "canonicalGeometryId": "uuid",
   "pathCount": 1
 }
 ```

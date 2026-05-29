@@ -33,8 +33,10 @@ The engine is responsible for transforming text into reliable SVG paths while ma
 
 User Input
 → Font Selection
-→ Glyph Extraction
-→ Path Generation
+→ Unicode Normalisation
+→ HarfBuzz Text Shaping
+→ Shaped Glyph Extraction
+→ Canonical Geometry Generation
 → Geometry Cleanup
 → Welding Preparation
 → Validation
@@ -64,12 +66,13 @@ Extract:
 
 - Curves
 - Shapes
-- Character outlines
+- Shaped glyph outlines
 
 Requirements:
 
 - Preserve fidelity
 - Maintain scalability
+- Preserve kerning, ligatures, accents, and Unicode shaping
 
 ---
 
@@ -77,13 +80,13 @@ Requirements:
 
 Convert:
 
-Glyphs → Vector Paths
+Shaped Glyphs → Canonical Geometry Model
 
 Output:
 
 - Polygons
 - Bezier curves
-- SVG paths
+- Internal geometry objects
 
 ---
 
@@ -139,6 +142,7 @@ Geometry suitable for welding engine.
 
 - fontTools
 - freetype-py
+- HarfBuzz
 
 ## Geometry
 
@@ -148,6 +152,14 @@ Geometry suitable for welding engine.
 ## SVG
 
 - svgwrite
+
+## Export Strategy
+
+SVG is the primary export format.
+
+PNG is a supporting export format.
+
+DXF remains future evaluation only.
 
 ---
 

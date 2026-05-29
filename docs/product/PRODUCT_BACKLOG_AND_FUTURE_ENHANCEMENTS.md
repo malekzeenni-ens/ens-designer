@@ -62,6 +62,10 @@ Business Value:
 
 Supports school, corporate, and event orders.
 
+MVP Status:
+
+Out of scope for Phase 1A, Phase 1B, and Phase 1C.
+
 ---
 
 ## BL-003
@@ -95,6 +99,10 @@ Examples:
 Business Value:
 
 Improves cut success rates.
+
+MVP Status:
+
+Initial profiles for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood are included in Phase 1B. Broader material libraries remain backlog.
 
 ---
 
@@ -156,6 +164,10 @@ Description:
 
 Synchronise projects between devices.
 
+MVP Status:
+
+Rejected for MVP.
+
 ---
 
 ## BL-010
@@ -165,6 +177,10 @@ Marketplace
 Description:
 
 Share and sell templates.
+
+MVP Status:
+
+Rejected for MVP.
 
 ---
 

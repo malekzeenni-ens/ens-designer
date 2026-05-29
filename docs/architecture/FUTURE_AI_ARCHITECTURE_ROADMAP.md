@@ -77,8 +77,11 @@ AI Graphic Generation
 Capabilities:
 
 - Prompt-to-image
-- Prompt-to-SVG
 - Automatic vectorisation
+
+Note:
+
+AI-generated artwork must not bypass deterministic vectorisation, geometry cleanup, and production validation.
 
 ---
 

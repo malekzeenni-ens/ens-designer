@@ -14,7 +14,7 @@ Owner: Etch 'N' Shine
 
 This document defines the Material Profile Engine responsible for applying material-specific manufacturing rules to generated SVG designs.
 
-The engine ensures that designs generated for plywood, MDF, acrylic, mirror acrylic, and future materials are structurally appropriate before export.
+The engine ensures that MVP designs generated for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood are structurally appropriate before export.
 
 ---
 
@@ -28,22 +28,11 @@ The engine ensures that designs generated for plywood, MDF, acrylic, mirror acry
 
 ---
 
-# Supported Materials (Initial Roadmap)
+# Supported Materials (MVP)
 
-## Wood
-
-- Birch plywood
-- Poplar plywood
-- MDF
-
----
-
-## Acrylic
-
-- Cast acrylic
-- Extruded acrylic
-- Mirror acrylic
-- Pastel acrylic
+- 3mm Cast Acrylic
+- 3mm Mirror Acrylic
+- 3mm Plywood
 
 ---
 
@@ -69,7 +58,7 @@ The engine ensures that designs generated for plywood, MDF, acrylic, mirror acry
 Allow user to select:
 
 - Material type
-- Thickness
+- Approved MVP material profile
 
 ---
 
@@ -127,13 +116,19 @@ Characteristics:
 
 # Future Enhancements
 
-## Phase 5
+## Phase 1B
+
+Material validation is introduced.
+
+## Phase 1C
+
+Material validation is exercised through the golden test corpus.
+
+## Future AI Phases
 
 AI material recommendations.
 
-## Phase 6
-
-Automatic manufacturing optimisation.
+Automatic manufacturing optimisation may be evaluated later.
 
 ---
 

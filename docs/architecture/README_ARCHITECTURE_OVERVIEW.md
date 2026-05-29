@@ -34,9 +34,9 @@ Reduce the time required to create laser-cut-ready artwork from minutes to secon
 
 # Core Features
 
-## Phase 1
+## Phase 1A
 
-Welded Text Generator
+Core Text Generation
 
 Inputs:
 
@@ -50,10 +50,37 @@ Outputs:
 
 Capabilities:
 
+- Unicode normalisation
+- HarfBuzz text shaping
+- Font outline extraction
+- Canonical geometry creation
+- Export-ready files
+
+---
+
+## Phase 1B
+
+Welding & Validation
+
+Capabilities:
+
 - Automatic welding
 - Automatic bridge generation
-- Structural validation
-- Export-ready files
+- Connectivity validation
+- Material validation for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood
+
+---
+
+## Phase 1C
+
+Production Hardening
+
+Capabilities:
+
+- Golden test corpus
+- LightBurn validation process
+- Manual bridge override
+- Production presets
 
 ---
 
@@ -61,11 +88,11 @@ Capabilities:
 
 ### Phase 2
 
-Advanced Structural Intelligence
+Cake Topper Generator
 
 ### Phase 3
 
-Cake Topper Generator
+SVG Import & Repair
 
 ### Phase 4
 
@@ -84,8 +111,10 @@ AI Design Studio
 # High-Level Architecture
 
 User Input
-→ Font Processing
-→ SVG Generation
+→ Unicode Normalisation
+→ HarfBuzz Text Shaping
+→ Font Outline Extraction
+→ Canonical Geometry Model
 → Welding Engine
 → Bridge Engine
 → Validation Engine
@@ -181,10 +210,17 @@ Fonts
 
 - FontTools
 - FreeType
+- HarfBuzz
 
 SVG
 
 - svgwrite
+
+Export Strategy
+
+- SVG primary
+- PNG supporting export
+- DXF future evaluation only
 
 ---
 

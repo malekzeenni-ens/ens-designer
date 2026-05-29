@@ -298,27 +298,21 @@ Range:
 
 # Future AI Enhancements
 
-## Phase 2
-
-AI-assisted bridge placement
-
----
-
-## Phase 3
-
-AI structural optimisation
-
----
-
-## Phase 4
+## Phase 5
 
 AI-generated graphics
 
 ---
 
-## Phase 5
+## Phase 6
 
 Full AI design generation
+
+---
+
+## Future Evaluation
+
+AI structural optimisation may be evaluated after deterministic welding, validation, and production hardening are complete.
 
 ---
 

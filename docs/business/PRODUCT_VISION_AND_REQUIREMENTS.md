@@ -87,9 +87,11 @@ Characteristics:
 
 # Phase 1 Product Scope
 
-## Feature 1
+Phase 1 is split into Phase 1A, Phase 1B, and Phase 1C to keep the MVP achievable for a solo-founder project.
 
-Welded Text Generator
+## Phase 1A Feature
+
+Core Text Generation
 
 ### Inputs
 
@@ -113,35 +115,67 @@ User can select a font.
 
 FR-003
 
-System generates connected lettering.
+System normalises text and shapes it using HarfBuzz.
 
 FR-004
 
-System automatically adjusts spacing.
+System extracts font outlines and creates canonical geometry.
 
 FR-005
 
-System automatically creates bridges when required.
+System exports SVG.
 
 FR-006
 
-System validates cutability.
-
-FR-007
-
-System exports SVG.
-
-FR-008
-
 System exports PNG.
 
-FR-009
+---
+
+## Phase 1B Feature
+
+Welding & Validation
+
+FR-101
+
+System generates connected lettering.
+
+FR-102
+
+System automatically adjusts spacing.
+
+FR-103
+
+System automatically creates bridges when required.
+
+FR-104
+
+System validates cutability.
+
+FR-105
+
+System applies material validation for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood.
+
+---
+
+## Phase 1C Feature
+
+Production Hardening
+
+FR-201
 
 System previews generated design.
 
-FR-010
+FR-202
 
 System warns users of structural issues.
+
+FR-203
+
+System supports golden test corpus validation.
+
+FR-204
+
+User can add, remove, and adjust bridges.
 
 ---
 
@@ -304,13 +338,17 @@ Cake Topper Generator
 
 ## Phase 3
 
-Decorative Library
+SVG Import & Repair
 
 ## Phase 4
 
-AI Graphic Generation
+Decorative Library
 
 ## Phase 5
+
+AI Graphic Generation
+
+## Phase 6
 
 AI Design Studio
 

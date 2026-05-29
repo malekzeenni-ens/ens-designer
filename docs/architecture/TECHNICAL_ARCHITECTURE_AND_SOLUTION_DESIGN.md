@@ -119,7 +119,9 @@ Font Processing Engine
 Responsibilities:
 
 - Load fonts
-- Parse glyphs
+- Normalise Unicode text
+- Shape text using HarfBuzz
+- Parse shaped glyphs
 - Generate outlines
 - Validate geometry
 
@@ -127,6 +129,7 @@ Suggested Libraries:
 
 - fontTools
 - freetype-py
+- HarfBuzz
 
 ---
 
@@ -136,14 +139,14 @@ Vector Generation Engine
 
 Responsibilities:
 
-- Convert glyphs into vector paths
+- Convert shaped glyph outlines into the Canonical Geometry Model
 - Preserve geometry quality
-- Create SVG-compatible output
+- Prepare export-compatible geometry
 
 Suggested Libraries:
 
-- svgwrite
 - shapely
+- pyclipper
 
 ---
 
@@ -219,6 +222,7 @@ Responsibilities:
 
 - SVG export
 - PNG export
+- DXF future evaluation only
 
 Requirements:
 
@@ -229,26 +233,32 @@ Requirements:
 
 # AI Architecture
 
-## Phase 1
+## Phase 1A to Phase 1C
 
 AI Usage:
 
 None required.
 
-SVG generation should remain deterministic.
-
----
-
-## Phase 2
-
-Optional AI Assistance:
-
-- Bridge placement recommendations
-- Structural optimisation suggestions
+SVG generation, welding, bridge generation, material validation, golden test corpus, LightBurn validation, and manual bridge override should remain deterministic.
 
 ---
 
 ## Phase 3
+
+SVG Import & Repair
+
+Workflow:
+
+Existing SVG
+→ Import
+→ Canonical Geometry Model
+→ Geometry Validation
+→ Supported Repair
+→ Re-export
+
+---
+
+## Phase 5
 
 AI Graphic Generation
 
@@ -267,8 +277,10 @@ User Prompt
 # Data Flow
 
 User Input
-→ Font Engine
-→ Vector Engine
+→ Unicode Normalisation
+→ HarfBuzz Text Shaping
+→ Font Outline Extraction
+→ Canonical Geometry Model
 → Welding Engine
 → Bridge Engine
 → Validation Engine
@@ -346,17 +358,17 @@ Examples:
 
 # Deployment Strategy
 
-Phase 1:
+Phase 1A:
 
 Local development environment.
 
-Phase 2:
+Phase 1B:
 
 Optional packaged desktop release.
 
-Phase 3:
+Phase 1C:
 
-Optional SaaS deployment evaluation.
+Production hardening and LightBurn validation.
 
 ---
 

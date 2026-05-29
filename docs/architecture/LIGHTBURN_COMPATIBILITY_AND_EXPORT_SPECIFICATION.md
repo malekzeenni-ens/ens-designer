@@ -113,7 +113,7 @@ Dimensions must remain accurate within 0.1mm.
 
 # Layer Strategy (Future)
 
-Phase 1
+Phase 1A to Phase 1C
 
 Single layer output.
 
@@ -137,6 +137,13 @@ Before export verify:
 - SVG valid
 - Dimensions valid
 - Paths optimised
+
+For Phase 1C also verify:
+
+- Golden test corpus exported
+- SVG imported into LightBurn
+- Dimensions preserved after import
+- Validation evidence documented
 
 ---
 
@@ -178,6 +185,7 @@ Run connectivity validation.
 - Dimensions remain correct
 - Geometry remains connected
 - No manual repair required
+- DXF remains future evaluation only
 
 ---
 

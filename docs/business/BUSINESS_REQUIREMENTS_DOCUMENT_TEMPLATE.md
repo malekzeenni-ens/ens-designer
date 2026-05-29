@@ -103,20 +103,48 @@ Support future AI-assisted artwork generation without architectural redesign.
 
 # Business Scope
 
-## In Scope (Phase 1)
+## In Scope (Phase 1A)
 
-### Welded Text Generator
+### Core Text Generation
 
 Features:
 
 - Name input
 - Font selection
-- Automatic letter welding
-- Automatic bridge creation
-- Structural validation
+- Unicode normalisation
+- HarfBuzz text shaping
+- Font outline extraction
+- Canonical geometry creation
 - SVG export
 - PNG export
 - Design preview
+
+---
+
+## In Scope (Phase 1B)
+
+### Welding & Validation
+
+Features:
+
+- Automatic letter welding
+- Automatic bridge creation
+- Connectivity validation
+- Geometry validation
+- Material validation for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood
+
+---
+
+## In Scope (Phase 1C)
+
+### Production Hardening
+
+Features:
+
+- Golden test corpus
+- LightBurn validation process
+- Manual bridge override
+- Production presets
 
 ---
 
@@ -253,17 +281,23 @@ Cake Topper Generator
 
 ## Phase 3
 
-Decorative Library
+SVG Import & Repair
 
 ---
 
 ## Phase 4
 
-AI Graphic Generator
+Decorative Library
 
 ---
 
 ## Phase 5
+
+AI Graphic Generator
+
+---
+
+## Phase 6
 
 AI Design Studio
 

@@ -31,15 +31,27 @@ Repository & Architecture Assessment
 
 ## Phase 01
 
-Welded Text Generator
+MVP Foundation
+
+### Phase 1A
+
+Core Text Generation
+
+### Phase 1B
+
+Welding & Validation
+
+### Phase 1C
+
+Production Hardening
 
 ## Phase 02
 
-Advanced Structural Intelligence
+Cake Topper Generator
 
 ## Phase 03
 
-Cake Topper Generator
+SVG Import & Repair
 
 ## Phase 04
 
@@ -77,6 +89,7 @@ Fonts
 
 - FontTools
 - FreeType
+- HarfBuzz
 
 SVG
 
@@ -134,15 +147,19 @@ Delivery:
 
 # Release Strategy
 
-v0.1.0 → Welded Text Generator
+v0.1.0 → Phase 1A Core Text Generation
 
-v0.2.0 → Advanced Structural Intelligence
+v0.2.0 → Phase 1B Welding & Validation
 
-v0.3.0 → Cake Topper Generator
+v0.3.0 → Phase 1C Production Hardening
 
-v0.4.0 → Decorative Library
+v0.4.0 → Cake Topper Generator
 
-v0.5.0 → AI Graphic Generator
+v0.5.0 → SVG Import & Repair
+
+v0.6.0 → Decorative Asset Library
+
+v0.7.0 → AI Graphic Generator
 
 v1.0.0 → AI Design Studio
 

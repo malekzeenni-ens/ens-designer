@@ -2,45 +2,23 @@
 
 ## Phase Information
 
-Phase: 05
+Phase: 03
 
-Name: AI Graphic Generator
+Name: SVG Import & Repair
 
 Target Release: v0.5.0
 
-Status: Ready For Development
+Status: Ready For Development After Phase 02 Approval
+
+Note: Filename retained for repository continuity. This document now represents approved Phase 03 scope.
 
 ---
 
 # Objective
 
-Enable users to generate laser-cut-ready artwork using natural language prompts.
+Allow users to import existing SVG files, validate them, repair supported issues, and re-export LightBurn-compatible SVG files.
 
-The objective is to allow a user to describe a design and automatically receive a vectorised SVG suitable for laser cutting.
-
-Examples:
-
-- Steam train
-- Dinosaur
-- Princess castle
-- Football player silhouette
-- Tractor
-- Racing car
-
-The generated output must be transformed into production-ready vector artwork.
-
----
-
-# Business Outcome
-
-Reduce the need to:
-
-- Search for artwork online
-- Purchase SVG files
-- Trace images manually
-- Create vector artwork manually
-
-The user should be able to generate custom laser-ready artwork directly from a text prompt.
+This phase reduces manual SVG repair work without introducing AI generation.
 
 ---
 
@@ -48,10 +26,9 @@ The user should be able to generate custom laser-ready artwork directly from a t
 
 ## Included
 
-- Prompt input
-- AI image generation
-- Image quality validation
-- Vectorisation engine
+- SVG import
+- Geometry validation
+- Supported repair workflow
 - Geometry cleanup
 - SVG optimisation
 - Structural validation
@@ -63,227 +40,49 @@ The user should be able to generate custom laser-ready artwork directly from a t
 
 ## Excluded
 
+- AI image generation
 - Full AI design studio
-- Automatic product generation
-- Multi-layer SVG generation
+- Decorative asset library
+- DXF implementation
 - Commercial marketplace
-
----
-
-# User Workflow
-
-Step 1
-
-User enters prompt.
-
-Example:
-
-"Steam train suitable for laser cutting"
-
----
-
-Step 2
-
-AI generates artwork.
-
----
-
-Step 3
-
-System analyses image.
-
----
-
-Step 4
-
-System converts image to vector geometry.
-
----
-
-Step 5
-
-System cleans geometry.
-
----
-
-Step 6
-
-System validates structural integrity.
-
----
-
-Step 7
-
-Preview displayed.
-
----
-
-Step 8
-
-User exports SVG or PNG.
 
 ---
 
 # Functional Requirements
 
-## FR-501
+## FR-301
 
-User enters prompt.
-
----
-
-## FR-502
-
-System generates image using AI.
+User can import an existing SVG.
 
 ---
 
-## FR-503
+## FR-302
 
-System validates image quality.
-
----
-
-## FR-504
-
-System vectorises image.
+System converts supported SVG content into the Canonical Geometry Model.
 
 ---
 
-## FR-505
+## FR-303
 
-System simplifies geometry.
-
----
-
-## FR-506
-
-System repairs geometry.
+System validates imported geometry.
 
 ---
 
-## FR-507
+## FR-304
 
-System validates production readiness.
-
----
-
-## FR-508
-
-System generates SVG.
+System reports unsupported or unsafe geometry.
 
 ---
 
-## FR-509
+## FR-305
 
-System generates PNG.
-
----
-
-## FR-510
-
-System displays preview.
+System repairs supported geometry issues.
 
 ---
 
-# Recommended AI Workflow
+## FR-306
 
-Prompt
-→ AI Generation
-→ Image Validation
-→ Vectorisation
-→ Geometry Cleanup
-→ Validation
-→ Export
-
----
-
-# AI Provider Evaluation
-
-Architecture should support:
-
-- OpenAI
-- Anthropic
-- Future providers
-
-Implementation should abstract providers behind a service layer.
-
----
-
-# Vectorisation Requirements
-
-Generated SVG must:
-
-- Remove excessive detail
-- Reduce unnecessary nodes
-- Preserve major features
-- Maintain laser suitability
-
----
-
-# Validation Requirements
-
-Check:
-
-- Floating islands
-- Unsupported geometry
-- Excessive node counts
-- Thin unsupported features
-
----
-
-# UI Enhancements
-
-Add:
-
-- Prompt Input
-- AI Generation Panel
-- Generation History
-- Preview Controls
-- Validation Results
-
----
-
-# Testing Requirements
-
-## Unit Tests
-
-Required Coverage:
-
-- AI service layer
-- Vectorisation engine
-- Validation engine
-- Geometry cleanup
-
----
-
-## Integration Tests
-
-Required Coverage:
-
-Prompt
-→ AI
-→ Vectorisation
-→ Validation
-→ Export
-
----
-
-## Manual Tests
-
-Generate:
-
-- Animals
-- Vehicles
-- Buildings
-- Silhouettes
-- Decorative graphics
-
-Verify:
-
-- SVG quality
-- Cutability
-- LightBurn compatibility
+System re-exports SVG.
 
 ---
 
@@ -291,29 +90,13 @@ Verify:
 
 The phase is complete when:
 
-- Prompt generates artwork
-- Artwork vectorises successfully
-- SVG exports correctly
-- Validation passes
-- LightBurn import successful
+- Existing SVG files can be imported
+- Supported repair issues are handled
+- Unsupported issues are reported clearly
+- Re-exported SVG remains LightBurn compatible
 - Tests pass
 - Documentation updated
 - Handoff completed
-
----
-
-# Documentation Updates Required
-
-Update:
-
-- /docs/architecture/TECHNICAL_ARCHITECTURE_AND_SOLUTION_DESIGN.md
-- /docs/architecture/RECOMMENDATION_ENGINE_DESIGN.md
-- /docs/architecture/UX_UI_SOLUTION_DESIGN.md
-- /docs/governance/PHASED_DELIVERY_PLAN.md
-
-Create:
-
-/docs/handoffs/phase-05-ai-graphic-generator-handoff.md
 
 ---
 
@@ -321,7 +104,7 @@ Create:
 
 Recommended:
 
-feat: phase 05 ai graphic generator
+feat: phase 03 svg import and repair
 
 ---
 
@@ -335,11 +118,11 @@ v0.5.0
 
 # Stop Condition
 
-After completing Phase 05:
+After completing Phase 03:
 
 STOP
 
-Do not begin Phase 06.
+Do not begin Phase 04.
 
 Wait for approval and QA review.
 

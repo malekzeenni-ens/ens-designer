@@ -105,7 +105,7 @@ Pain Points:
 
 # User Journey
 
-## Phase 1 User Flow
+## Phase 1A User Flow
 
 Step 1
 
@@ -117,11 +117,11 @@ User selects font.
 
 Step 3
 
-User generates design.
+System normalises and shapes text using HarfBuzz.
 
 Step 4
 
-System validates structure.
+System creates canonical geometry.
 
 Step 5
 
@@ -129,11 +129,43 @@ System generates preview.
 
 Step 6
 
-User exports SVG.
+User exports SVG or PNG.
 
-Step 7
+---
 
-User imports into LightBurn.
+## Phase 1B User Flow
+
+Step 1
+
+System analyses canonical geometry.
+
+Step 2
+
+System welds and bridges geometry.
+
+Step 3
+
+System validates material suitability.
+
+Step 4
+
+System displays validation results.
+
+---
+
+## Phase 1C User Flow
+
+Step 1
+
+System validates against the golden test corpus.
+
+Step 2
+
+User may add, remove, or adjust bridges.
+
+Step 3
+
+User validates output in LightBurn.
 
 ---
 
@@ -341,13 +373,17 @@ Cake Topper Generator
 
 ## Phase 3
 
-Decorative Library
+SVG Import & Repair
 
 ## Phase 4
 
-AI Graphic Generator
+Decorative Library
 
 ## Phase 5
+
+AI Graphic Generator
+
+## Phase 6
 
 AI Design Studio
 

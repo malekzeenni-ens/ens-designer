@@ -2,9 +2,9 @@
 
 ## Phase Information
 
-Phase: 01
+Phase: 1A
 
-Name: Welded Text Generator MVP
+Name: Core Text Generation
 
 Target Release: v0.1.0
 
@@ -14,17 +14,17 @@ Status: Ready For Development
 
 # Objective
 
-Deliver the first working version of the AI SVG Generator capable of producing laser-ready SVG and PNG files from text and fonts.
+Deliver the first working version of the AI SVG Generator capable of shaping text, extracting font outlines, creating canonical geometry, and exporting SVG and PNG files.
 
-This phase establishes the foundation for all future phases.
+This phase establishes the deterministic text and export foundation for all future phases.
 
 ---
 
 # Business Outcome
 
-Reduce the time required to create welded laser-cut text from several minutes to less than 30 seconds.
+Reduce the time required to create initial laser-design text geometry from several minutes to less than 30 seconds.
 
-The output should require little to no manual editing before import into LightBurn.
+Welding, bridge generation, material validation, and production hardening are handled in Phase 1B and Phase 1C.
 
 ---
 
@@ -35,12 +35,13 @@ The output should require little to no manual editing before import into LightBu
 - Name input
 - Font selection
 - Font preview
+- Unicode normalisation
+- HarfBuzz text shaping
+- Font outline extraction
+- Canonical Geometry Model
 - SVG generation
 - PNG generation
 - SVG preview
-- Basic welding engine
-- Basic bridge generation
-- Structural validation
 - Export functionality
 - Error handling
 - Logging
@@ -50,12 +51,15 @@ The output should require little to no manual editing before import into LightBu
 ## Excluded
 
 - Cake toppers
+- Welding
+- Bridge generation
+- Material validation
 - Decorative libraries
 - AI-generated graphics
 - Cloud deployment
 - User accounts
 - Project sharing
-- SaaS functionality
+- Cloud functionality
 
 ---
 
@@ -75,49 +79,49 @@ User selects a font.
 
 ## FR-003
 
-System converts text into vector geometry.
+System normalises and shapes text using HarfBuzz.
 
 ---
 
 ## FR-004
 
-System automatically welds letters.
+System extracts shaped font outlines.
 
 ---
 
 ## FR-005
 
-System automatically creates bridges when necessary.
+System creates canonical geometry.
 
 ---
 
 ## FR-006
 
-System validates connectivity.
+System generates SVG.
 
 ---
 
 ## FR-007
 
-System generates SVG.
+System generates PNG.
 
 ---
 
 ## FR-008
 
-System generates PNG.
+System displays preview.
 
 ---
 
 ## FR-009
 
-System displays preview.
+System exports files locally.
 
 ---
 
 ## FR-010
 
-System exports files locally.
+System does not perform welding or bridge generation in Phase 1A.
 
 ---
 
@@ -141,9 +145,6 @@ Create:
 
 - Font engine
 - SVG engine
-- Welding engine
-- Bridge engine
-- Validation engine
 - Export engine
 
 ---
@@ -174,9 +175,8 @@ Required Coverage
 
 - Font loading
 - SVG generation
-- Welding engine
-- Bridge engine
-- Validation engine
+- HarfBuzz shaping
+- Canonical geometry creation
 
 ---
 
@@ -185,23 +185,20 @@ Required Coverage
 Required Coverage
 
 Input
+→ Text Shaping
+→ Canonical Geometry
 → SVG Generation
-→ Validation
 → Export
 
 ---
 
 ## Manual Tests
 
-Generate at least:
-
-- 10 script font names
-- 10 serif font names
-- 10 decorative font names
+Validate against the Phase 1A subset of the golden test corpus.
 
 Verify:
 
-- Connectivity
+- Text shaping
 - SVG quality
 - LightBurn compatibility
 
@@ -214,8 +211,8 @@ The phase is complete when:
 - SVG generated successfully
 - PNG generated successfully
 - SVG imports into LightBurn
-- Letters remain connected
-- Validation engine functions correctly
+- Text shaping functions correctly
+- Canonical geometry is created
 - Tests pass
 - Documentation updated
 - Handoff document completed
@@ -240,7 +237,7 @@ Create:
 
 Recommended:
 
-feat: phase 01 welded text generator mvp
+feat: phase 1a core text generation
 
 ---
 
@@ -254,11 +251,11 @@ v0.1.0
 
 # Stop Condition
 
-After completing Phase 01:
+After completing Phase 1A:
 
 STOP
 
-Do not begin Phase 02.
+Do not begin Phase 1B.
 
 Wait for approval and QA review.
 

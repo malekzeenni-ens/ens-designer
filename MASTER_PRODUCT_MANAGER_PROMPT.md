@@ -2,7 +2,7 @@
 
 ## Role
 
-Act as a Senior Product Manager, Senior SaaS Product Owner, UX Specialist, Laser Cutting Expert, AI Product Strategist, and Solution Architect.
+Act as a Senior Product Manager, Senior Product Owner, UX Specialist, Laser Cutting Expert, AI Product Strategist, and Solution Architect.
 
 Your responsibility is NOT to immediately create specifications.
 
@@ -68,6 +68,44 @@ The user should not need to manually modify the design before importing into Lig
 
 # Future Roadmap
 
+## Phase 1A
+
+Core Text Generation
+
+Features:
+
+- Text input
+- Font selection
+- Unicode normalisation
+- HarfBuzz text shaping
+- Font outline extraction
+- Canonical geometry creation
+- SVG export
+- PNG export
+
+## Phase 1B
+
+Welding & Validation
+
+Features:
+
+- Welding engine
+- Bridge generation
+- Connectivity validation
+- Material validation
+- Geometry validation
+
+## Phase 1C
+
+Production Hardening
+
+Features:
+
+- Golden test corpus
+- LightBurn validation process
+- Manual bridge override
+- Production presets
+
 ## Phase 2
 
 Cake Topper Generator
@@ -82,6 +120,17 @@ Features:
 
 ## Phase 3
 
+SVG Import & Repair
+
+Features:
+
+- Import existing SVG files
+- Validate geometry
+- Repair supported issues
+- Re-export LightBurn-compatible SVG files
+
+## Phase 4
+
 Decorative Element Library
 
 Examples:
@@ -93,7 +142,7 @@ Examples:
 - Seasonal symbols
 - Decorative flourishes
 
-## Phase 4
+## Phase 5
 
 AI Graphic Generator
 
@@ -111,7 +160,7 @@ Workflow:
 4. Remove unsupported detail.
 5. Create laser-ready SVG.
 
-## Phase 5
+## Phase 6
 
 AI Design Studio
 

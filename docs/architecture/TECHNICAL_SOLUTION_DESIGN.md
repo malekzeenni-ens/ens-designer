@@ -29,6 +29,8 @@ Primary outputs:
 
 Primary goals:
 
+- Accurate text shaping
+- Canonical geometry generation
 - Automatic text welding
 - Structural validation
 - LightBurn compatibility
@@ -88,13 +90,16 @@ Responsibilities:
 Responsibilities:
 
 - Load fonts
-- Parse glyphs
+- Normalise Unicode text
+- Shape text using HarfBuzz
+- Parse shaped glyphs
 - Create vector outlines
 
 Suggested Libraries:
 
 - fontTools
 - freetype-py
+- HarfBuzz
 
 ---
 
@@ -102,7 +107,7 @@ Suggested Libraries:
 
 Responsibilities:
 
-- Convert glyphs to paths
+- Convert shaped glyph outlines into the Canonical Geometry Model
 - Union operations
 - Cleanup geometry
 
@@ -163,16 +168,35 @@ Responsibilities:
 
 ---
 
-# Phase 1 Workflow
+# Phase 1A Workflow
 
 1. User enters text.
 2. User selects font.
-3. Font converted to vector paths.
-4. Welding engine runs.
-5. Bridge engine runs.
-6. Validation engine runs.
+3. Text is normalised.
+4. HarfBuzz shapes text.
+5. Font outlines are extracted.
+6. Canonical geometry is created.
 7. Preview generated.
-8. User exports file.
+8. User exports SVG or PNG.
+
+---
+
+# Phase 1B Workflow
+
+1. Canonical geometry is analysed.
+2. Welding engine runs.
+3. Bridge engine runs.
+4. Material validation runs.
+5. Validation results are returned.
+
+---
+
+# Phase 1C Workflow
+
+1. Golden test corpus is executed.
+2. LightBurn validation is documented.
+3. Manual bridge override is available.
+4. Production presets are available.
 
 ---
 
@@ -211,17 +235,21 @@ Location:
 
 Phase 2
 
-- Structural scoring engine
+- Cake topper engine
 
 Phase 3
 
-- Cake topper engine
+- SVG import and repair engine
 
 Phase 4
 
-- AI artwork generation
+- Decorative asset library
 
 Phase 5
+
+- AI artwork generation
+
+Phase 6
 
 - AI design studio
 

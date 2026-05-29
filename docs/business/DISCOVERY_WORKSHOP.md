@@ -215,6 +215,17 @@ Cake Toppers
 
 ## Phase 3
 
+SVG Import & Repair
+
+1. Should existing SVG files be imported?
+2. Which repair operations are most valuable?
+3. Should unsupported geometry be rejected or warned?
+4. Should repaired SVG files be re-exported only as SVG?
+
+---
+
+## Phase 4
+
 Decorative Elements
 
 1. Which symbols are highest priority?
@@ -223,7 +234,7 @@ Decorative Elements
 
 ---
 
-## Phase 4
+## Phase 5
 
 AI Graphics
 
@@ -234,7 +245,7 @@ AI Graphics
 
 ---
 
-## Phase 5
+## Phase 6
 
 AI Design Studio
 

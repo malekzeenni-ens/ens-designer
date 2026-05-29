@@ -153,31 +153,47 @@ v1.0.0
 
 ## v0.1.0
 
-Phase 1
+Phase 1A
 
-Welded Text Generator
+Core Text Generation
 
 ---
 
 ## v0.2.0
 
-Advanced Structural Intelligence
+Phase 1B
+
+Welding & Validation
 
 ---
 
 ## v0.3.0
 
-Cake Topper Generator
+Phase 1C
+
+Production Hardening
 
 ---
 
 ## v0.4.0
 
-Decorative Library
+Cake Topper Generator
 
 ---
 
 ## v0.5.0
+
+SVG Import & Repair
+
+---
+
+## v0.6.0
+
+Decorative Library
+
+---
+
+## v0.7.0
 
 AI Graphic Generator
 
@@ -295,7 +311,7 @@ Electron
 
 ## Phase 3
 
-Optional SaaS evaluation
+SVG Import & Repair evaluation and release hardening
 
 ---
 

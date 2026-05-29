@@ -62,7 +62,9 @@ Validate interaction between modules.
 
 Coverage:
 
-- Input → Font Processing
+- Input → Unicode Normalisation
+- Unicode Normalisation → HarfBuzz Shaping
+- HarfBuzz Shaping → Font Processing
 - Font Processing → SVG Engine
 - SVG Engine → Welding Engine
 - Welding Engine → Validation Engine
@@ -292,13 +294,42 @@ Mandatory Areas:
 
 Before every release:
 
-- Generate 10 sample names
+- Execute the golden test corpus
 - Test multiple font categories
 - Export SVG
 - Import into LightBurn
 - Verify connectivity
 - Verify scaling
 - Verify cut readiness
+
+---
+
+# Golden Test Corpus
+
+The standard validation benchmark must include:
+
+Fonts:
+
+- Script
+- Serif
+- Sans
+- Decorative
+
+Names:
+
+- Oliver
+- Amelia
+- Muhammad
+- O'Connor
+- Lea
+
+Materials:
+
+- 3mm Cast Acrylic
+- 3mm Mirror Acrylic
+- 3mm Plywood
+
+The corpus must be used during Phase 1C and before production release.
 
 ---
 

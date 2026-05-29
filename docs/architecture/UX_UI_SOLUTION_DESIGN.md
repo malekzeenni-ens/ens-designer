@@ -316,25 +316,39 @@ Design not suitable for export
 
 # Future UX Enhancements
 
-## Phase 2
+## Phase 1C
 
-Advanced validation panel
+Manual bridge override.
+
+Users can add, remove, and adjust bridges without entering a complex CAD workflow.
 
 ---
 
-## Phase 3
+## Phase 2
 
 Cake topper wizard
 
 ---
 
+## Phase 3
+
+SVG import and repair workflow
+
+---
+
 ## Phase 4
+
+Decorative asset library workflow
+
+---
+
+## Phase 5
 
 AI artwork generation workflow
 
 ---
 
-## Phase 5
+## Phase 6
 
 AI design studio workflow
 

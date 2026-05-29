@@ -2,34 +2,23 @@
 
 ## Phase Information
 
-Phase: 03
+Phase: 1C
 
-Name: Cake Topper Generator
+Name: Production Hardening
 
 Target Release: v0.3.0
 
-Status: Ready For Development
+Status: Ready For Development After Phase 1B Approval
+
+Note: Filename retained for repository continuity. This document now represents approved Phase 1C scope.
 
 ---
 
 # Objective
 
-Extend the SVG Generator platform to automatically create production-ready cake toppers from generated names and designs.
+Harden the Phase 1A and Phase 1B MVP workflow for real Etch 'N' Shine production use.
 
-The cake topper engine must create structurally sound stake systems while preserving the aesthetics of the design.
-
----
-
-# Business Outcome
-
-Eliminate the manual work currently required to:
-
-- Add stakes
-- Position stakes
-- Adjust dimensions
-- Reinforce weak areas
-
-The generated topper should be immediately ready for laser cutting.
+This phase introduces the golden test corpus, documented LightBurn validation, production presets, and lightweight manual bridge override.
 
 ---
 
@@ -37,234 +26,85 @@ The generated topper should be immediately ready for laser cutting.
 
 ## Included
 
-- Single stake support
-- Double stake support
-- Adjustable stake length
-- Adjustable stake width
-- Automatic stake positioning
-- Structural reinforcement
-- Topper preview
-- SVG export
-- PNG export
-- Validation support
+- Golden test corpus
+- LightBurn validation process
+- Manual bridge override
+- Production presets
+- Production workflow improvements
 
 ---
 
 ## Excluded
 
+- Cake topper generation
 - Decorative asset library
 - AI-generated artwork
-- OpenAI integration
-- Multi-layer cake toppers
-- Commercial templates marketplace
+- DXF implementation
+- Batch generation
+- Cloud sync
+- Marketplace functionality
 
 ---
 
 # Functional Requirements
 
-## FR-301
+## FR-1C-001
 
-User can select:
-
-- Single stake
-- Double stake
+System validates against the approved golden test corpus.
 
 ---
 
-## FR-302
+## FR-1C-002
 
-User can configure stake length.
-
----
-
-## FR-303
-
-User can configure stake width.
+System documents LightBurn import validation evidence.
 
 ---
 
-## FR-304
+## FR-1C-003
 
-System automatically positions stakes.
-
----
-
-## FR-305
-
-System automatically merges stakes with design.
+User can add a bridge.
 
 ---
 
-## FR-306
+## FR-1C-004
 
-System validates structural integrity.
-
----
-
-## FR-307
-
-System generates SVG output.
+User can remove a bridge.
 
 ---
 
-## FR-308
+## FR-1C-005
 
-System generates PNG output.
-
----
-
-## FR-309
-
-System displays topper preview.
+User can adjust a bridge.
 
 ---
 
-## FR-310
+## FR-1C-006
 
-System warns about weak structures.
+System supports production presets:
 
----
-
-# User Workflow
-
-Step 1
-
-Enter name.
-
----
-
-Step 2
-
-Select font.
-
----
-
-Step 3
-
-Choose topper mode.
-
----
-
-Step 4
-
-Choose:
-
-- Single stake
-- Double stake
-
----
-
-Step 5
-
-Adjust stake settings.
-
----
-
-Step 6
-
-Generate topper.
-
----
-
-Step 7
-
-Review validation results.
-
----
-
-Step 8
-
-Export SVG or PNG.
-
----
-
-# Stake Rules
-
-## Single Stake
-
-Recommended for:
-
-- Small names
-- Lightweight materials
-
----
-
-## Double Stake
-
-Recommended for:
-
-- Long names
-- Heavy materials
-- Decorative designs
-
----
-
-# Automatic Placement Rules
-
-The system should:
-
-- Determine centre of gravity
-- Analyse geometry balance
-- Place stakes automatically
-- Optimise structural stability
-
----
-
-# Structural Validation Requirements
-
-Check:
-
-- Stake attachment strength
-- Unsupported geometry
-- Weak connections
-- Production readiness
-
----
-
-# UI Enhancements
-
-Add:
-
-- Topper Mode Toggle
-- Stake Controls
-- Validation Feedback
-- Production Readiness Indicators
+- Name Sign
+- Cake Topper
+- Ornament
+- Nursery Sign
 
 ---
 
 # Testing Requirements
 
-## Unit Tests
-
-Required Coverage:
-
-- Stake generation
-- Stake placement
-- Structural validation
-
----
-
-## Integration Tests
-
-Required Coverage:
-
-Design
-→ Stake Engine
-→ Validation
-→ Export
-
----
-
-## Manual Tests
-
 Validate:
 
-- Short names
-- Long names
-- Script fonts
-- Decorative fonts
-- Single stake mode
-- Double stake mode
+- Script font sample
+- Serif font sample
+- Sans font sample
+- Decorative font sample
+- Oliver
+- Amelia
+- Muhammad
+- O'Connor
+- Lea
+- 3mm Cast Acrylic
+- 3mm Mirror Acrylic
+- 3mm Plywood
 
 ---
 
@@ -272,11 +112,12 @@ Validate:
 
 The phase is complete when:
 
-- Stakes generated automatically
-- Stakes positioned correctly
-- Structural validation passes
-- SVG exports correctly
-- LightBurn import successful
+- Golden corpus passes
+- LightBurn validation is documented
+- Manual bridge override works
+- Production presets are available
+- SVG remains primary export format
+- DXF remains future evaluation only
 - Tests pass
 - Documentation updated
 - Handoff completed
@@ -293,7 +134,7 @@ Update:
 
 Create:
 
-/docs/handoffs/phase-03-cake-topper-generator-handoff.md
+/docs/handoffs/phase-1c-production-hardening-handoff.md
 
 ---
 
@@ -301,7 +142,7 @@ Create:
 
 Recommended:
 
-feat: phase 03 cake topper generator
+feat: phase 1c production hardening
 
 ---
 
@@ -315,11 +156,11 @@ v0.3.0
 
 # Stop Condition
 
-After completing Phase 03:
+After completing Phase 1C:
 
 STOP
 
-Do not begin Phase 04.
+Do not begin Phase 02.
 
 Wait for approval and QA review.
 
