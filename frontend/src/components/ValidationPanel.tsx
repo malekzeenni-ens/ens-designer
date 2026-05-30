@@ -22,6 +22,7 @@ export function ValidationPanel({ result }: ValidationPanelProps) {
       <div className="welding-summary">
         <span>Components: {welding.connected_components_before} to {welding.connected_components_after}</span>
         <span>Bridges: {welding.bridges_added}</span>
+        <span>Skipped: {welding.bridge_candidates_skipped}</span>
       </div>
       {validation.warnings.length > 0 && (
         <ul className="warning-list">

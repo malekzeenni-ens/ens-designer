@@ -2,9 +2,9 @@
 
 ## 1. Executive Summary
 
-Phase 1B delivered welding and validation MVP functionality on top of the accepted Phase 1A application.
+Phase 1B delivered welding and validation MVP functionality on top of the accepted Phase 1A application, then received a remediation pass after bridge placement feedback.
 
-The system can now select a material profile, generate automatic bridge geometry, calculate validation scores, show warnings, preview the result, and export SVG/PNG.
+The system can now select a material profile, generate conservative automatic bridge geometry, skip low-confidence bridges, calculate validation scores, show warnings, preview the result, and export SVG/PNG.
 
 ---
 
@@ -13,7 +13,8 @@ The system can now select a material profile, generate automatic bridge geometry
 - Material profile endpoint implemented.
 - Material selector implemented.
 - Generation API extended with material selection.
-- Automatic bridge generation implemented.
+- Conservative automatic bridge generation implemented.
+- Low-confidence bridge skipping implemented.
 - Welding metadata implemented.
 - Validation scoring implemented.
 - Validation warnings implemented.
@@ -84,11 +85,11 @@ The system can now select a material profile, generate automatic bridge geometry
 
 Decision:
 
-Use deterministic rectangular bridge geometry for the Phase 1B MVP.
+Use confidence-gated bridge geometry for the Phase 1B MVP.
 
 Reason:
 
-It provides immediate production-value validation and connection behaviour without building a CAD-grade editor.
+It avoids drawing visibly wrong connector bars while still allowing safe automatic bridges when confidence is high.
 
 Alternative:
 
@@ -168,23 +169,20 @@ Passed.
 
 ## Manual Smoke Test
 
-Generated Oliver using Arial and 3mm Cast Acrylic.
+Generated reported review cases after remediation.
 
 Result:
 
-- Bridges added: 5
-- Components before: 6
-- Components after: 1
-- Connectivity score: 100
-- Structural score: 92
-- Production readiness score: 96
+- Oliver / Anton: 0 bridges added, 5 low-confidence bridges skipped, connectivity score 15.
+- jamie / Georgia: 0 bridges added, 4 low-confidence bridges skipped, connectivity score 25.
+- jamie / josephsophia: 0 bridges added, no forced bridge bars, connectivity score 88 with review warning.
 - PNG generated
 
 ---
 
 # 11. Known Issues
 
-- Bridge generation is functional but visually basic.
+- Bridge generation is conservative and skips low-confidence placements.
 - Full path union is not implemented.
 - Material thresholds require real-world tuning.
 - SVG should be manually reviewed in LightBurn before Phase 1C.
@@ -193,10 +191,10 @@ Result:
 
 # 12. Risks
 
-- Decorative/script fonts may produce awkward bridge placement.
+- Decorative/script fonts may produce low-confidence skipped bridge warnings.
 - Some fonts may need manual override in Phase 1C.
 - Material score values may be too optimistic until calibrated against real cuts.
-- Rectangular bridges may not match Etch 'N' Shine's final aesthetic standard.
+- Automatic bridge confidence is intentionally strict until Phase 1C manual override and production hardening.
 
 ---
 

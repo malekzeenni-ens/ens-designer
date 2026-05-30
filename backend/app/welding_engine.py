@@ -22,19 +22,30 @@ class PathBounds:
     def height(self) -> float:
         return self.max_y - self.min_y
 
+    @property
+    def width(self) -> float:
+        return self.max_x - self.min_x
+
+    def vertical_overlap(self, other: "PathBounds") -> float:
+        return max(0.0, min(self.max_y, other.max_y) - max(self.min_y, other.min_y))
+
 
 def apply_welding(geometry: CanonicalGeometry, material: MaterialProfile, enabled: bool) -> CanonicalGeometry:
     bounds = [_path_bounds(path) for path in geometry.paths]
     components_before = _count_components(bounds)
     bridge_paths: list[GeometryPath] = []
 
+    skipped_candidates = 0
     if enabled and len(bounds) > 1:
         for index, (left, right) in enumerate(zip(bounds, bounds[1:]), start=1):
             gap = right.min_x - left.max_x
-            if gap > 0:
+            if _is_safe_bridge_candidate(left, right, gap, material.recommended_connection_width_mm):
                 bridge_paths.append(_create_bridge(index, left, right, material.recommended_connection_width_mm))
+            elif gap > 0:
+                skipped_candidates += 1
 
     updated_paths = [*geometry.paths, *bridge_paths]
+    components_after = _count_components([_path_bounds(path) for path in updated_paths])
     welded_geometry = geometry.model_copy(
         update={
             "paths": updated_paths,
@@ -42,9 +53,10 @@ def apply_welding(geometry: CanonicalGeometry, material: MaterialProfile, enable
             "welding": WeldingMetadata(
                 enabled=enabled,
                 connected_components_before=components_before,
-                connected_components_after=max(1, components_before - len(bridge_paths)) if enabled else components_before,
+                connected_components_after=components_after if enabled else components_before,
                 bridges_added=len(bridge_paths),
                 bridge_path_ids=[path.path_id for path in bridge_paths],
+                bridge_candidates_skipped=skipped_candidates,
             ),
         },
         deep=True,
@@ -77,8 +89,26 @@ def _count_components(bounds: list[PathBounds]) -> int:
     return components
 
 
+def _is_safe_bridge_candidate(left: PathBounds, right: PathBounds, gap: float, recommended_width: float) -> bool:
+    if gap <= 0:
+        return False
+    if gap > min(0.75, recommended_width * 0.25):
+        return False
+
+    overlap = left.vertical_overlap(right)
+    smaller_height = max(0.001, min(left.height, right.height))
+    if overlap / smaller_height < 0.55:
+        return False
+
+    height_ratio = max(left.height, right.height) / max(0.001, smaller_height)
+    if height_ratio > 1.8:
+        return False
+
+    return True
+
+
 def _create_bridge(index: int, left: PathBounds, right: PathBounds, width: float) -> GeometryPath:
-    bridge_height = min(width, max(1.0, left.height * 0.32, right.height * 0.32))
+    bridge_height = min(width, max(1.0, min(left.height, right.height) * 0.18))
     center_y = (left.center_y + right.center_y) / 2
     y1 = round(center_y - bridge_height / 2, 3)
     y2 = round(center_y + bridge_height / 2, 3)

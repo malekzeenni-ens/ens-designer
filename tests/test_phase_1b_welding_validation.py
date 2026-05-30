@@ -61,3 +61,16 @@ def test_welding_can_be_disabled(client: TestClient, font_id: str) -> None:
     welding = response.json()["geometry"]["welding"]
     assert welding["enabled"] is False
     assert welding["bridges_added"] == 0
+
+
+def test_low_confidence_bridges_are_skipped(client: TestClient, font_id: str) -> None:
+    response = client.post("/api/generate", json={"text": "Oliver", "font_id": font_id, "material_id": "cast-acrylic-3mm"})
+
+    assert response.status_code == 200
+    geometry = response.json()["geometry"]
+    welding = geometry["welding"]
+    validation = geometry["validation"]
+    if welding["bridge_candidates_skipped"] > 0:
+        assert welding["bridges_added"] == 0
+        assert validation["connectivity_score"] < 100
+        assert any(warning["code"] == "AUTO_BRIDGE_LOW_CONFIDENCE" for warning in validation["warnings"])

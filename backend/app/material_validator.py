@@ -8,6 +8,7 @@ def validate_geometry(geometry: CanonicalGeometry, material: MaterialProfile) ->
     welding = geometry.welding
     bridges_added = welding.bridges_added if welding else 0
     components_after = welding.connected_components_after if welding else len(geometry.paths)
+    skipped_candidates = welding.bridge_candidates_skipped if welding else 0
 
     if components_after > 1:
         warnings.append(
@@ -18,12 +19,21 @@ def validate_geometry(geometry: CanonicalGeometry, material: MaterialProfile) ->
             )
         )
 
+    if skipped_candidates > 0:
+        warnings.append(
+            ValidationWarning(
+                code="AUTO_BRIDGE_LOW_CONFIDENCE",
+                severity="warning",
+                message="Automatic bridges were skipped because placement confidence was low. Manual review is required.",
+            )
+        )
+
     if bridges_added == 0 and len(geometry.glyphs) > 1:
         warnings.append(
             ValidationWarning(
-                code="NO_BRIDGES_ADDED",
-                severity="info",
-                message="No bridges were required or generated for this font/text combination.",
+                code="NO_SAFE_BRIDGES_ADDED",
+                severity="warning" if components_after > 1 else "info",
+                message="No safe automatic bridges were added for this font/text combination.",
             )
         )
 
@@ -45,8 +55,12 @@ def validate_geometry(geometry: CanonicalGeometry, material: MaterialProfile) ->
             )
         )
 
-    connectivity_score = 100 if components_after <= 1 else max(0, 100 - ((components_after - 1) * 20))
-    structural_score = max(35, 92 - (len([w for w in warnings if w.severity == "warning"]) * 14))
+    if components_after <= 1:
+        connectivity_score = 88 if bridges_added == 0 and len(geometry.glyphs) > 1 else 100
+    else:
+        connectivity_score = max(15, 65 - ((components_after - 1) * 10))
+
+    structural_score = max(25, 88 - (len([w for w in warnings if w.severity == "warning"]) * 18))
     production_score = round((connectivity_score * 0.45) + (structural_score * 0.45) + (100 * 0.10))
 
     return geometry.model_copy(

@@ -90,6 +90,7 @@ class WeldingMetadata(BaseModel):
     connected_components_after: int
     bridges_added: int
     bridge_path_ids: list[str]
+    bridge_candidates_skipped: int = 0
 
 
 class ValidationWarning(BaseModel):

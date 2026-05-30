@@ -34,6 +34,7 @@ export interface GenerateResponse {
       connected_components_after: number;
       bridges_added: number;
       bridge_path_ids: string[];
+      bridge_candidates_skipped: number;
     } | null;
     validation: {
       connectivity_score: number;
