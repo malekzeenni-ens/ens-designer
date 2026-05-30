@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes.fonts import router as fonts_router
 from .api.routes.generation import router as generation_router
+from .api.routes.materials import router as materials_router
 from .font_loader import FontCatalog
 from .generation_service import GenerationService
 
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
     app.state.generation_service = GenerationService(project_root=PROJECT_ROOT, font_catalog=font_catalog)
     app.include_router(fonts_router)
     app.include_router(generation_router)
+    app.include_router(materials_router)
     return app
 
 

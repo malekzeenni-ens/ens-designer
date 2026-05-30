@@ -16,6 +16,8 @@ class FontInfo(BaseModel):
 class GenerateRequest(BaseModel):
     text: str = Field(min_length=1, max_length=80)
     font_id: str
+    material_id: str = "cast-acrylic-3mm"
+    welding_enabled: bool = True
 
 
 class PathCommand(BaseModel):
@@ -73,6 +75,36 @@ class ExportMetadata(BaseModel):
     png_ready: bool
 
 
+class MaterialProfile(BaseModel):
+    material_id: str
+    material_name: str
+    thickness_mm: float
+    minimum_bridge_width_mm: float
+    minimum_feature_size_mm: float
+    recommended_connection_width_mm: float
+
+
+class WeldingMetadata(BaseModel):
+    enabled: bool
+    connected_components_before: int
+    connected_components_after: int
+    bridges_added: int
+    bridge_path_ids: list[str]
+
+
+class ValidationWarning(BaseModel):
+    code: str
+    severity: Literal["info", "warning", "error"]
+    message: str
+
+
+class ValidationReport(BaseModel):
+    connectivity_score: int
+    structural_score: int
+    production_readiness_score: int
+    warnings: list[ValidationWarning]
+
+
 class CanonicalGeometry(BaseModel):
     geometry_id: str
     source: GeometrySource
@@ -83,6 +115,9 @@ class CanonicalGeometry(BaseModel):
     paths: list[GeometryPath]
     bounds: Bounds
     export_metadata: ExportMetadata
+    material: MaterialProfile | None = None
+    welding: WeldingMetadata | None = None
+    validation: ValidationReport | None = None
 
 
 class GenerateResponse(BaseModel):

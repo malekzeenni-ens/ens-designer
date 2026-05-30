@@ -8,7 +8,7 @@ Name: Welding & Validation
 
 Target Release: v0.2.0
 
-Status: Ready For Development
+Status: Completed
 
 ---
 

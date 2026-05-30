@@ -40,6 +40,19 @@ def build_geometry(text: str, font: FontInfo, glyphs: list[GlyphGeometry], paths
     )
 
 
+def recalculate_geometry_bounds(geometry: CanonicalGeometry) -> CanonicalGeometry:
+    min_x, min_y, max_x, max_y = _calculate_bounds(geometry.paths)
+    width = max_x - min_x
+    height = max_y - min_y
+    return geometry.model_copy(
+        update={
+            "dimensions": Dimensions(width=round(width, 3), height=round(height, 3)),
+            "bounds": Bounds(min_x=round(min_x, 3), min_y=round(min_y, 3), max_x=round(max_x, 3), max_y=round(max_y, 3)),
+        },
+        deep=True,
+    )
+
+
 def _calculate_bounds(paths: list[GeometryPath]) -> tuple[float, float, float, float]:
     xs: list[float] = []
     ys: list[float] = []

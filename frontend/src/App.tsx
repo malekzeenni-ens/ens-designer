@@ -3,25 +3,31 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ExportControls } from "./components/ExportControls";
 import { FontSelector } from "./components/FontSelector";
+import { MaterialSelector } from "./components/MaterialSelector";
 import { PreviewPanel } from "./components/PreviewPanel";
 import { TextInput } from "./components/TextInput";
-import { fetchFonts, generateDesign } from "./services/generationApi";
-import type { FontInfo, GenerateResponse } from "./types/design";
+import { ValidationPanel } from "./components/ValidationPanel";
+import { fetchFonts, fetchMaterials, generateDesign } from "./services/generationApi";
+import type { FontInfo, GenerateResponse, MaterialProfile } from "./types/design";
 
 export function App() {
   const [text, setText] = useState("Oliver");
   const [fonts, setFonts] = useState<FontInfo[]>([]);
+  const [materials, setMaterials] = useState<MaterialProfile[]>([]);
   const [fontId, setFontId] = useState("");
   const [fontSearch, setFontSearch] = useState("");
+  const [materialId, setMaterialId] = useState("cast-acrylic-3mm");
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchFonts()
-      .then((loadedFonts) => {
+    Promise.all([fetchFonts(), fetchMaterials()])
+      .then(([loadedFonts, loadedMaterials]) => {
         setFonts(loadedFonts);
+        setMaterials(loadedMaterials);
         setFontId(loadedFonts[0]?.id ?? "");
+        setMaterialId(loadedMaterials[0]?.material_id ?? "cast-acrylic-3mm");
       })
       .catch((caught: Error) => setError(caught.message));
   }, []);
@@ -45,7 +51,7 @@ export function App() {
     setLoading(true);
     setError(null);
     try {
-      setResult(await generateDesign(text, fontId));
+      setResult(await generateDesign(text, fontId, materialId));
     } catch (caught) {
       setResult(null);
       setError(caught instanceof Error ? caught.message : "Could not generate design.");
@@ -71,7 +77,8 @@ export function App() {
             search={fontSearch}
             onSearchChange={setFontSearch}
           />
-          <button className="generate-button" type="button" onClick={handleGenerate} disabled={loading || !fontId || filteredFonts.length === 0}>
+          <MaterialSelector materials={materials} value={materialId} onChange={setMaterialId} />
+          <button className="generate-button" type="button" onClick={handleGenerate} disabled={loading || !fontId || !materialId || filteredFonts.length === 0}>
             <Wand2 size={18} aria-hidden="true" />
             {loading ? "Generating" : "Generate"}
           </button>
@@ -81,6 +88,7 @@ export function App() {
         {error && <p className="error">{error}</p>}
 
         <PreviewPanel svg={result?.svg ?? null} />
+        <ValidationPanel result={result} />
 
         <div className="footer-bar">
           <div>

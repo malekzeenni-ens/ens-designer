@@ -19,20 +19,24 @@ Future versions will provide a complete AI-powered design studio for laser busin
 
 # Current Application
 
-Phase 1A is implemented as a local deterministic text-to-vector MVP.
+Phase 1B is implemented as a local deterministic welding and validation MVP.
 
 Current workflow:
 
 ```text
 Text Input
 -> Font Selection
+-> Material Selection
 -> Generate
 -> Preview
+-> Review Validation Scores
 -> Download SVG
 -> Download PNG
 ```
 
-Phase 1A intentionally does not include welding, bridge generation, material validation, cake toppers, SVG import and repair, AI features, DXF export, decorative assets, batch processing, or SaaS/cloud features.
+Phase 1B includes automatic bridge generation, approved material profiles, connectivity scoring, structural scoring, production readiness scoring, and validation warnings.
+
+Phase 1B intentionally does not include manual bridge override, golden test corpus automation, cake toppers, SVG import and repair, AI features, DXF export, decorative assets, batch processing, or SaaS/cloud features.
 
 ---
 
@@ -175,6 +179,8 @@ Backend
 Geometry
 
 - Canonical Geometry Model
+- Shapely
+- PyClipper
 
 Fonts
 
