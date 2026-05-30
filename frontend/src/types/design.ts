@@ -29,12 +29,14 @@ export interface GenerateResponse {
     };
     material: MaterialProfile | null;
     welding: {
+      strategy: "natural" | "compression" | "bridge" | "disconnected";
       enabled: boolean;
       connected_components_before: number;
       connected_components_after: number;
       bridges_added: number;
       bridge_path_ids: string[];
       bridge_candidates_skipped: number;
+      compression_amount_mm: number;
     } | null;
     validation: {
       connectivity_score: number;

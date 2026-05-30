@@ -15,7 +15,7 @@ from .png_exporter import export_png
 from .svg_exporter import export_svg
 from .text_shaper import shape_text
 from .unicode_normalisation import normalise_text
-from .welding_engine import apply_welding
+from .connectivity_engine import resolve_connectivity
 
 
 @dataclass
@@ -31,7 +31,7 @@ class GenerationService:
         shaped = shape_text(normalised, font_path)
         glyphs, paths = extract_outlines(font_path, shaped)
         geometry = build_geometry(normalised, font_info, glyphs, paths)
-        geometry = apply_welding(geometry, material, welding_enabled)
+        geometry = resolve_connectivity(geometry, material, welding_enabled)
         geometry = validate_geometry(geometry, material)
         svg = export_svg(geometry)
         png = export_png(svg, geometry)

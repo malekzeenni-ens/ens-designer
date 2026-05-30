@@ -85,12 +85,14 @@ class MaterialProfile(BaseModel):
 
 
 class WeldingMetadata(BaseModel):
+    strategy: Literal["natural", "compression", "bridge", "disconnected"] = "bridge"
     enabled: bool
     connected_components_before: int
     connected_components_after: int
     bridges_added: int
     bridge_path_ids: list[str]
     bridge_candidates_skipped: int = 0
+    compression_amount_mm: float = 0.0
 
 
 class ValidationWarning(BaseModel):
