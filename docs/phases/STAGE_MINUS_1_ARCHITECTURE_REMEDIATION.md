@@ -124,7 +124,7 @@ Text
 → HarfBuzz
 → Font Outline Extraction
 → Geometry Engine
-→ Welding Engine
+→ Connectivity Resolution Engine
 → Validation Engine
 → Export Engine
 
@@ -257,11 +257,11 @@ No bridge generation.
 
 ## New Phase 1B
 
-Welding & Validation
+Connectivity Resolution & Validation
 
 Scope:
 
-* Welding engine
+* Connectivity Resolution Engine
 * Bridge generation
 * Connectivity validation
 * Material validation

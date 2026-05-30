@@ -21,7 +21,7 @@ The application should remove the need for repetitive vector editing while maint
 
 ## Goal 1
 
-Generate welded laser-ready text automatically.
+Generate connected laser-ready text automatically.
 
 ## Goal 2
 
@@ -75,8 +75,9 @@ Characteristics:
 
 ## Current Challenges
 
-- Manual text welding
-- Manual bridge creation
+- Manual text connectivity repair
+- Manual letter spacing/compression
+- Manual bridge creation when spacing cannot solve connectivity
 - Font compatibility issues
 - Floating islands
 - Weak connections
@@ -133,25 +134,29 @@ System exports PNG.
 
 ## Phase 1B Feature
 
-Welding & Validation
+Connectivity Resolution & Validation
 
 FR-101
 
-System generates connected lettering.
+System analyses whether lettering is naturally connected.
 
 FR-102
 
-System automatically adjusts spacing.
+System preserves naturally connected fonts without modification.
 
 FR-103
 
-System automatically creates bridges when required.
+System automatically adjusts spacing and tracking for disconnected fonts when compression can create a valid connected structure.
 
 FR-104
 
-System validates cutability.
+System creates structural bridges only when natural connectivity and intelligent compression fail.
 
 FR-105
+
+System validates cutability.
+
+FR-106
 
 System applies material validation for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood.
 
@@ -295,11 +300,11 @@ Support XCS workflows.
 
 ## Risk 1
 
-Certain fonts may not weld correctly.
+Certain fonts may not connect correctly through natural overlap or compression.
 
 Mitigation:
 
-Automatic bridge creation.
+Connectivity resolution must use the approved order: natural connectivity, intelligent letter compression, then structural bridges as fallback.
 
 ## Risk 2
 

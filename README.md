@@ -6,9 +6,10 @@ AI SVG Generator is a local-first application designed for Etch 'N' Shine to gen
 
 The platform automates:
 
-- Text welding
-- Letter connections
-- Bridge generation
+- Text and design connectivity resolution
+- Natural connectivity preservation
+- Intelligent letter compression
+- Structural bridges only as a fallback
 - Structural validation
 - Cake topper generation
 - AI-assisted artwork generation
@@ -19,7 +20,7 @@ Future versions will provide a complete AI-powered design studio for laser busin
 
 # Current Application
 
-Phase 1B is implemented as a local deterministic welding and validation MVP.
+Phase 1B is implemented as a local deterministic connectivity resolution and validation MVP.
 
 Current workflow:
 
@@ -34,7 +35,7 @@ Text Input
 -> Download PNG
 ```
 
-Phase 1B includes automatic bridge generation, approved material profiles, connectivity scoring, structural scoring, production readiness scoring, and validation warnings.
+Phase 1B includes approved material profiles, connectivity scoring, structural scoring, production readiness scoring, and validation warnings. The approved product behaviour is to preserve naturally connected fonts, use intelligent letter compression for disconnected fonts, and use structural bridges only as a fallback.
 
 Phase 1B intentionally does not include manual bridge override, golden test corpus automation, cake toppers, SVG import and repair, AI features, DXF export, decorative assets, batch processing, or SaaS/cloud features.
 
@@ -134,7 +135,7 @@ Core Text Generation
 
 ### Phase 1B
 
-Welding & Validation
+Connectivity Resolution & Validation
 
 ### Phase 1C
 
@@ -251,7 +252,7 @@ Delivery:
 
 v0.1.0 -> Phase 1A Core Text Generation
 
-v0.2.0 -> Phase 1B Welding & Validation
+v0.2.0 -> Phase 1B Connectivity Resolution & Validation
 
 v0.3.0 -> Phase 1C Production Hardening
 

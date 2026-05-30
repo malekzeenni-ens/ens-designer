@@ -4,7 +4,7 @@
 
 Define the minimum Canonical Geometry Model required for Phase 1A.
 
-This model is intentionally small. It supports shaped text outline export only. It does not include welding, bridge generation, material validation, structural scoring, SVG import, DXF, AI, or manufacturing simulation.
+This model is intentionally small. It supports shaped text outline export only. It does not include connectivity resolution, bridge fallback, material validation, structural scoring, SVG import, DXF, AI, or manufacturing simulation.
 
 ---
 
@@ -155,4 +155,3 @@ Phase 1C may add:
 
 - Manual bridge override metadata
 - Golden test corpus result metadata
-

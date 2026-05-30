@@ -4,7 +4,7 @@
 
 Phase: 1B
 
-Name: Welding & Validation
+Name: Connectivity Resolution & Validation
 
 Target Release: v0.2.0
 
@@ -14,7 +14,7 @@ Status: Completed
 
 # Objective
 
-Enhance the Phase 1A core geometry with welding, bridge generation, geometry validation, connectivity validation, and material validation.
+Enhance the Phase 1A core geometry with connectivity analysis, natural connectivity preservation, intelligent letter compression, structural bridge fallback, geometry validation, connectivity validation, and material validation.
 
 This phase focuses on improving manufacturing reliability, reducing failed cuts, and increasing confidence in automatically generated designs.
 
@@ -32,13 +32,15 @@ The system should proactively identify weak geometry and either repair it automa
 
 ## Included
 
-- Welding engine
-- Bridge generation
+- Connectivity Resolution Engine
+- Natural connectivity preservation
+- Intelligent letter compression
+- Structural bridge fallback
 - Geometry validation
 - Material validation
 - Connectivity scoring
 - Production readiness scoring
-- Weak bridge detection
+- Weak connection and fallback bridge detection
 - Weak geometry detection
 - Lightweight reinforcement recommendations
 - Enhanced validation reporting
@@ -79,7 +81,7 @@ Calculate production readiness score.
 
 ## FR-204
 
-Detect weak bridge locations.
+Detect weak connection or fallback bridge locations.
 
 ---
 
@@ -137,7 +139,8 @@ Implement:
 Implement:
 
 - Material profiles for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood
-- Minimum bridge width checks
+- Minimum connection width checks
+- Minimum fallback bridge width checks
 - Minimum feature size checks
 - Material-specific warning output
 
@@ -199,7 +202,7 @@ Range:
 Required Coverage:
 
 - Structural scoring
-- Weak bridge detection
+- Weak connection and fallback bridge detection
 - Connectivity analysis
 - Validation reporting
 
@@ -260,7 +263,7 @@ Create:
 
 Recommended:
 
-feat: phase 1b welding and validation
+feat: phase 1b connectivity resolution and validation
 
 ---
 

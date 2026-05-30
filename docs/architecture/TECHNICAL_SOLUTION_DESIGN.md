@@ -31,7 +31,7 @@ Primary goals:
 
 - Accurate text shaping
 - Canonical geometry generation
-- Automatic text welding
+- Automatic text connectivity resolution
 - Structural validation
 - LightBurn compatibility
 - Future AI extensibility
@@ -118,27 +118,19 @@ Suggested Libraries:
 
 ---
 
-## Welding Module
+## Connectivity Resolution Module
 
 Responsibilities:
 
-- Kerning adjustment
-- Overlap detection
-- Letter joining
+- Connectivity analysis
+- Natural connectivity preservation
+- Intelligent tracking and spacing compression
+- Overlap detection and geometry union
+- Structural bridge fallback only when required
 
 Outputs:
 
 - Connected geometry
-
----
-
-## Bridge Module
-
-Responsibilities:
-
-- Detect unsupported regions
-- Add structural bridges
-- Preserve aesthetics
 
 ---
 
@@ -184,10 +176,12 @@ Responsibilities:
 # Phase 1B Workflow
 
 1. Canonical geometry is analysed.
-2. Welding engine runs.
-3. Bridge engine runs.
-4. Material validation runs.
-5. Validation results are returned.
+2. Connectivity analysis determines whether the design is already connected.
+3. Naturally connected designs are preserved without modification.
+4. Disconnected designs attempt intelligent letter compression and overlap union.
+5. Structural bridges are generated only if compression cannot resolve connectivity.
+6. Material validation runs.
+7. Validation results are returned.
 
 ---
 

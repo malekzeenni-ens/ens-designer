@@ -163,7 +163,7 @@ Core Text Generation
 
 Phase 1B
 
-Welding & Validation
+Connectivity Resolution & Validation
 
 ---
 

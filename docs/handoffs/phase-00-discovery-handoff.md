@@ -236,7 +236,7 @@ Before Phase 1A implementation:
 - Keep Phase 1A scope limited to core text generation and export.
 - Validate HarfBuzz integration approach.
 - Define minimum Canonical Geometry Model fields for Phase 1A.
-- Do not implement welding, bridge generation, material validation, AI, SVG import, DXF, or cake topper features.
+- Do not implement connectivity resolution, bridge fallback, material validation, AI, SVG import, DXF, or cake topper features.
 
 ---
 

@@ -99,8 +99,9 @@ Create the first deterministic text-to-geometry and export foundation.
 
 ### Out of Scope
 
-- Welding
-- Bridge generation
+- Connectivity resolution
+- Letter compression
+- Structural bridge fallback
 - Material validation
 - Cake toppers
 - AI generation
@@ -133,16 +134,19 @@ Create the first deterministic text-to-geometry and export foundation.
 
 # Phase 1B
 
-## Welding & Validation
+## Connectivity Resolution & Validation
 
 ### Objectives
 
-Create connected, manufacturable text geometry.
+Create connected, manufacturable text geometry using the least invasive valid strategy.
 
 ### Features
 
-- Welding engine
-- Bridge generation
+- Connectivity analysis
+- Natural connectivity preservation
+- Intelligent letter compression
+- Geometry union for overlaps
+- Structural bridge fallback
 - Connectivity validation
 - Geometry validation
 - Material validation
@@ -150,14 +154,16 @@ Create connected, manufacturable text geometry.
 
 ### Deliverables
 
-- Welding engine
-- Bridge engine
+- Connectivity Resolution Engine
 - Validation engine
 - Material profiles for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood
 
 ### Acceptance Criteria
 
-- Letters remain connected
+- Naturally connected fonts remain unmodified
+- Disconnected fonts attempt compression before bridge creation
+- Bridges are created only when natural connectivity and compression fail
+- Final output is connected or a clear warning is shown
 - Material validation is applied
 - SVG imports into LightBurn
 - Validation reports generated

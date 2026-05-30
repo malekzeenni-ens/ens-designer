@@ -66,7 +66,8 @@ Allow user to select:
 
 Apply:
 
-- Minimum bridge widths
+- Minimum bridge widths for fallback structural bridges
+- Recommended connection widths for compression and overlap connections
 - Minimum feature sizes
 - Reinforcement thresholds
 

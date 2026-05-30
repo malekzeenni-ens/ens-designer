@@ -13,7 +13,7 @@ None.
 1. Keep Phase 1A strictly limited to core text generation and export.
 2. Validate SVG dimensional accuracy early using simple fixtures.
 3. Preserve ADR-001 through ADR-005 as accepted baseline decisions.
-4. Prevent welding, bridge generation, and material validation from entering Phase 1A.
+4. Prevent connectivity resolution, bridge fallback, and material validation from entering Phase 1A.
 
 ---
 
@@ -42,4 +42,3 @@ Proceed to Phase 1A planning only after explicit approval.
 Recommended decision:
 
 GO WITH CONDITIONS
-

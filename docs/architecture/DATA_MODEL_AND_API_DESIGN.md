@@ -272,7 +272,7 @@ POST
 
 ---
 
-## Welding Engine Output
+## Connectivity Resolution Engine Output
 
 ```json
 {
@@ -284,7 +284,7 @@ POST
 
 ---
 
-## Bridge Engine Output
+## Structural Bridge Fallback Output
 
 ```json
 {

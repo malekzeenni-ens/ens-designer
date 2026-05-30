@@ -50,9 +50,10 @@ Many products require manual design preparation before production.
 
 Examples include:
 
-* Welding names together
+* Making names and designs cut as one connected structure
 * Creating cake toppers
-* Adding support bridges
+* Reducing letter spacing where natural overlap can solve connectivity
+* Adding support bridges only when natural connectivity and compression fail
 * Preparing SVG files
 * Adjusting designs for specific materials
 
@@ -115,8 +116,10 @@ The AI SVG Generator is intended to become the internal design platform used by 
 
 The platform will:
 
-* Automate text welding
-* Automate bridge creation
+* Resolve text and design connectivity using the least invasive valid strategy
+* Preserve naturally connected fonts without modification
+* Use intelligent letter compression before introducing bridges
+* Add structural bridges only as a fallback when required
 * Validate cut readiness
 * Generate cake toppers
 * Generate custom artwork
@@ -185,7 +188,7 @@ Future:
 
 ## Use Case 1
 
-Generate a welded name sign.
+Generate a connected name sign.
 
 Input:
 

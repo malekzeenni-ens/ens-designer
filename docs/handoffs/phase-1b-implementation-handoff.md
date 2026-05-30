@@ -2,9 +2,9 @@
 
 ## 1. Executive Summary
 
-Phase 1B delivered welding and validation MVP functionality on top of the accepted Phase 1A application, then received a remediation pass after bridge placement feedback.
+Phase 1B is governed by the Connectivity Resolution & Validation architecture after bridge placement feedback.
 
-The system can now select a material profile, generate conservative automatic bridge geometry, skip low-confidence bridges, calculate validation scores, show warnings, preview the result, and export SVG/PNG.
+Historical implementation notes below describe the current conservative bridge fallback behaviour. Future acceptance must verify the approved order: natural connectivity, intelligent letter compression, then structural bridge fallback.
 
 ---
 
@@ -13,9 +13,9 @@ The system can now select a material profile, generate conservative automatic br
 - Material profile endpoint implemented.
 - Material selector implemented.
 - Generation API extended with material selection.
-- Conservative automatic bridge generation implemented.
+- Conservative structural bridge fallback implemented.
 - Low-confidence bridge skipping implemented.
-- Welding metadata implemented.
+- Connectivity metadata implemented.
 - Validation scoring implemented.
 - Validation warnings implemented.
 - Validation panel implemented.
@@ -89,7 +89,7 @@ Use confidence-gated bridge geometry for the Phase 1B MVP.
 
 Reason:
 
-It avoids drawing visibly wrong connector bars while still allowing safe automatic bridges when confidence is high.
+It avoids drawing visibly wrong connector bars while still allowing safe fallback bridges when confidence is high.
 
 Alternative:
 

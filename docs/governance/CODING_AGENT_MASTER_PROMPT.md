@@ -46,7 +46,7 @@ Production-ready SVG files that require minimal manual editing.
 
 # Core Objectives
 
-1. Generate welded text designs.
+1. Generate connected laser-ready text designs.
 2. Generate laser-ready SVG files.
 3. Support LightBurn workflows.
 4. Support future cake topper generation.
@@ -111,7 +111,7 @@ Required review:
 Approved MVP sequencing:
 
 - Phase 1A: Core Text Generation
-- Phase 1B: Welding & Validation
+- Phase 1B: Connectivity Resolution & Validation
 - Phase 1C: Production Hardening
 - Phase 2: Cake Topper Generator
 - Phase 3: SVG Import & Repair
@@ -206,7 +206,7 @@ Create meaningful commits.
 
 Examples:
 
-feat: phase 1 welded text generator
+feat: phase 1 connected text generator
 
 feat: phase 2 structural intelligence
 

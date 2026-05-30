@@ -16,7 +16,7 @@ AI SVG Generator is a local-first application designed to generate production-re
 
 The platform focuses on:
 
-- Welded text generation
+- Connected text generation
 - Structural validation
 - Laser-ready output
 - LightBurn compatibility
@@ -60,12 +60,14 @@ Capabilities:
 
 ## Phase 1B
 
-Welding & Validation
+Connectivity Resolution & Validation
 
 Capabilities:
 
-- Automatic welding
-- Automatic bridge generation
+- Natural connectivity detection
+- Preservation of already connected script fonts
+- Intelligent letter compression for disconnected fonts
+- Structural bridge fallback only when required
 - Connectivity validation
 - Material validation for 3mm Cast Acrylic, 3mm Mirror Acrylic, and 3mm Plywood
 
@@ -115,8 +117,10 @@ User Input
 → HarfBuzz Text Shaping
 → Font Outline Extraction
 → Canonical Geometry Model
-→ Welding Engine
-→ Bridge Engine
+→ Connectivity Analysis
+→ Natural Connectivity
+→ Letter Compression
+→ Structural Bridge Fallback
 → Validation Engine
 → Preview Engine
 → Export Engine

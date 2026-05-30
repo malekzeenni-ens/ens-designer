@@ -22,12 +22,12 @@ The approved architecture is:
 - SVG-first
 - LightBurn-first
 - Deterministic for MVP workflows
-- Modular across font processing, canonical geometry, welding, validation, preview, and export
+- Modular across font processing, canonical geometry, connectivity resolution, validation, preview, and export
 
 The MVP is split into:
 
 - Phase 1A - Core Text Generation
-- Phase 1B - Welding & Validation
+- Phase 1B - Connectivity Resolution & Validation
 - Phase 1C - Production Hardening
 
 ---
@@ -73,7 +73,7 @@ Constrain MVP delivery to local-first, single-user, one-design-at-a-time workflo
 | Stage -1 | Architecture Remediation | Apply approved architecture corrections |
 | Phase 00 | Repository & Architecture Assessment | Validate repository, architecture, documentation, and risk posture before implementation |
 | Phase 1A | Core Text Generation | Text input, font selection, HarfBuzz shaping, canonical geometry, SVG and PNG export |
-| Phase 1B | Welding & Validation | Welding, bridge generation, connectivity validation, geometry validation, material validation |
+| Phase 1B | Connectivity Resolution & Validation | Natural connectivity preservation, intelligent letter compression, structural bridge fallback, connectivity validation, geometry validation, material validation |
 | Phase 1C | Production Hardening | Golden test corpus, LightBurn validation, manual bridge override, production presets |
 | Phase 02 | Cake Topper Generator | Cake topper stake generation and validation |
 | Phase 03 | SVG Import & Repair | Import, validate, repair, and re-export existing SVG files |
@@ -156,4 +156,3 @@ Confirmed:
 Architecture Freeze Status: GO
 
 The repository is ready for Phase 00 after this freeze summary is committed and pushed.
-

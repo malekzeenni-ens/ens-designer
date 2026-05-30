@@ -2,9 +2,9 @@
 
 ## 1. Executive Summary
 
-Phase 1B Welding & Validation is complete with remediation applied after acceptance review feedback.
+Phase 1B Connectivity Resolution & Validation is the approved architecture baseline after connectivity remediation.
 
-The application now extends the accepted Phase 1A text-to-vector workflow with material selection, conservative automatic bridge generation, welding metadata, validation scores, validation warnings, and SVG/PNG export from the post-welding geometry.
+Historical implementation notes below may describe conservative automatic bridge generation and welding metadata. Those notes are superseded by the Connectivity Resolution Engine architecture where bridges are fallback geometry after natural connectivity and intelligent letter compression.
 
 Recommendation:
 
@@ -19,10 +19,10 @@ GO WITH CONDITIONS for Phase 1B acceptance review.
   - 3mm Mirror Acrylic
   - 3mm Plywood
 - `GET /api/materials` endpoint.
-- Extended generation request with `material_id` and `welding_enabled`.
-- Conservative automatic bridge generation between separated adjacent glyph components.
+- Extended generation request with `material_id` and deterministic connectivity controls.
+- Conservative structural bridge fallback between separated adjacent glyph components.
 - Low-confidence bridge skipping to avoid visibly incorrect connector bars.
-- Welding metadata:
+- Connectivity metadata:
   - components before
   - components after
   - bridge count
@@ -114,7 +114,7 @@ Observed:
 
 | Limitation | Severity | Notes |
 |---|---|---|
-| Automatic bridges are confidence-gated | High | Low-confidence bridges are skipped and surfaced as warnings instead of drawing bad connector bars. Manual bridge override is Phase 1C. |
+| Structural bridge fallback is confidence-gated | High | Low-confidence bridges are skipped and surfaced as warnings instead of drawing bad connector bars. Manual bridge override is Phase 1C. |
 | The implementation does not perform full Bezier boolean union | High | Bridge geometry is appended to the SVG rather than full CAD-grade shape merging. |
 | Material thresholds are starting defaults | Medium | Values should be tuned after real shop tests. |
 | PNG fallback may not match complex SVG geometry perfectly | Medium | SVG remains the production source of truth. |
@@ -127,7 +127,7 @@ Before approving Phase 1B:
 
 - Generate 5 to 10 real names.
 - Try at least one script font, one bold font, and one thin font.
-- Review any automatic bridge placement visually.
+- Review any fallback bridge placement visually.
 - Treat low-confidence skipped bridge warnings as requiring manual review.
 - Download SVG and import into LightBurn.
 - Confirm dimensions remain correct.

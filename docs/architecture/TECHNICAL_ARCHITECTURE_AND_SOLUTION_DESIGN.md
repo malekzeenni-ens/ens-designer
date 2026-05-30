@@ -152,13 +152,15 @@ Suggested Libraries:
 
 ## Component 3
 
-Welding Engine
+Connectivity Resolution Engine
 
 Responsibilities:
 
-- Merge letters
-- Adjust spacing
-- Repair intersections
+- Analyse whether generated geometry is already connected
+- Preserve naturally connected fonts without modification
+- Apply intelligent letter compression when disconnected fonts can be connected through overlap
+- Union overlapping geometry
+- Use structural bridges only when natural connectivity and compression fail
 
 Suggested Libraries:
 
@@ -169,17 +171,18 @@ Suggested Libraries:
 
 ## Component 4
 
-Bridge Generation Engine
+Validation Engine
 
 Responsibilities:
 
+- Validate connectivity
 - Detect unsupported regions
-- Create structural bridges
-- Maintain aesthetics
+- Validate material-specific constraints
+- Report production readiness
 
 Suggested Approach:
 
-Custom algorithm.
+Rule-based scoring followed by clear warnings.
 
 ---
 
@@ -239,7 +242,7 @@ AI Usage:
 
 None required.
 
-SVG generation, welding, bridge generation, material validation, golden test corpus, LightBurn validation, and manual bridge override should remain deterministic.
+SVG generation, connectivity resolution, material validation, golden test corpus, LightBurn validation, and manual bridge override should remain deterministic.
 
 ---
 
@@ -281,8 +284,10 @@ User Input
 → HarfBuzz Text Shaping
 → Font Outline Extraction
 → Canonical Geometry Model
-→ Welding Engine
-→ Bridge Engine
+→ Connectivity Analysis
+→ Natural Connectivity Preservation
+→ Intelligent Letter Compression
+→ Structural Bridge Fallback
 → Validation Engine
 → Preview Engine
 → Export Engine
@@ -343,7 +348,7 @@ Future:
 
 Future modules should plug into the architecture without affecting:
 
-- Welding engine
+- Connectivity Resolution Engine
 - Validation engine
 - Export engine
 

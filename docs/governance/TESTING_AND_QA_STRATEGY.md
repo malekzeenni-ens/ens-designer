@@ -41,8 +41,9 @@ Coverage:
 
 - Font processing
 - SVG generation
-- Welding engine
-- Bridge generation
+- Connectivity Resolution Engine
+- Letter compression
+- Structural bridge fallback
 - Validation engine
 - Export engine
 
@@ -66,8 +67,8 @@ Coverage:
 - Unicode Normalisation → HarfBuzz Shaping
 - HarfBuzz Shaping → Font Processing
 - Font Processing → SVG Engine
-- SVG Engine → Welding Engine
-- Welding Engine → Validation Engine
+- SVG Engine → Connectivity Resolution Engine
+- Connectivity Resolution Engine → Validation Engine
 - Validation Engine → Export Engine
 
 ---
@@ -121,6 +122,60 @@ Script Font
 Expected:
 
 Letters connected.
+
+---
+
+## FT-002A
+
+Already Connected Font
+
+Input:
+
+Oliver
+
+Font:
+
+Pacifico or Peanut Butter
+
+Expected:
+
+Natural connectivity is preserved without compression or bridges.
+
+---
+
+## FT-002B
+
+Compression Required Font
+
+Input:
+
+Oliver
+
+Font:
+
+Anton or Oswald
+
+Expected:
+
+Letter compression is attempted before any bridge fallback.
+
+---
+
+## FT-002C
+
+Bridge Required Layout
+
+Input:
+
+Happy Birthday
+
+Font:
+
+Lobster or equivalent decorative script
+
+Expected:
+
+Structural bridge fallback is used only if natural connectivity and compression fail.
 
 ---
 
@@ -180,7 +235,7 @@ Warning generated.
 
 ## VT-002
 
-Weak Bridge Detection
+Weak Connection Or Fallback Bridge Detection
 
 Expected:
 
@@ -284,7 +339,7 @@ Required After:
 Mandatory Areas:
 
 - SVG generation
-- Welding engine
+- Connectivity Resolution Engine
 - Validation engine
 - Export engine
 

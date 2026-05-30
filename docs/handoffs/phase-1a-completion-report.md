@@ -6,7 +6,7 @@ Phase 1A Core Text Generation is complete.
 
 The repository now contains a working local application that generates SVG and PNG outputs from user-entered text and a selected local/system font.
 
-The implementation follows the approved Phase 1A scope and does not introduce welding, bridge generation, material validation, cake topper generation, SVG import and repair, AI features, DXF export, decorative assets, batch processing, SaaS, cloud, or multi-user functionality.
+The implementation follows the approved Phase 1A scope and does not introduce connectivity resolution, bridge fallback, material validation, cake topper generation, SVG import and repair, AI features, DXF export, decorative assets, batch processing, SaaS, cloud, or multi-user functionality.
 
 Recommendation:
 
@@ -120,7 +120,7 @@ The generated SVG includes:
 
 Manual LightBurn import was completed by the project owner and confirmed successful.
 
-The project owner also confirmed that generated text is visible as individual letter geometry, which is expected for Phase 1A before Phase 1B welding.
+The project owner also confirmed that generated text is visible as individual letter geometry, which is expected for Phase 1A before Phase 1B connectivity resolution.
 
 ---
 
@@ -152,5 +152,5 @@ GO WITH CONDITIONS
 
 Conditions:
 
-- Keep Phase 1B focused on welding and validation only.
+- Keep Phase 1B focused on connectivity resolution and validation only.
 - Do not introduce AI, DXF, batch, cloud, or decorative asset scope.

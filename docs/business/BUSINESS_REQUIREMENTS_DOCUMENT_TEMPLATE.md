@@ -123,7 +123,7 @@ Features:
 
 ## In Scope (Phase 1B)
 
-### Welding & Validation
+### Connectivity Resolution & Validation
 
 Features:
 
@@ -237,7 +237,7 @@ Certain fonts may not produce reliable welds.
 
 Mitigation:
 
-Automatic bridge generation.
+Automatic bridge fallback after natural connectivity and compression fail.
 
 ---
 

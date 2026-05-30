@@ -278,7 +278,7 @@ Passed.
 - Some fonts may lack glyphs for user input.
 - The external Dropbox font path is machine-specific and may not exist for future contributors.
 - PNG rendering may differ from SVG for complex fonts when CairoSVG is unavailable.
-- Letter-level geometry is expected in Phase 1A until Phase 1B welding.
+- Letter-level geometry is expected in Phase 1A until Phase 1B connectivity resolution.
 
 ---
 
@@ -349,7 +349,7 @@ Revert the Phase 1A implementation commit if required.
 
 # 17. Recommendations For Next Phase
 
-- Keep Phase 1B focused on welding and validation.
+- Keep Phase 1B focused on connectivity resolution and validation.
 - Preserve SVG as the production source of truth.
 - Revisit production PNG rendering during Phase 1C.
 - Confirm a preferred Python runtime for development and packaging.

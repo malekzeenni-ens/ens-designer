@@ -10,7 +10,7 @@ Introduce material validation in Phase 1B.
 
 ## Context
 
-The application exists to produce laser-ready files, not just visually valid SVGs. Material-specific constraints affect bridge width, minimum feature size, structural warnings, and production-readiness scoring.
+The application exists to produce laser-ready files, not just visually valid SVGs. Material-specific constraints affect connection width, fallback bridge width, minimum feature size, structural warnings, and production-readiness scoring.
 
 ## Approved Initial Materials
 
@@ -20,11 +20,12 @@ The application exists to produce laser-ready files, not just visually valid SVG
 
 ## Approved Approach
 
-Phase 1B must validate generated welded designs against the approved initial material profiles.
+Phase 1B must validate generated connected designs against the approved initial material profiles.
 
 Validation must consider:
 
-- Minimum bridge width
+- Minimum connection width
+- Minimum fallback bridge width
 - Minimum feature size
 - Recommended connection width
 - Material-specific warnings
@@ -38,4 +39,3 @@ Validation must consider:
 ## Scope Guardrail
 
 Do not introduce broad material databases, laser setting automation, manufacturing simulation, or physics-based strength modelling.
-

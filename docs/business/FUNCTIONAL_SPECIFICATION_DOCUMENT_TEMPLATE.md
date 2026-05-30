@@ -26,7 +26,7 @@ The system automatically:
 
 - Converts text to vector geometry
 - Welds letters
-- Creates bridges when required
+- Creates bridges only when natural connectivity and compression fail
 - Validates structural integrity
 - Generates export-ready files
 
@@ -39,7 +39,7 @@ The system automatically:
 3. System normalises text
 4. System shapes text using HarfBuzz
 5. System creates canonical geometry
-6. Phase 1B performs welding and validation
+6. Phase 1B performs connectivity resolution and validation
 7. Phase 1C hardens the production workflow
 8. System exports SVG and PNG
 
@@ -135,7 +135,7 @@ Error Handling:
 
 ## Component 4
 
-### Welding Engine
+### Connectivity Resolution Engine
 
 Purpose:
 
@@ -176,7 +176,7 @@ Repair broken geometry.
 
 ## Component 5
 
-### Bridge Generation Engine
+### Structural Bridge Fallback
 
 Purpose:
 
@@ -377,7 +377,7 @@ Generate warning.
 
 Expected:
 
-Bridge engine invoked.
+Structural bridge fallback invoked.
 
 ---
 

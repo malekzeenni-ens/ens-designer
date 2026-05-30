@@ -36,6 +36,24 @@ Implement only if justified.
 
 # P1 Backlog
 
+## BL-000
+
+Connectivity Resolution Quality Improvements
+
+Description:
+
+Improve deterministic connectivity resolution beyond the MVP so that the system consistently chooses the least invasive valid strategy:
+
+1. Preserve already connected fonts such as Pacifico, Peanut Butter, and script fonts.
+2. Apply intelligent letter compression for block fonts such as Anton and Oswald.
+3. Use structural bridges only for layouts that cannot be connected naturally, such as Lobster leading-character cases, Happy Birthday layouts, and multi-word compositions.
+
+Notes:
+
+This backlog item must not turn bridge generation into the primary behaviour. Bridge quality improvements should support the fallback strategy only.
+
+---
+
 ## BL-001
 
 Font Upload Support

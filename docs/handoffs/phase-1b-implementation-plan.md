@@ -8,7 +8,7 @@ Phase Number:
 
 Phase Name:
 
-Welding & Validation
+Connectivity Resolution & Validation
 
 Target Release:
 
@@ -28,7 +28,7 @@ Ready For Approval
 
 Phase 1B should build directly on the accepted Phase 1A text-to-vector foundation.
 
-The goal is to convert the current per-letter vector output into a more production-aware design workflow by adding automatic welding, basic bridge generation, material selection, material validation, validation scoring, warnings, and visual feedback.
+The goal is to convert the current per-letter vector output into a more production-aware design workflow by adding connectivity analysis, natural connectivity preservation, intelligent letter compression, structural bridge fallback, material selection, material validation, validation scoring, warnings, and visual feedback.
 
 This phase must stay pragmatic. It should not become a CAD editor, simulation engine, AI repair system, or full production hardening pass.
 
@@ -38,7 +38,7 @@ GO WITH CONDITIONS
 
 Conditions:
 
-- Keep bridge generation automatic only.
+- Treat bridges as fallback geometry only after natural connectivity and compression fail.
 - Do not implement manual bridge override.
 - Do not implement golden test corpus automation.
 - Do not add DXF, AI, SVG import, cake toppers, decorative assets, batch, cloud, or multi-user features.
@@ -52,18 +52,20 @@ Conditions:
 
 - Material selection for approved MVP materials.
 - Material profile definitions.
-- Geometry conversion suitable for welding analysis.
-- Automatic overlap-based welding.
-- Basic kerning-based connection attempt where small spacing adjustment can create natural contact.
-- Basic bridge generation when letters remain disconnected.
+- Geometry conversion suitable for connectivity analysis.
+- Natural connectivity detection and preservation.
+- Intelligent letter compression where spacing adjustment can create natural contact.
+- Automatic overlap-based geometry union.
+- Structural bridge fallback when letters remain disconnected after compression.
 - Connectivity analysis.
 - Material validation.
 - Minimum feature warnings.
-- Minimum bridge width warnings.
+- Minimum connection width warnings.
+- Minimum fallback bridge width warnings.
 - Production readiness scoring.
 - Validation warnings panel.
-- Visual feedback for generated weld/bridge/validation status.
-- SVG and PNG export from the post-welding geometry.
+- Visual feedback for connectivity/compression/bridge-fallback/validation status.
+- SVG and PNG export from the connected geometry.
 - Automated tests.
 - Updated documentation and handoff.
 
@@ -146,10 +148,10 @@ Add or extend the existing structure:
 backend/
   app/
     engines/
-      welding/
+      connectivity/
         geometry_adapter.py
-        welding_engine.py
-        bridge_generator.py
+        connectivity_resolution_engine.py
+        bridge_fallback_generator.py
         connectivity_analyzer.py
       validation/
         material_profiles.py
@@ -168,7 +170,7 @@ frontend/
       design.ts
 
 tests/
-  test_phase_1b_welding_validation.py
+  test_phase_1b_connectivity_validation.py
 ```
 
 The exact file split can be simplified during implementation if the code remains clear.
@@ -188,12 +190,14 @@ Add:
     "materialName": "3mm Cast Acrylic",
     "thicknessMm": 3.0
   },
-  "welding": {
+  "connectivity": {
     "enabled": true,
     "connectedComponentsBefore": 5,
     "connectedComponentsAfter": 1,
-    "bridgesAdded": 4,
-    "weldedPathIds": ["path-merged-001"]
+    "strategyApplied": "letter_compression",
+    "compressionApplied": true,
+    "bridgesAdded": 0,
+    "connectedPathIds": ["path-merged-001"]
   },
   "validation": {
     "connectivityScore": 100,
@@ -220,7 +224,7 @@ Do not add:
 
 ---
 
-# 7. Welding Strategy
+# 7. Connectivity Resolution Strategy
 
 ## Processing Pipeline
 
@@ -229,9 +233,10 @@ Phase 1A Geometry
 -> Convert paths to analysis geometry
 -> Detect connected components
 -> Detect natural overlaps
--> Attempt minimal kerning connection where feasible
+-> Preserve already connected geometry without modification
+-> Attempt intelligent letter compression where feasible
 -> Union overlapping/connected geometry
--> Add automatic bridges for remaining disconnected components
+-> Add structural bridge fallback only for remaining disconnected components
 -> Recalculate connected components
 -> Validate against selected material
 -> Export SVG/PNG
@@ -240,20 +245,40 @@ Phase 1A Geometry
 ## Strategy Priority
 
 1. Preserve original font appearance.
-2. Use existing overlap when available.
-3. Use small kerning adjustment only when it improves natural connection.
-4. Add bridges only when required.
+2. Preserve existing natural connectivity when available.
+3. Use intelligent spacing/tracking compression only when it improves natural connection.
+4. Add bridges only when natural connectivity and compression fail.
 5. Warn when automatic repair is not strong enough.
 
-## Bridge Generation MVP
+## Connectivity Strategy Examples
 
-Bridge generation should be simple and deterministic:
+Already connected:
 
-- Connect adjacent disconnected letter components.
+- Pacifico
+- Peanut Butter
+- Script fonts
+
+Compression required:
+
+- Anton
+- Oswald
+
+Bridge required:
+
+- Lobster leading character example
+- Happy Birthday
+- Multi-word layouts
+
+## Bridge Fallback MVP
+
+Bridge fallback should be simple, conservative, and deterministic:
+
+- Run only after natural connectivity and compression fail.
+- Connect adjacent disconnected letter components when placement confidence is high.
 - Prefer shortest reasonable connection between bounding boxes or nearest sampled points.
 - Use material profile recommended connection width.
 - Avoid creating bridges thinner than material minimum.
-- Represent bridges as generated geometry, not user-editable controls.
+- Represent bridges as generated fallback geometry, not user-editable controls.
 
 Manual bridge override is Phase 1C and must not be introduced here.
 
@@ -278,7 +303,9 @@ These are starting validation defaults, not laser settings.
 - Production readiness score.
 - Warning list.
 - Material profile used.
-- Bridge count.
+- Connectivity strategy applied.
+- Compression status.
+- Fallback bridge count.
 - Connected components before/after.
 
 ---
@@ -292,7 +319,7 @@ Extend `POST /api/generate` request:
   "text": "Oliver",
   "font_id": "font-id",
   "material_id": "cast-acrylic-3mm",
-  "welding_enabled": true
+  "connectivity_resolution_enabled": true
 }
 ```
 
@@ -329,7 +356,7 @@ Add only:
 - Material selector.
 - Validation score summary.
 - Warning panel.
-- Bridge/welding status text.
+- Connectivity strategy status text.
 
 Do not add:
 
@@ -380,9 +407,11 @@ Text Input
 - Material profile list returns exactly approved MVP materials.
 - Generate endpoint accepts material ID.
 - Unknown material ID is rejected.
-- Welding-enabled output preserves SVG and PNG export.
-- Connected component count after welding is less than or equal to before.
-- Bridge count is reported.
+- Connectivity-enabled output preserves SVG and PNG export.
+- Already connected fonts are preserved without compression or bridges.
+- Anton and Oswald attempt compression before bridge fallback.
+- Bridge fallback is reported only when natural connectivity and compression fail.
+- Connected component count after connectivity resolution is less than or equal to before.
 - Validation scores are present and finite.
 - Warnings are produced for thin or weak geometry.
 - No future-phase metadata appears in the response.
@@ -399,7 +428,7 @@ Text Input
 - Generate real customer-like names with script and bold fonts.
 - Import welded SVG into LightBurn.
 - Confirm dimensions remain correct.
-- Confirm separate letters are connected or warnings are clear.
+- Confirm separate letters are connected through the least invasive valid strategy or warnings are clear.
 
 ---
 
@@ -409,7 +438,7 @@ Phase 1B is complete when:
 
 - User can select material profile.
 - Generate still works for Phase 1A names.
-- Automatic welding/bridging attempts to connect letters.
+- Connectivity resolution attempts natural preservation, compression, then bridge fallback in that order.
 - Validation reports connected component count.
 - Validation scores display in UI.
 - Warnings display in UI.
@@ -427,7 +456,7 @@ Phase 1B is complete when:
 | Risk | Severity | Mitigation |
 |---|---|---|
 | Bezier-to-polygon conversion may reduce font fidelity | High | Keep SVG export based on path geometry where possible and use polygon approximation only for analysis/welding MVP. |
-| Automatic bridges may look visually awkward | High | Start with deterministic bridges and expose warnings; manual bridge editing remains Phase 1C. |
+| Structural bridge fallback may look visually awkward | High | Treat bridges as fallback only, prefer compression, and expose warnings; manual bridge editing remains Phase 1C. |
 | True geometric union across complex font outlines may be difficult | High | Implement a conservative MVP, test script/bold fonts first, and avoid pretending all fonts are production-perfect. |
 | Material thresholds may need shop calibration | Medium | Use documented starting values and keep warnings transparent. |
 | Performance may degrade with decorative fonts | Medium | Add limits and timing checks; keep one design at a time. |
@@ -441,8 +470,8 @@ Phase 1B is complete when:
 2. Extend request/response models.
 3. Add geometry adapter for analysis.
 4. Add connected component analysis.
-5. Add conservative welding/union implementation.
-6. Add automatic bridge generation.
+5. Add conservative compression and geometry union implementation.
+6. Add structural bridge fallback.
 7. Add material validation and scoring.
 8. Update SVG/PNG export from post-weld geometry.
 9. Add UI material selector and validation panel.

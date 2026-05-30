@@ -24,7 +24,7 @@ This phase establishes the deterministic text and export foundation for all futu
 
 Reduce the time required to create initial laser-design text geometry from several minutes to less than 30 seconds.
 
-Welding, bridge generation, material validation, and production hardening are handled in Phase 1B and Phase 1C.
+Connectivity resolution, material validation, and production hardening are handled in Phase 1B and Phase 1C.
 
 ---
 
@@ -124,7 +124,7 @@ System exports files locally.
 
 ## FR-010
 
-System does not perform welding or bridge generation in Phase 1A.
+System does not perform connectivity resolution, compression, or bridge fallback in Phase 1A.
 
 ---
 

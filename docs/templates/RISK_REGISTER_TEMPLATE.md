@@ -119,7 +119,7 @@ High
 
 Mitigation:
 
-Automatic bridge generation fallback.
+Structural bridge fallback after natural connectivity and compression fail.
 
 ---
 

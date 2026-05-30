@@ -23,7 +23,7 @@ The engine is responsible for transforming text into reliable SVG paths while ma
 1. Load commercial and system fonts.
 2. Convert glyphs into vector paths.
 3. Preserve font appearance.
-4. Enable automatic welding.
+4. Enable downstream connectivity resolution.
 5. Support future cake topper generation.
 6. Produce geometry suitable for LightBurn.
 
@@ -38,7 +38,7 @@ User Input
 → Shaped Glyph Extraction
 → Canonical Geometry Generation
 → Geometry Cleanup
-→ Welding Preparation
+→ Connectivity Preparation
 → Validation
 → SVG Output
 
@@ -122,17 +122,19 @@ Calculate:
 
 ---
 
-# Welding Preparation
+# Connectivity Preparation
 
-Before welding:
+Before connectivity resolution:
 
 - Analyse spacing
 - Analyse overlap
 - Detect disconnected letters
+- Identify natural connectivity candidates
+- Identify letter compression candidates
 
 Output:
 
-Geometry suitable for welding engine.
+Geometry suitable for the Connectivity Resolution Engine.
 
 ---
 

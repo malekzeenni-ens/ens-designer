@@ -4,7 +4,7 @@
 
 Define Phase 1A test strategy.
 
-Testing must prove the deterministic text-to-vector foundation without testing out-of-scope welding, bridge generation, material validation, AI, DXF, SVG import, or cake topper functionality.
+Testing must prove the deterministic text-to-vector foundation without testing out-of-scope connectivity resolution, bridge fallback, material validation, AI, DXF, SVG import, or cake topper functionality.
 
 ---
 
@@ -168,4 +168,3 @@ Phase 1A planning may proceed to implementation approval when:
 - Required names are accepted as the Phase 1A corpus.
 - Font fixture approach is approved.
 - No out-of-scope tests are required.
-

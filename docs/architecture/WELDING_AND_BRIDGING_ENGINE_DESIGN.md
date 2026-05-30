@@ -2,7 +2,7 @@
 
 ## Document Information
 
-Version: 1.0
+Version: 1.1
 Status: Draft
 Document Type: Engine Design
 Project: AI SVG Generator
@@ -12,91 +12,194 @@ Owner: Etch 'N' Shine
 
 # Purpose
 
-This document defines the Welding and Bridging Engine responsible for transforming disconnected text into a single production-ready structure suitable for laser cutting.
+This document defines the Connectivity Resolution Engine.
 
-The engine is one of the most critical components of the platform because it determines whether a generated design can physically survive cutting and handling.
+The previous working name, Welding and Bridging Engine, is retained in the filename for repository continuity, but it is not the preferred architectural term.
+
+The product is not primarily a bridge generation engine. Its purpose is to produce laser-cuttable text and designs where all required elements become a single connected structure whenever appropriate, using the least invasive valid strategy.
+
+---
+
+# Terminology Decision
+
+Approved term:
+
+Connectivity Resolution Engine
+
+Reason:
+
+This term accurately covers analysis, natural connectivity preservation, intelligent letter compression, geometry union, structural bridge fallback, and validation.
+
+Terms to avoid as primary architecture labels:
+
+- Welding Engine
+- Bridge Engine
+- Bridge Generation Engine
+
+These may still describe internal operations, but they must not imply that welding or bridges are always required.
 
 ---
 
 # Objectives
 
-1. Connect letters into a single structure.
-2. Preserve visual quality.
-3. Minimise manual editing.
-4. Automatically repair disconnected geometry.
-5. Support script, serif, and decorative fonts.
-6. Produce production-ready SVG geometry.
+1. Preserve naturally connected fonts without modification.
+2. Connect disconnected fonts through intelligent spacing and tracking compression before adding bridges.
+3. Use structural bridges only when natural connectivity and compression fail.
+4. Preserve visual quality.
+5. Minimise manual editing.
+6. Produce production-ready SVG geometry for LightBurn workflows.
 
 ---
 
 # Processing Workflow
 
+```text
 Font Geometry
-→ Overlap Analysis
-→ Kerning Optimisation
-→ Welding Analysis
-→ Bridge Placement
-→ Structural Validation
-→ Geometry Output
+-> Connectivity Analysis
+-> Natural Connectivity
+-> Intelligent Letter Compression
+-> Geometry Union
+-> Structural Bridge Fallback
+-> Structural Validation
+-> Connected Output
+```
+
+---
+
+# Connectivity Strategy Priority
+
+## Level 1 - Natural Connectivity
+
+Use when the selected font is already connected.
+
+Examples:
+
+- Pacifico
+- Peanut Butter
+- Many script fonts
+
+Action:
+
+- Preserve the original font geometry.
+- Do not add bridges.
+- Do not compress letters.
+- Do not adjust tracking.
+
+Expected result:
+
+The design remains visually faithful and structurally connected.
+
+---
+
+## Level 2 - Intelligent Letter Compression
+
+Use when the selected font is disconnected but can become connected by reducing spacing.
+
+Examples:
+
+- Anton
+- Oswald
+- Many block fonts
+
+Action:
+
+- Reduce tracking.
+- Move adjacent letters closer together.
+- Create controlled overlap where visually acceptable.
+- Union overlapping geometry.
+- Recalculate connected components.
+
+Expected result:
+
+The text becomes one connected structure without artificial bridge geometry.
+
+---
+
+## Level 3 - Structural Bridges
+
+Use only when Levels 1 and 2 fail.
+
+Examples:
+
+- Lobster leading character requiring support
+- Happy Birthday layouts
+- Multi-word layouts
+- Multi-line layouts
+- Decorative compositions
+
+Action:
+
+- Add structural bridges at the least intrusive valid locations.
+- Validate bridge width against the selected material.
+- Surface warnings when bridge placement is low confidence.
+
+Expected result:
+
+The output is connected, or the user receives a clear warning that manual review is required.
 
 ---
 
 # Core Responsibilities
 
-## Letter Connectivity
+## Connectivity Analysis
 
-Determine whether adjacent characters are:
+Determine whether the design is:
 
 - Already connected
-- Overlapping
-- Nearly connected
-- Completely disconnected
+- Connected through natural overlap
+- Nearly connectable through compression
+- Disconnected and requiring bridge fallback
+- Not safely resolvable automatically
 
 ---
 
-## Kerning Optimisation
+## Letter Compression
 
-Adjust spacing when minor movement creates a natural connection.
+Adjust spacing when movement creates a natural connection.
 
 Priority:
 
-Highest
+High
 
 Reason:
 
-Produces the most visually pleasing result.
+Compression preserves the intended product appearance better than artificial bridges for many block and sans-serif fonts.
 
 ---
 
-## Welding Operations
+## Geometry Union
 
 When overlap exists:
 
 - Union geometry
-- Remove duplicate paths
+- Remove duplicate paths where practical
 - Clean intersections
+- Recalculate connected components
 
 Output:
 
-Single connected structure
+Connected geometry without artificial bridges.
 
 ---
 
-## Bridge Generation
+## Structural Bridge Fallback
 
-When welding alone is insufficient:
+When natural connectivity and compression are insufficient:
 
 - Create structural bridges
 - Minimise visual impact
 - Maximise strength
+- Avoid decorative focal points where possible
+
+Bridges are fallback geometry, not the preferred solution.
 
 ---
 
 ## Manual Bridge Override
 
-Automatic bridge generation remains the default.
+Manual bridge override remains a Phase 1C production hardening capability.
 
-Users must also be able to:
+Users must eventually be able to:
 
 - Add a bridge
 - Remove a bridge
@@ -106,151 +209,85 @@ This must remain lightweight and must not become a CAD editor.
 
 ---
 
-# Connection Strategy Priority
-
-## Strategy 1
-
-Natural Connection
-
-Description:
-
-Existing character overlap.
-
-Preferred:
-
-Yes
-
----
-
-## Strategy 2
-
-Kerning Adjustment
-
-Description:
-
-Move characters slightly.
-
-Preferred:
-
-Yes
-
----
-
-## Strategy 3
-
-Geometry Welding
-
-Description:
-
-Merge overlapping geometry.
-
-Preferred:
-
-Yes
-
----
-
-## Strategy 4
-
-Bridge Creation
-
-Description:
-
-Generate artificial connectors.
-
-Preferred:
-
-Fallback only
-
----
-
-# Bridge Placement Rules
-
-## Rule 1
-
-Bridges should be visually unobtrusive.
-
----
-
-## Rule 2
-
-Bridges should maximise structural strength.
-
----
-
-## Rule 3
-
-Bridges should avoid decorative focal points.
-
----
-
-## Rule 4
-
-Bridges should be placed where they appear intentional.
-
----
-
 # Structural Rules
 
 ## Rule 1
 
-Final geometry must form a single connected structure.
+Final geometry should form a single connected structure whenever the design type requires it.
 
 ---
 
 ## Rule 2
 
-No floating letters permitted.
+No floating letters should remain without a warning.
 
 ---
 
 ## Rule 3
 
-No unsupported decorative elements permitted.
+No unsupported decorative elements should remain without a warning.
 
 ---
 
 ## Rule 4
 
-Connections must survive normal handling.
+Connections must satisfy the selected material's minimum connection and bridge constraints.
 
 ---
 
 # Font Categories
 
-## Script Fonts
+## Already Connected Fonts
 
 Priority:
 
-Natural overlap.
+Natural connectivity.
+
+Examples:
+
+- Pacifico
+- Peanut Butter
+- Script fonts
 
 Expected Behaviour:
 
-Minimal bridging.
+No compression and no bridges.
 
 ---
 
-## Serif Fonts
+## Compression Required Fonts
 
 Priority:
 
-Kerning optimisation.
+Intelligent letter compression.
+
+Examples:
+
+- Anton
+- Oswald
 
 Expected Behaviour:
 
-Moderate bridging.
+Reduce spacing and union overlap before bridge fallback is considered.
 
 ---
 
-## Decorative Fonts
+## Bridge Required Designs
 
 Priority:
 
-Structural stability.
+Structural bridge fallback.
+
+Examples:
+
+- Lobster leading character example
+- Happy Birthday
+- Multi-word layouts
+- Multi-line layouts
 
 Expected Behaviour:
 
-More aggressive reinforcement may be required.
+Use bridges only after analysis confirms that natural connectivity and compression cannot safely produce a connected structure.
 
 ---
 
@@ -259,7 +296,9 @@ More aggressive reinforcement may be required.
 Check:
 
 - Connected geometry
-- Bridge width
+- Natural connectivity preserved
+- Compression amount and visual tolerance
+- Bridge width for fallback bridges
 - Bridge count
 - Weak regions
 - Unsupported islands
@@ -267,33 +306,53 @@ Check:
 
 ---
 
-# Future AI Enhancements
+# Phase Mapping
+
+## Phase 1A
+
+Core text generation only. No connectivity resolution.
+
+---
 
 ## Phase 1B
 
-Welding, bridge generation, connectivity validation, and material validation.
+Connectivity resolution and validation:
+
+- Connectivity analysis
+- Natural connectivity preservation
+- Intelligent letter compression
+- Geometry union
+- Structural bridge fallback
+- Material validation
 
 ---
 
 ## Phase 1C
 
-Manual bridge override and production hardening.
+Production hardening:
+
+- Golden test corpus
+- LightBurn validation evidence
+- Manual bridge override
+- Production presets
 
 ---
 
 ## Future AI Phases
 
-AI-assisted structural optimisation may be evaluated later.
+AI-assisted structural optimisation may be evaluated later after deterministic connectivity resolution is proven.
 
 ---
 
 # Performance Targets
 
-Overlap Analysis: <2 seconds
+Connectivity Analysis: <2 seconds
 
-Welding: <5 seconds
+Letter Compression: <5 seconds
 
-Bridge Placement: <5 seconds
+Geometry Union: <5 seconds
+
+Bridge Fallback: <5 seconds
 
 Validation: <5 seconds
 
@@ -301,11 +360,13 @@ Validation: <5 seconds
 
 # Acceptance Criteria
 
-- Letters connected
-- Geometry valid
-- SVG exports successfully
-- LightBurn import successful
-- Minimal manual repair required
+- Already connected fonts are preserved without modification.
+- Disconnected fonts attempt compression before bridge fallback.
+- Bridges are generated only when required.
+- Geometry is valid.
+- SVG exports successfully.
+- LightBurn import is successful.
+- Minimal manual repair is required.
 
 ---
 

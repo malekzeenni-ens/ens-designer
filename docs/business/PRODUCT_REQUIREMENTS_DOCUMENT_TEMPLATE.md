@@ -243,7 +243,7 @@ System supports decorative fonts.
 
 ---
 
-## Welding Engine
+## Connectivity Resolution Engine
 
 FR-006
 
@@ -255,7 +255,7 @@ System automatically adjusts kerning.
 
 FR-008
 
-System creates bridges when required.
+System creates bridges only when natural connectivity and compression fail.
 
 FR-009
 

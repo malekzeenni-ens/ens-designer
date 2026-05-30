@@ -94,16 +94,16 @@ Geometry report
 
 ## Step 4
 
-Connection Strategy Selection
+Connectivity Strategy Selection
 
 The engine chooses the most suitable approach.
 
 Priority Order:
 
-1. Natural overlap
-2. Kerning adjustment
-3. Intelligent welding
-4. Automatic bridges
+1. Natural connectivity
+2. Intelligent letter compression
+3. Geometry union
+4. Structural bridge fallback
 
 ---
 
@@ -130,7 +130,8 @@ Validation
 Checks:
 
 - Connectivity
-- Minimum bridge width
+- Minimum connection width
+- Minimum fallback bridge width
 - Minimum feature size
 - Floating islands
 
@@ -162,11 +163,11 @@ Production-ready files
 
 ## Strategy 1
 
-Natural Overlap
+Natural Connectivity
 
 Used When:
 
-Letters already intersect.
+Letters or decorative elements are already connected.
 
 Priority:
 
@@ -174,13 +175,13 @@ Highest
 
 Reason:
 
-Best visual result.
+Best visual result and no unnecessary modification.
 
 ---
 
 ## Strategy 2
 
-Kerning Optimisation
+Intelligent Letter Compression
 
 Used When:
 
@@ -192,17 +193,17 @@ High
 
 Reason:
 
-Minimal geometry modification.
+Minimal geometry modification and preferred over bridges.
 
 ---
 
 ## Strategy 3
 
-Intelligent Welding
+Geometry Union
 
 Used When:
 
-Overlap alone is insufficient.
+Compression or natural overlap creates intersecting geometry that should become one connected structure.
 
 Priority:
 
@@ -210,17 +211,17 @@ Medium
 
 Reason:
 
-Preserves aesthetics while creating connectivity.
+Preserves aesthetics while resolving overlapping shapes into production geometry.
 
 ---
 
 ## Strategy 4
 
-Bridge Creation
+Structural Bridge Fallback
 
 Used When:
 
-No reliable connection exists.
+Natural connectivity, compression, and geometry union cannot produce a reliable connection.
 
 Priority:
 
@@ -228,7 +229,7 @@ Fallback
 
 Reason:
 
-Guarantees cutability.
+Provides a last-resort connection strategy while surfacing warnings when confidence is low.
 
 ---
 
