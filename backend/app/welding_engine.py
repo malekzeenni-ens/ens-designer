@@ -80,28 +80,33 @@ def _path_bounds(path: GeometryPath) -> PathBounds:
 def _count_components(bounds: list[PathBounds]) -> int:
     if not bounds:
         return 0
+    # Sort by min_x so bridges appended after letter paths are seen in sweep order.
+    ordered = sorted(bounds, key=lambda b: b.min_x)
     components = 1
-    current_max = bounds[0].max_x
-    for item in bounds[1:]:
+    current_max = ordered[0].max_x
+    for item in ordered[1:]:
         if item.min_x > current_max:
             components += 1
         current_max = max(current_max, item.max_x)
     return components
 
 
+_MAX_BRIDGE_GAP_MM = 4.0  # maximum gap a bridge will span
+
+
 def _is_safe_bridge_candidate(left: PathBounds, right: PathBounds, gap: float, recommended_width: float) -> bool:
     if gap <= 0:
         return False
-    if gap > min(0.75, recommended_width * 0.25):
+    if gap > _MAX_BRIDGE_GAP_MM:
         return False
 
     overlap = left.vertical_overlap(right)
     smaller_height = max(0.001, min(left.height, right.height))
-    if overlap / smaller_height < 0.55:
+    if overlap / smaller_height < 0.40:
         return False
 
     height_ratio = max(left.height, right.height) / max(0.001, smaller_height)
-    if height_ratio > 1.8:
+    if height_ratio > 2.5:
         return False
 
     return True

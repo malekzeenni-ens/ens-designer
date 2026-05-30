@@ -10,23 +10,33 @@ _CUBIC_STEPS = 12
 _CONNECTIVITY_TOLERANCE_MM = 0.1
 
 
-def path_to_shapely(path: GeometryPath) -> Polygon | None:
-    """Convert one closed canonical path to a Shapely Polygon by approximating Bezier curves."""
-    coords: list[tuple[float, float]] = []
+def path_to_shapely(path: GeometryPath) -> Polygon | MultiPolygon | None:
+    """
+    Convert one canonical path to Shapely geometry.
+
+    A single GeometryPath may contain multiple closed subpaths (M…Z M…Z) —
+    for example the outer ring and counter hole of the letter O. Each subpath
+    is built as a separate Polygon, then combined via the same outer/hole logic
+    used by glyph_to_shapely.
+    """
+    subpath_coords: list[list[tuple[float, float]]] = []
+    current_coords: list[tuple[float, float]] = []
     current = (0.0, 0.0)
 
     for cmd in path.commands:
         if cmd.type == "M":
+            if len(current_coords) >= 3:
+                subpath_coords.append(current_coords)
+            current_coords = [(cmd.x, cmd.y)]
             current = (cmd.x, cmd.y)
-            coords.append(current)
         elif cmd.type == "L":
             current = (cmd.x, cmd.y)
-            coords.append(current)
+            current_coords.append(current)
         elif cmd.type == "Q":
             p0, p1, p2 = current, (cmd.x1, cmd.y1), (cmd.x, cmd.y)
             for i in range(1, _QUAD_STEPS + 1):
                 t = i / _QUAD_STEPS
-                coords.append((
+                current_coords.append((
                     (1 - t) ** 2 * p0[0] + 2 * t * (1 - t) * p1[0] + t ** 2 * p2[0],
                     (1 - t) ** 2 * p0[1] + 2 * t * (1 - t) * p1[1] + t ** 2 * p2[1],
                 ))
@@ -35,27 +45,58 @@ def path_to_shapely(path: GeometryPath) -> Polygon | None:
             p0, p1, p2, p3 = current, (cmd.x1, cmd.y1), (cmd.x2, cmd.y2), (cmd.x, cmd.y)
             for i in range(1, _CUBIC_STEPS + 1):
                 t = i / _CUBIC_STEPS
-                coords.append((
+                current_coords.append((
                     (1 - t) ** 3 * p0[0] + 3 * t * (1 - t) ** 2 * p1[0]
                     + 3 * t ** 2 * (1 - t) * p2[0] + t ** 3 * p3[0],
                     (1 - t) ** 3 * p0[1] + 3 * t * (1 - t) ** 2 * p1[1]
                     + 3 * t ** 2 * (1 - t) * p2[1] + t ** 3 * p3[1],
                 ))
             current = p3
-        elif cmd.type == "Z" and coords:
-            coords.append(coords[0])
+        elif cmd.type == "Z":
+            if len(current_coords) >= 3:
+                subpath_coords.append(current_coords)
+            current_coords = []
 
-    if len(coords) < 4:
+    if len(current_coords) >= 3:
+        subpath_coords.append(current_coords)
+
+    if not subpath_coords:
         return None
+
+    polys: list[Polygon] = []
+    for coords in subpath_coords:
+        try:
+            poly = Polygon(coords).buffer(0)
+            if not poly.is_empty and poly.area > 0:
+                polys.append(poly)
+        except Exception:
+            pass
+
+    if not polys:
+        return None
+    if len(polys) == 1:
+        return polys[0]
+
+    # Largest polygon is the outer shell; smaller ones whose centroid lies inside are holes.
+    polys_sorted = sorted(polys, key=lambda p: p.area, reverse=True)
+    result: Polygon | MultiPolygon = polys_sorted[0]
+    for candidate in polys_sorted[1:]:
+        try:
+            if result.contains(candidate.centroid):
+                result = result.difference(candidate)
+            else:
+                result = result.union(candidate)
+        except Exception:
+            pass
     try:
-        return Polygon(coords).buffer(0)
+        return result.buffer(0)
     except Exception:
-        return None
+        return result
 
 
 def glyph_to_shapely(glyph: GlyphGeometry, path_map: dict[str, GeometryPath]) -> Polygon | MultiPolygon | None:
-    """Build one Shapely geometry for a glyph from all its closed paths."""
-    polys: list[Polygon | MultiPolygon] = []
+    """Build one Shapely geometry for a glyph, correctly subtracting counter holes (O, e, B…)."""
+    polys: list[Polygon] = []
     for pid in glyph.path_ids:
         path = path_map.get(pid)
         if path and path.closed:
@@ -66,10 +107,27 @@ def glyph_to_shapely(glyph: GlyphGeometry, path_map: dict[str, GeometryPath]) ->
         return None
     if len(polys) == 1:
         return polys[0]
+
+    # Largest area polygon is the outer shell; smaller polygons whose centroid
+    # lies inside the shell are counter holes (subtract); others are separate
+    # ink components (union — e.g. the dot on 'i').
+    polys_sorted = sorted(polys, key=lambda p: p.area, reverse=True)
+    result: Polygon | MultiPolygon = polys_sorted[0]
+    for candidate in polys_sorted[1:]:
+        try:
+            if result.contains(candidate.centroid):
+                result = result.difference(candidate)
+            else:
+                result = result.union(candidate)
+        except Exception:
+            try:
+                result = result.union(candidate)
+            except Exception:
+                pass
     try:
-        return unary_union(polys).buffer(0)
+        return result.buffer(0)
     except Exception:
-        return polys[0]
+        return result
 
 
 def count_connected_components(geometries: list, tolerance: float = _CONNECTIVITY_TOLERANCE_MM) -> int:

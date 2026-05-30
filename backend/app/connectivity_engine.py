@@ -8,7 +8,10 @@ from .shapely_converter import count_connected_components, glyph_to_shapely, sha
 from .welding_engine import apply_welding
 
 _COMPRESSION_STEP_MM = 0.3
-_MAX_COMPRESSION_STEPS = 20  # up to 6 mm shift per inter-glyph gap
+_MAX_COMPRESSION_STEPS = 20  # hard ceiling
+# Compression beyond this per-gap shift is visually destructive for most fonts;
+# the bridge fallback produces better results for wider-spaced fonts.
+_MAX_COMPRESSION_PER_GAP_MM = 1.5
 
 
 def resolve_connectivity(
@@ -64,6 +67,8 @@ def _apply_compression(
 
     for step in range(1, _MAX_COMPRESSION_STEPS + 1):
         shift_per_gap = step * _COMPRESSION_STEP_MM
+        if shift_per_gap > _MAX_COMPRESSION_PER_GAP_MM:
+            break  # Exceeds visual quality limit — fall through to bridge fallback.
         compressed_paths = _shift_paths(geometry.paths, glyph_path_ids, shift_per_gap)
         path_map = {p.path_id: p for p in compressed_paths}
         geoms = [glyph_to_shapely(g, path_map) for g in geometry.glyphs]
