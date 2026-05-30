@@ -8,13 +8,15 @@ from .models import CanonicalGeometry, GeometryPath, PathCommand
 def export_svg(geometry: CanonicalGeometry) -> str:
     width = geometry.dimensions.width
     height = geometry.dimensions.height
+    min_x = geometry.bounds.min_x
+    min_y = geometry.bounds.min_y
     drawing = svgwrite.Drawing(size=(f"{width}mm", f"{height}mm"), profile="tiny")
-    drawing.viewbox(0, 0, width, height)
+    drawing.viewbox(min_x, min_y, width, height)
     drawing.attribs["xmlns"] = "http://www.w3.org/2000/svg"
     drawing.attribs["version"] = "1.1"
 
     for path in geometry.paths:
-        drawing.add(drawing.path(d=_path_data(path), fill="#000000", stroke="none"))
+        drawing.add(drawing.path(d=_path_data(path), fill="#000000", stroke="none", fill_rule="evenodd"))
 
     return drawing.tostring()
 
