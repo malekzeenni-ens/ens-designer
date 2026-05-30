@@ -43,6 +43,7 @@ class FontCatalog:
             return self._records
 
         records: dict[str, FontRecord] = {}
+        seen_names: set[tuple[str, str]] = set()
         for source, directory in self._font_directories():
             if not directory.exists():
                 continue
@@ -50,7 +51,8 @@ class FontCatalog:
                 if path.suffix.lower() not in FONT_EXTENSIONS or not path.is_file():
                     continue
                 record = self._read_font(source, path)
-                if record is not None:
+                if record is not None and _font_key(record.info) not in seen_names:
+                    seen_names.add(_font_key(record.info))
                     records[record.info.id] = record
 
         self._records = dict(sorted(records.items(), key=lambda item: item[1].info.full_name.lower()))
@@ -83,3 +85,11 @@ class FontCatalog:
         font_id = hashlib.sha1(str(path.resolve()).encode("utf-8")).hexdigest()[:16]
         info = FontInfo(id=font_id, family=family, full_name=full_name, style=style, source=source)  # type: ignore[arg-type]
         return FontRecord(info=info, path=path)
+
+
+def _font_key(font: FontInfo) -> tuple[str, str]:
+    return (_normalise_name(font.full_name), _normalise_name(font.style))
+
+
+def _normalise_name(value: str) -> str:
+    return " ".join(value.casefold().split())

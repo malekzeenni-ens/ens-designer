@@ -12,6 +12,7 @@ export function App() {
   const [text, setText] = useState("Oliver");
   const [fonts, setFonts] = useState<FontInfo[]>([]);
   const [fontId, setFontId] = useState("");
+  const [fontSearch, setFontSearch] = useState("");
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,20 @@ export function App() {
       .catch((caught: Error) => setError(caught.message));
   }, []);
 
+  const filteredFonts = useMemo(() => {
+    const query = fontSearch.trim().toLowerCase();
+    if (!query) {
+      return fonts;
+    }
+    return fonts.filter((font) => `${font.full_name} ${font.family} ${font.style}`.toLowerCase().includes(query));
+  }, [fonts, fontSearch]);
   const selectedFont = useMemo(() => fonts.find((font) => font.id === fontId), [fonts, fontId]);
+
+  useEffect(() => {
+    if (filteredFonts.length > 0 && !filteredFonts.some((font) => font.id === fontId)) {
+      setFontId(filteredFonts[0].id);
+    }
+  }, [filteredFonts, fontId]);
 
   async function handleGenerate() {
     setLoading(true);
@@ -50,8 +64,14 @@ export function App() {
 
         <div className="controls">
           <TextInput value={text} onChange={setText} />
-          <FontSelector fonts={fonts} value={fontId} onChange={setFontId} />
-          <button className="generate-button" type="button" onClick={handleGenerate} disabled={loading || !fontId}>
+          <FontSelector
+            fonts={filteredFonts}
+            value={fontId}
+            onChange={setFontId}
+            search={fontSearch}
+            onSearchChange={setFontSearch}
+          />
+          <button className="generate-button" type="button" onClick={handleGenerate} disabled={loading || !fontId || filteredFonts.length === 0}>
             <Wand2 size={18} aria-hidden="true" />
             {loading ? "Generating" : "Generate"}
           </button>

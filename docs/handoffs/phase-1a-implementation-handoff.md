@@ -37,6 +37,8 @@ The current project state is ready for Phase 1A review and conditional approval 
 - Single-screen local app.
 - Text input.
 - Font selector.
+- Font search.
+- Duplicate font hiding.
 - Recursive `.ttf` and `.otf` discovery from the Etch 'N' Shine Dropbox font library.
 - Generate button.
 - SVG preview.
@@ -124,6 +126,18 @@ It matches the approved local API architecture and keeps the backend small.
 Alternative:
 
 A file-only local script was rejected because the approved user workflow requires a browser preview and downloads.
+
+Decision:
+
+Hide duplicate fonts by normalised full font name and style.
+
+Reason:
+
+The Etch 'N' Shine Dropbox font library contains duplicate font files that make the selector harder to use.
+
+Alternative:
+
+Showing every font file was rejected because it creates noise without adding design value.
 
 Decision:
 
@@ -253,7 +267,7 @@ Passed.
 
 - Native Cairo is not installed in this Windows environment, so PNG export uses Pillow fallback locally.
 - Pillow fallback is acceptable for Phase 1A preview/download but should be revisited before production packaging.
-- Manual LightBurn import validation remains required.
+- Manual LightBurn import validation was completed successfully by the project owner.
 - Python 3.14 required a source-build workaround for `uharfbuzz`.
 
 ---
@@ -264,7 +278,7 @@ Passed.
 - Some fonts may lack glyphs for user input.
 - The external Dropbox font path is machine-specific and may not exist for future contributors.
 - PNG rendering may differ from SVG for complex fonts when CairoSVG is unavailable.
-- LightBurn import needs direct manual confirmation.
+- Letter-level geometry is expected in Phase 1A until Phase 1B welding.
 
 ---
 
@@ -335,7 +349,6 @@ Revert the Phase 1A implementation commit if required.
 
 # 17. Recommendations For Next Phase
 
-- Manually validate generated SVG files in LightBurn before Phase 1B.
 - Keep Phase 1B focused on welding and validation.
 - Preserve SVG as the production source of truth.
 - Revisit production PNG rendering during Phase 1C.

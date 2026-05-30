@@ -51,6 +51,8 @@ Supported font files:
 
 The Dropbox font library is scanned recursively. Zip files are not unpacked by the application.
 
+Duplicate fonts are hidden from the selector using the font full name and style. Project fonts take priority, then the Etch 'N' Shine Dropbox font library, then Windows system fonts.
+
 Restart the backend after adding or removing fonts.
 
 ---

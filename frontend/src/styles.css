@@ -70,9 +70,15 @@ h1 {
   background: #fffdf8;
 }
 
-.field {
+.field,
+.font-field {
   display: grid;
   gap: 6px;
+}
+
+.font-field {
+  grid-template-columns: minmax(140px, 0.55fr) minmax(220px, 1fr);
+  align-items: end;
 }
 
 .field span {
@@ -202,6 +208,10 @@ button:disabled {
   }
 
   .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .font-field {
     grid-template-columns: 1fr;
   }
 
