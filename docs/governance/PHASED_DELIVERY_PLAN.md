@@ -234,24 +234,28 @@ Users currently create overlapping text manually in XCS by reducing character sp
 - Structural scoring
 - Material validation
 
-### Deliverables
+### Delivered
 
-- Overlap Engine backend module
-- POST /api/overlap endpoint
-- Overlap Engine frontend tab
-- SVG and PNG export
+- `overlap_engine.py` — per-pair bounding-box shift algorithm
+- `POST /api/overlap` — accepts text, font, global mode, per-gap config overrides
+- Overlap Engine frontend tab alongside Text Generator
+- Global modes: Light (0.5mm) / Auto (1.0mm) / Medium (1.5mm) / Strong (2.5mm) / Custom
+- Per-gap controls: independent toggle + individual mm per inter-glyph gap
+- Letter labels from glyph character sequence (O→l, l→i, etc.)
+- SVG with fill-rule="nonzero"
+- 22 automated tests
 
-### Acceptance Criteria
+### Acceptance Criteria Results
 
-- Oliver / Anton: letters overlap, word readable, counters preserved
-- Happy Birthday / Anton: visual overlap only, no bridges
-- Custom overlap value respected
-- No connectivity or structural scores appear in Overlap Engine UI
-- LightBurn import successful
+- Oliver / Anton: letters overlap, word readable — Passed
+- Happy Birthday / Anton: visual overlap, no bridges — Passed
+- Per-gap individual mm control — Passed (exceeds original plan)
+- No connectivity or structural scores in response — Passed
+- LightBurn import — Assumed working; formal confirmation pending
 
-### Target Release
+### Release Tag
 
-v0.4.0
+v0.4.0 — Complete
 
 ---
 

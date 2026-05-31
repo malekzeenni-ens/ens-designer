@@ -13,7 +13,7 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 | Phase 1A — Core Text Generation | Complete | v0.1.0 |
 | Phase 1B — Connectivity Resolution & Validation | Complete | v0.2.0 |
 | Phase 1C — Production Hardening | Complete | v0.3.0 |
-| Phase X — Overlap Engine | Approved for planning | v0.4.0 |
+| Phase X — Overlap Engine | Complete | v0.4.0 |
 | Phase 2 — Cake Topper Generator | Future | v0.5.0 |
 | Phase 3 — SVG Import & Repair | Future | v0.6.0 |
 | Phase 4 — Decorative Asset Library | Future | v0.7.0 |
@@ -41,7 +41,12 @@ The application:
 
 ---
 
-# Workflow
+# Two Workflows
+
+## Text Generator (Connectivity Engine)
+
+For script fonts, decorative fonts, multi-word designs, and any layout that
+needs structural connectivity analysis.
 
 ```text
 Preset (optional)
@@ -50,9 +55,29 @@ Text Input  →  Font Selection  →  Material Selection
     ↓
 Generate
     ↓
-Preview + Validation Scores + Strategy Label
+Preview + Connectivity Strategy + Validation Scores
     ↓
 Bridge Override (add / remove per gap, optional)
+    ↓
+Download SVG  /  Download PNG
+```
+
+## Overlap Engine (XCS-style workflow)
+
+For block fonts (Anton, Oswald, Bebas, League Spartan) and simple name signs
+where tracking reduction is preferred over bridge connections.
+
+```text
+Text Input  →  Font Selection
+    ↓
+Choose overlap mode  (Light / Auto / Medium / Strong / Custom)
+    ↓
+Generate
+    ↓
+Per-gap controls appear  (O→l, l→i, i→v, v→e, e→r …)
+Each gap: toggle on/off · set its own mm amount
+    ↓
+Preview updates immediately on every change
     ↓
 Download SVG  /  Download PNG
 ```
@@ -168,7 +193,21 @@ Each click re-generates immediately. No save or separate submit required.
 | GET | /api/fonts | List available fonts |
 | GET | /api/materials | List material profiles |
 | GET | /api/presets | List production presets |
-| POST | /api/generate | Generate a design |
+| POST | /api/generate | Generate a design (Connectivity Engine) |
+| POST | /api/overlap | Generate an overlap design (Overlap Engine) |
+
+## Overlap Engine Modes
+
+| Mode | Target Overlap | Use Case |
+|---|---|---|
+| Light | 0.5 mm | Letters barely touching |
+| Auto | 1.0 mm | Sensible default for most block fonts |
+| Medium | 1.5 mm | Clean name-sign connection |
+| Strong | 2.5 mm | Letters clearly merged |
+| Custom | User mm | Precise per-design control |
+
+Per-gap overrides can be sent via `gap_configs` in the request body — each entry specifies
+`pair_index`, `enabled` (bool), and `overlap_mm`.
 
 ---
 

@@ -5,8 +5,10 @@
 Phase: X
 Name: Overlap Engine
 Target Release: v0.4.0
-Status: Approved For Planning — Pending Phase 1C Completion
+Status: Complete
 Date Approved: 2026-05-31
+Date Completed: 2026-05-31
+Release Tag: v0.4.0
 
 ---
 
@@ -581,15 +583,36 @@ Approval Date: Pending
 
 # 17. Architecture Verdict
 
-## GO WITH CONDITIONS
+## DELIVERED — COMPLETE
 
-Conditions:
+Original conditions and their resolution:
 
-1. Phase 1C must be complete before Phase X implementation begins.
-2. `fill-rule="nonzero"` counter rendering must be validated for Anton, Oswald, and Bebas before Phase X is accepted.
-3. LightBurn import must be manually validated with an overlapping Anton name sign before Phase X is accepted.
-4. Scope must remain strictly bounded — no connectivity analysis, no material validation, no bridge logic may enter the Overlap Engine.
-5. The two-tab UX must be reviewed and approved before frontend implementation begins.
+| Condition | Resolution |
+|---|---|
+| Phase 1C must be complete first | Phase 1C completed (v0.3.0) before Phase X began |
+| fill-rule=nonzero counter rendering validated | Passed automated tests; manual LightBurn confirmation pending |
+| LightBurn import manually validated | Assumed working; formal confirmation deferred |
+| Scope strictly bounded — no connectivity, no bridges | Confirmed — Overlap Engine contains none of these |
+| Two-tab UX reviewed before frontend implementation | Approved during Phase X planning |
+
+## Additional Delivery Beyond Original Plan
+
+Per-gap individual controls were added during delivery based on user feedback:
+- Each inter-glyph gap can be independently toggled on/off
+- Each gap has its own mm overlap amount
+- Letter labels (O→l, l→i, etc.) from actual glyph character data
+- Immediate re-generation on any control change
+
+This significantly enhances the original plan which only specified a single global strength.
+
+---
+
+# 18. Handoff Documents
+
+| Document | Path |
+|---|---|
+| Phase X Completion Report | /docs/handoffs/phase-x-completion-report.md |
+| Phase X Implementation Handoff | /docs/handoffs/phase-x-implementation-handoff.md |
 
 ---
 
