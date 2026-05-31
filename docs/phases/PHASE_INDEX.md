@@ -17,7 +17,8 @@ Some filenames were retained for repository continuity after the Stage -1 archit
 | PHASE_01_WELDED_TEXT_GENERATOR_IMPLEMENTATION.md | Phase 1A - Core Text Generation | v0.1.0 | Complete |
 | PHASE_02_ADVANCED_STRUCTURAL_INTELLIGENCE_IMPLEMENTATION.md | Phase 1B - Connectivity Resolution & Validation | v0.2.0 | Complete |
 | PHASE_03_CAKE_TOPPER_GENERATOR_IMPLEMENTATION.md | Phase 1C - Production Hardening | v0.3.0 | Complete |
-| PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md | Phase X - Overlap Engine | v0.4.0 | Complete |
+| PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md | Phase X - Overlap Engine + Cake Topper Tab | v0.4.0 | Complete |
+| CAKE_TOPPER_FEATURE_SPECIFICATION.md | Cake Topper Feature Specification | v0.4.0 | Complete |
 | PHASE_04_DECORATIVE_LIBRARY_IMPLEMENTATION.md | Phase 02 - Cake Topper Generator | v0.5.0 | Ready After Phase X Approval |
 | PHASE_05_AI_GRAPHIC_GENERATOR_IMPLEMENTATION.md | Phase 03 - SVG Import & Repair | v0.6.0 | Ready After Phase 02 Approval |
 | PHASE_06_AI_DESIGN_STUDIO_IMPLEMENTATION.md | Phase 06 - AI Design Studio | v1.0.0 | Future Phase |
@@ -31,8 +32,8 @@ Some filenames were retained for repository continuity after the Stage -1 archit
 3. Phase 1A - Core Text Generation
 4. Phase 1B - Connectivity Resolution & Validation
 5. Phase 1C - Production Hardening
-6. Phase X  - Overlap Engine
-7. Phase 02 - Cake Topper Generator
+6. Phase X  - Overlap Engine + Cake Topper Tab
+7. Phase 02 - Cake Topper Generator (formal — stakes, validation, presets)
 8. Phase 03 - SVG Import & Repair
 9. Phase 04 - Decorative Asset Library
 10. Phase 05 - AI Graphic Generator

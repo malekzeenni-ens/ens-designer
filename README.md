@@ -13,8 +13,8 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 | Phase 1A — Core Text Generation | Complete | v0.1.0 |
 | Phase 1B — Connectivity Resolution & Validation | Complete | v0.2.0 |
 | Phase 1C — Production Hardening | Complete | v0.3.0 |
-| Phase X — Overlap Engine | Complete | v0.4.0 |
-| Phase 2 — Cake Topper Generator | Future | v0.5.0 |
+| Phase X — Overlap Engine + Cake Topper Tab | Complete | v0.4.0 |
+| Phase 2 — Cake Topper Generator (stakes, validation, presets) | Next | v0.5.0 |
 | Phase 3 — SVG Import & Repair | Future | v0.6.0 |
 | Phase 4 — Decorative Asset Library | Future | v0.7.0 |
 | Phase 5 — AI Graphic Generator | Future | v0.8.0 |
@@ -256,6 +256,7 @@ logs/             Application logs (gitignored)
 | [docs/handoffs/phase-1c-completion-report.md](docs/handoffs/phase-1c-completion-report.md) | Phase 1C completion report |
 | [docs/handoffs/phase-1c-lightburn-validation.md](docs/handoffs/phase-1c-lightburn-validation.md) | LightBurn validation evidence |
 | [docs/phases/PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md](docs/phases/PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md) | Phase X Overlap Engine plan |
+| [docs/phases/CAKE_TOPPER_FEATURE_SPECIFICATION.md](docs/phases/CAKE_TOPPER_FEATURE_SPECIFICATION.md) | Cake Topper feature specification (business + technical) |
 
 ---
 

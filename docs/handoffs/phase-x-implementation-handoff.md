@@ -3,47 +3,53 @@
 ## Document Information
 
 Phase: X
-Name: Overlap Engine
-Date: 2026-05-31
+Name: Overlap Engine + Cake Topper Tab
+Date: 2026-06-01
 Release Tag: v0.4.0
 
 ---
 
 # 1. Objectives Completed
 
-- Overlap Engine backend: per-pair bounding-box shift algorithm, nonzero SVG fill rule.
-- POST /api/overlap endpoint: accepts text, font, global mode, and per-gap config overrides.
-- Overlap Engine frontend tab: global mode buttons + per-gap toggle/mm controls.
-- Letter labels derived from glyph_chars in metadata (O→l, l→i, etc.).
-- Immediate re-generation on any gap toggle or mm change.
-- 22 automated tests.
+- Overlap Engine: per-pair bounding-box shift algorithm, nonzero SVG fill rule.
+- Per-gap controls: each inter-glyph gap independently toggleable with its own mm value.
+- Floating component X/Y controls: dots and accents repositionable independently of the main stroke.
+- Cake Topper tab: multi-line text composition with per-line font/size/alignment/overlap/vertical-gap.
+- Two-column layout for both tabs: preview left (sticky), settings right (scrollable).
+- Friendly error messages across all three generation endpoints.
+- Font search auto-select bug fixed in Overlap and Cake Topper panels.
 
 ---
 
-# 2. Files Created
+# 2. New Files
 
 | File | Purpose |
 |---|---|
-| `backend/app/overlap_engine.py` | Core algorithm: gap measurement, per-pair shifts, cumulative glyph shifts, SVG/PNG export |
-| `backend/app/api/routes/overlap.py` | POST /api/overlap — validates request and delegates to OverlapService |
-| `frontend/src/components/OverlapPanel.tsx` | Full Overlap Engine tab: text input, font selector, global mode, per-gap controls, preview, export |
-| `tests/test_phase_x_overlap_engine.py` | 22 tests: basics, all modes, nonzero fill rule, no connectivity fields, edge cases |
-| `docs/handoffs/phase-x-completion-report.md` | Phase X completion report |
-| `docs/handoffs/phase-x-implementation-handoff.md` | This document |
+| `backend/app/overlap_engine.py` | Core overlap algorithm, per-gap shift, floating offset application, SVG export |
+| `backend/app/cake_topper_engine.py` | Multi-line text engine, per-line pipeline, canvas assembly, SVG composition |
+| `backend/app/floating_component.py` | Detect floating subpaths (dots/accents), apply independent X/Y offsets |
+| `backend/app/api/routes/overlap.py` | POST /api/overlap |
+| `backend/app/api/routes/cake_topper.py` | POST /api/cake-topper |
+| `frontend/src/components/OverlapPanel.tsx` | Full Overlap Engine tab with two-column layout and per-gap controls |
+| `frontend/src/components/CakeTopperPanel.tsx` | Cake Topper tab with accordion per-line and vertical gap controls |
+| `frontend/src/components/FloatingControls.tsx` | Shared X/Y control for floating components (used in both tabs) |
+| `tests/test_phase_x_overlap_engine.py` | 22 Overlap Engine tests |
+| `docs/phases/CAKE_TOPPER_FEATURE_SPECIFICATION.md` | Comprehensive Cake Topper feature document |
 
 ---
 
-# 3. Files Modified
+# 3. Modified Files
 
 | File | Change |
 |---|---|
-| `backend/app/models.py` | Added `OverlapGapConfig`, extended `OverlapRequest` (gap_configs), extended `OverlapMetadata` (glyph_chars) |
-| `backend/app/main.py` | Registered `OverlapService` on app.state; included `overlap_router` |
-| `backend/app/svg_exporter.py` | Added `fill_rule: str = "evenodd"` parameter; Overlap Engine passes `"nonzero"` |
-| `frontend/src/App.tsx` | Added `Tab` type, tab bar, Overlap Engine tab rendering |
-| `frontend/src/types/design.ts` | Added `OverlapGapConfig`, `OverlapMode`, `OverlapResult` |
-| `frontend/src/services/generationApi.ts` | Added `generateOverlap`, updated import |
-| `frontend/src/styles.css` | Tab bar, gap-controls grid, gap row, gap toggle, gap mm input, gap result |
+| `backend/app/models.py` | Added: FloatingComponentOffset, FloatingComponentInfo, OverlapGapConfig, OverlapRequest (+floating_offsets), OverlapMetadata (+floating_components, +glyph_chars), CakeTopperLineConfig (+floating_offsets), CakeTopperLineMetadata (+floating_components), CakeTopperMetadata, CakeTopperResponse, Preset |
+| `backend/app/main.py` | overlap_router, cake_topper_router, OverlapService, CakeTopperService registered |
+| `backend/app/outline_extractor.py` | `font_size_mm` parameter added (default 42mm) for per-line size in Cake Topper |
+| `backend/app/svg_exporter.py` | `fill_rule` parameter (default "evenodd"; Overlap/Cake Topper use "nonzero") |
+| `frontend/src/App.tsx` | Three-tab navigation (Text Generator / Overlap Engine / Cake Topper) |
+| `frontend/src/types/design.ts` | OverlapGapConfig, OverlapMode, FloatingComponentOffset, FloatingComponentInfo, OverlapResult, AlignmentMode, CakeTopperLineConfig, CakeTopperLineMetadata, CakeTopperResult |
+| `frontend/src/services/generationApi.ts` | _readError() helper, generateOverlap, generateCakeTopper |
+| `frontend/src/styles.css` | Two-column layout, per-gap pill styles, floating controls, cake topper accordion, alignment buttons, vertical gap row |
 
 ---
 
@@ -51,108 +57,167 @@ Release Tag: v0.4.0
 
 | Decision | Rationale |
 |---|---|
-| fill-rule="nonzero" for Overlap Engine SVG | With evenodd, overlapping paths cancel each other out creating holes. With nonzero, same-winding overlapping paths stay solid. Fonts use opposite winding for counters so holes are preserved. |
-| Per-pair config overrides rather than per-pair separate API calls | Keeps the API stateless and the server simple. One request = one complete design. |
-| Naturally-overlapping pairs left untouched | If a pair already exceeds the target overlap (e.g. script font l→i at −3.4mm vs target 1.5mm), no further shift is applied. Prevents over-compression of already-flowing script letters. |
-| Cumulative shifts applied to glyph path x-coordinates | Preserves original letter Bezier shapes. No geometry union, no merging, no Shapely. |
-| Global mode becomes "set all active gaps" after first generation | Provides fast bulk adjustment while keeping individual overrides intact. |
-| glyph_chars in metadata for letter labels | More accurate than splitting the raw text string — handles NFC normalisation, combining characters, and potential ligature differences. |
-| Immediate re-generation on any control change | Fast feedback loop. No extra "Apply" button. Backend is fast enough (< 2s for typical names). |
+| fill-rule="nonzero" for Overlap + Cake Topper | Overlapping same-winding paths stay solid; evenodd cancels them. Counters preserved via font winding convention. |
+| Per-gap config overrides (stateless, per-request) | No server session needed; complete state sent every request |
+| Detection before applying floating offsets | Moving the dot toward the stroke would cause re-detection to classify it as non-floating, hiding the controls. Pre-offset detection is stable. |
+| Floating component control in shared FloatingControls.tsx | Identical UI needed in both Overlap Engine and Cake Topper |
+| Cake Topper detects words from text.split() (max 4) | Simple, predictable for short phrases; user controls word assignment via what they type |
+| Canvas width = max line width + 2×PADDING | Gives room for all alignment modes without clipping |
+| Lines centered by default | Most natural for cake toppers and decorative text |
+| Accordion per-line (expanded by default) | After generation user wants to edit; expand/collapse available for space management |
+| Detection order: detect → floating offset → geometry recalc | Ensures floating_components metadata is always present even after the dot is moved |
 
 ---
 
 # 5. API Reference
 
-### POST /api/overlap
+## POST /api/overlap
 
 **Request:**
-
 ```json
 {
   "text": "Oliver",
-  "font_id": "font-identifier",
+  "font_id": "font-id",
   "overlap_mode": "medium",
   "overlap_custom_mm": null,
   "gap_configs": [
-    { "pair_index": 0, "enabled": true,  "overlap_mm": 2.0 },
+    { "pair_index": 0, "enabled": true, "overlap_mm": 2.0 },
     { "pair_index": 2, "enabled": false, "overlap_mm": 1.5 }
+  ],
+  "floating_offsets": [
+    { "glyph_index": 2, "x_offset_mm": 0.0, "y_offset_mm": 3.0 }
   ]
 }
 ```
 
-`gap_configs` is optional. Empty array = apply global mode to all gaps.
-
 **Response:**
-
 ```json
 {
-  "svg": "<svg ...>...</svg>",
+  "svg": "...",
   "png_base64": "...",
   "svg_filename": "oliver.svg",
   "png_filename": "oliver.png",
   "overlap_metadata": {
     "mode": "medium",
     "target_overlap_mm": 1.5,
-    "glyph_chars": ["O", "l", "i", "v", "e", "r"],
-    "gaps_before_mm": [2.789, 2.912, 1.886, 1.682, 2.666],
-    "gaps_after_mm":  [-1.5,  -1.5,  1.886, -1.5,  -1.5]
+    "glyph_chars": ["O","l","i","v","e","r"],
+    "gaps_before_mm": [2.79, 2.91, 1.89, 1.68, 2.67],
+    "gaps_after_mm": [-1.5, -1.5, 1.89, -1.5, -1.5],
+    "floating_components": [
+      { "glyph_index": 2, "char": "i" }
+    ]
   },
   "dimensions": { "width": 78.3, "height": 39.1, "units": "mm" }
 }
 ```
 
-Note: `gaps_after_mm[2] = 1.886` because pair index 2 (i→v) was disabled — original gap preserved.
+## POST /api/cake-topper
+
+**Request:**
+```json
+{
+  "text": "Happy Birthday",
+  "default_font_id": "font-id",
+  "default_font_size_mm": 42.0,
+  "default_overlap_mode": "medium",
+  "line_configs": [
+    {
+      "font_id": "script-font-id",
+      "font_size_mm": 35.0,
+      "alignment": "center",
+      "alignment_offset_mm": 0.0,
+      "overlap_mode": "light",
+      "gap_configs": [],
+      "floating_offsets": []
+    },
+    {
+      "font_id": "bold-font-id",
+      "font_size_mm": 42.0,
+      "alignment": "center",
+      "alignment_offset_mm": 0.0,
+      "overlap_mode": "medium",
+      "gap_configs": [],
+      "floating_offsets": []
+    }
+  ],
+  "inter_line_gaps_mm": [-5.0]
+}
+```
+
+**Response:**
+```json
+{
+  "svg": "...",
+  "png_base64": "...",
+  "svg_filename": "happy_birthday.svg",
+  "metadata": {
+    "words": ["Happy", "Birthday"],
+    "lines": [
+      {
+        "text": "Happy",
+        "glyph_chars": ["H","a","p","p","y"],
+        "gaps_before_mm": [...],
+        "gaps_after_mm": [...],
+        "width_mm": 86.8,
+        "height_mm": 41.2,
+        "x_offset_mm": 18.8,
+        "floating_components": []
+      },
+      { "text": "Birthday", ... }
+    ],
+    "inter_line_gaps_mm": [-5.0],
+    "canvas_width_mm": 134.4,
+    "canvas_height_mm": 92.5
+  }
+}
+```
 
 ---
 
 # 6. Overlap Modes
 
-| Mode | Target Overlap |
-|---|---|
-| light | 0.5mm |
-| auto | 1.0mm |
-| medium | 1.5mm |
-| strong | 2.5mm |
-| custom | user-specified (0.1–10.0mm) |
-
----
-
-# 7. Testing
-
-```
-22 passed, 0 failed
-119 total tests pass
-```
-
-Test categories covered:
-- Basic response (200, SVG, PNG, metadata)
-- fill-rule=nonzero in SVG output
-- All named modes return 200
-- Medium > Light overlap, Strong > Medium overlap
-- Custom mm respected exactly
-- Gaps after are smaller than gaps before (for positive gaps)
-- Medium mode creates negative gaps (actual overlap) for fully-disconnected fonts
-- No welding/validation fields in response
-- No bridge paths in output
-- Existing /api/generate endpoint unchanged
-- Single character: no shifts applied
-- Empty text rejected (400)
-- Unknown font rejected (400)
-
----
-
-# 8. Known Limitations
-
-| Limitation | Severity | Recommendation |
+| Mode | Target Overlap | Use Case |
 |---|---|---|
-| LightBurn fill-rule=nonzero validation not formally confirmed | Medium | Run LightBurn manual validation before signing off Phase X |
-| Counter rendering depends on font winding conventions | Medium | Test Anton, Oswald, Bebas counters (O, e, a) in LightBurn import |
-| No auto-suggest for per-gap settings | Low | Manual by design. Could be enhanced in a future iteration. |
+| light | 0.5mm | Letters barely touching |
+| auto | 1.0mm | Sensible default |
+| medium | 1.5mm | Clean name-sign connection |
+| strong | 2.5mm | Letters clearly merged |
+| custom | User mm | Precise per-design control |
 
 ---
 
-# 9. Recommendations For Phase 2
+# 7. Alignment Modes (Cake Topper)
 
-- Formally validate Phase X LightBurn import (fill-rule=nonzero) before production use.
-- Consider caching font catalogue across requests if startup time becomes noticeable.
-- Phase 2 (Cake Topper) should reuse the existing text pipeline and not modify the Overlap Engine.
+| Mode | Behaviour |
+|---|---|
+| left | Line left edge aligned to canvas left padding |
+| center | Line centered within canvas width |
+| right | Line right edge aligned to canvas right padding |
+| manual | Line positioned at `PADDING + alignment_offset_mm` |
+
+---
+
+# 8. Tests
+
+```
+22 passed (Overlap Engine)
+119 total (all phases)
+```
+
+---
+
+# 9. Known Limitations
+
+| Limitation | Severity | Notes |
+|---|---|---|
+| LightBurn fill-rule=nonzero not formally validated | Medium | Manual import test recommended before production use |
+| Floating detection is bounding-box vertical only | Low | May miss accents that partially overlap the base glyph |
+| Cake Topper canvas uses flat path assembly | Low | Not a boolean union; overlapping outlines at line borders visible in path-edit mode |
+
+---
+
+# 10. Recommendations
+
+- Formally validate Cake Topper SVG in LightBurn before production use.
+- Consider adding a "Center all" shortcut for Cake Topper alignment.
+- Consider a max-word-count selector (currently hardcoded to 4).
