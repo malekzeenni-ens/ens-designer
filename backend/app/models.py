@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -13,11 +13,18 @@ class FontInfo(BaseModel):
     source: Literal["project", "system", "external"]
 
 
+class BridgeOverride(BaseModel):
+    pair_index: int = Field(ge=0, description="Zero-based index of the inter-glyph gap to override.")
+    action: Literal["add", "remove", "set_width"]
+    width_mm: Optional[float] = Field(default=None, gt=0, le=5.0)
+
+
 class GenerateRequest(BaseModel):
     text: str = Field(min_length=1, max_length=80)
     font_id: str
     material_id: str = "cast-acrylic-3mm"
     welding_enabled: bool = True
+    bridge_overrides: list[BridgeOverride] = Field(default_factory=list)
 
 
 class PathCommand(BaseModel):
@@ -129,3 +136,10 @@ class GenerateResponse(BaseModel):
     png_base64: str
     svg_filename: str
     png_filename: str
+
+
+class Preset(BaseModel):
+    preset_id: str
+    preset_name: str
+    default_material_id: str
+    description: str

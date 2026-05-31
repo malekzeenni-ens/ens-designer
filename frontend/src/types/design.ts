@@ -1,3 +1,16 @@
+export interface BridgeOverride {
+  pair_index: number;
+  action: "add" | "remove" | "set_width";
+  width_mm?: number | null;
+}
+
+export interface Preset {
+  preset_id: string;
+  preset_name: string;
+  default_material_id: string;
+  description: string;
+}
+
 export interface FontInfo {
   id: string;
   family: string;
@@ -27,6 +40,17 @@ export interface GenerateResponse {
       width: number;
       height: number;
     };
+    glyphs: Array<{
+      glyph_id: number;
+      glyph_name: string;
+      cluster: number;
+      advance_x: number;
+      advance_y: number;
+      offset_x: number;
+      offset_y: number;
+      path_ids: string[];
+    }>;
+    paths: Array<{ path_id: string; closed: boolean }>;
     material: MaterialProfile | null;
     welding: {
       strategy: "natural" | "compression" | "bridge" | "disconnected";

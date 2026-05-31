@@ -59,6 +59,49 @@ h1 {
   line-height: 0.95;
 }
 
+.preset-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.preset-label {
+  color: #4d5a55;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #cfcabe;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #28332f;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.preset-btn:hover {
+  border-color: #18241f;
+  background: #f0ede4;
+}
+
+.preset-btn--active {
+  border-color: #18241f;
+  background: #18241f;
+  color: #ffffff;
+}
+
 .controls {
   display: grid;
   grid-template-columns: minmax(160px, 0.8fr) minmax(260px, 1.4fr) minmax(180px, 0.8fr) auto;
@@ -197,6 +240,70 @@ button:disabled {
 .welding-summary {
   display: flex;
   gap: 18px;
+}
+
+.bridge-override-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.bridge-override-label {
+  color: #4d5a55;
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+  padding-top: 4px;
+}
+
+.bridge-override-gaps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bridge-gap-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.bridge-gap-index {
+  font-size: 0.75rem;
+  color: #66736f;
+}
+
+.bridge-btn {
+  min-height: 28px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bridge-btn--add {
+  border: 1px dashed #74827b;
+  background: #f5f4ef;
+  color: #4d5a55;
+}
+
+.bridge-btn--add:hover {
+  border-color: #18241f;
+  background: #e8e5dc;
+  color: #18241f;
+}
+
+.bridge-btn--remove {
+  border: 1px solid #bc6c25;
+  background: #fff8f3;
+  color: #bc6c25;
+}
+
+.bridge-btn--remove:hover {
+  background: #bc6c25;
+  color: #ffffff;
 }
 
 .warning-list {

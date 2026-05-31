@@ -1,4 +1,4 @@
-import type { FontInfo, GenerateResponse, MaterialProfile } from "../types/design";
+import type { BridgeOverride, FontInfo, GenerateResponse, MaterialProfile, Preset } from "../types/design";
 
 export async function fetchFonts(): Promise<FontInfo[]> {
   const response = await fetch("/api/fonts");
@@ -16,13 +16,30 @@ export async function fetchMaterials(): Promise<MaterialProfile[]> {
   return response.json();
 }
 
-export async function generateDesign(text: string, fontId: string, materialId: string): Promise<GenerateResponse> {
+export async function fetchPresets(): Promise<Preset[]> {
+  const response = await fetch("/api/presets");
+  if (!response.ok) {
+    throw new Error("Could not load presets.");
+  }
+  return response.json();
+}
+
+export async function generateDesign(
+  text: string,
+  fontId: string,
+  materialId: string,
+  bridgeOverrides: BridgeOverride[] = [],
+): Promise<GenerateResponse> {
   const response = await fetch("/api/generate", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ text, font_id: fontId, material_id: materialId, welding_enabled: true })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text,
+      font_id: fontId,
+      material_id: materialId,
+      welding_enabled: true,
+      bridge_overrides: bridgeOverrides,
+    }),
   });
 
   if (!response.ok) {
