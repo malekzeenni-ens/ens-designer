@@ -114,7 +114,7 @@ class CakeTopperService:
             translated_path_groups.append(translated)
 
             line_metadata.append(CakeTopperLineMetadata(
-                text=word,
+                text=words[i],
                 glyph_chars=meta["glyph_chars"],
                 gaps_before_mm=meta["gaps_before_mm"],
                 gaps_after_mm=meta["gaps_after_mm"],
