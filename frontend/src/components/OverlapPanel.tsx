@@ -1,5 +1,5 @@
 import { Wand2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ExportControls } from "./ExportControls";
 import { FontSelector } from "./FontSelector";
@@ -49,6 +49,13 @@ export function OverlapPanel({ fonts }: OverlapPanelProps) {
   }, [fonts, fontSearch]);
 
   const selectedFont = useMemo(() => fonts.find((f) => f.id === fontId), [fonts, fontId]);
+
+  // Auto-select first visible font when the current selection is filtered out
+  useEffect(() => {
+    if (filteredFonts.length > 0 && !filteredFonts.some((f) => f.id === fontId)) {
+      setFontId(filteredFonts[0].id);
+    }
+  }, [filteredFonts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const globalMm = useMemo(() => {
     if (mode === "custom") return parseFloat(customMm) || 1.5;

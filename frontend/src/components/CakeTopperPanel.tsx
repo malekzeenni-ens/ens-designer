@@ -1,8 +1,7 @@
-import { Wand2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { ChevronDown, ChevronRight, Wand2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ExportControls } from "./ExportControls";
-import { FontSelector } from "./FontSelector";
 import { PreviewPanel } from "./PreviewPanel";
 import { generateCakeTopper } from "../services/generationApi";
 import type {
@@ -26,12 +25,7 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
   { value: "custom", label: "Custom", mm: null },
 ];
 
-const ALIGNMENTS: { value: AlignmentMode; label: string }[] = [
-  { value: "left",   label: "Left"   },
-  { value: "center", label: "Center" },
-  { value: "right",  label: "Right"  },
-  { value: "manual", label: "Manual" },
-];
+const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
 
 type GapState = { enabled: boolean; overlapMm: string };
 type LineState = {
@@ -42,29 +36,31 @@ type LineState = {
   overlapMode: OverlapMode;
   overlapCustomMm: string;
   gapStates: GapState[];
+  expanded: boolean;
 };
 
-const DEFAULT_FONT_SIZE = "42";
+const DEFAULT_SIZE = "42";
 const DEFAULT_OVERLAP: OverlapMode = "medium";
 const DEFAULT_INTER_GAP = "3";
 
-function initLineState(fontId: string): LineState {
+function initLine(fontId: string, overlapMm: string, numGaps: number): LineState {
   return {
     fontId,
-    fontSizeMm: DEFAULT_FONT_SIZE,
+    fontSizeMm: DEFAULT_SIZE,
     alignment: "center",
     alignmentOffsetMm: "0",
     overlapMode: DEFAULT_OVERLAP,
     overlapCustomMm: "1.5",
-    gapStates: [],
+    gapStates: Array.from({ length: numGaps }, () => ({ enabled: true, overlapMm })),
+    expanded: true,
   };
 }
 
 export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [text, setText] = useState("Happy Birthday");
-  const [defaultFontId, setDefaultFontId] = useState(fonts[0]?.id ?? "");
   const [fontSearch, setFontSearch] = useState("");
-  const [defaultFontSize, setDefaultFontSize] = useState(DEFAULT_FONT_SIZE);
+  const [defaultFontId, setDefaultFontId] = useState(fonts[0]?.id ?? "");
+  const [defaultSize, setDefaultSize] = useState(DEFAULT_SIZE);
   const [defaultOverlap, setDefaultOverlap] = useState<OverlapMode>(DEFAULT_OVERLAP);
   const [lineStates, setLineStates] = useState<LineState[]>([]);
   const [interLineGaps, setInterLineGaps] = useState<string[]>([]);
@@ -74,16 +70,23 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
 
   const words = useMemo(
     () => text.trim().split(/\s+/).filter(Boolean).slice(0, 4),
-    [text]
+    [text],
   );
 
   const filteredFonts = useMemo(() => {
     const q = fontSearch.trim().toLowerCase();
     if (!q) return fonts;
     return fonts.filter((f) =>
-      `${f.full_name} ${f.family} ${f.style}`.toLowerCase().includes(q)
+      `${f.full_name} ${f.family} ${f.style}`.toLowerCase().includes(q),
     );
   }, [fonts, fontSearch]);
+
+  // Auto-select first visible font when the current selection is filtered out
+  useEffect(() => {
+    if (filteredFonts.length > 0 && !filteredFonts.some((f) => f.id === defaultFontId)) {
+      setDefaultFontId(filteredFonts[0].id);
+    }
+  }, [filteredFonts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function buildLineConfigs(states: LineState[]): CakeTopperLineConfig[] {
     return states.map((s) => ({
@@ -104,39 +107,25 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   async function callApi(states: LineState[], gaps: string[]) {
     const n = words.length;
     const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
-    const gapValues = gaps.slice(0, n - 1).map((g) => parseFloat(g) || 3);
-
+    const gapValues = gaps.slice(0, n - 1).map((g) => parseFloat(g) ?? 3);
     setLoading(true);
     setError(null);
     try {
       const r = await generateCakeTopper(
-        text,
-        defaultFontId,
-        parseFloat(defaultFontSize) || 42,
-        defaultOverlap,
-        configs,
-        gapValues,
+        text, defaultFontId, parseFloat(defaultSize) || 42,
+        defaultOverlap, configs, gapValues,
       );
       setResult(r);
-
-      // Initialise line/gap states from first generation
       if (states.length === 0) {
-        const overlapMm = String(
-          OVERLAP_MODES.find((m) => m.value === defaultOverlap)?.mm ?? 1.5
+        const mm = String(OVERLAP_MODES.find((m) => m.value === defaultOverlap)?.mm ?? 1.5);
+        setLineStates(
+          r.metadata.lines.map((lm) => initLine(defaultFontId, mm, lm.gaps_before_mm.length)),
         );
-        const newStates = r.metadata.lines.map((lineMeta) => ({
-          ...initLineState(defaultFontId),
-          gapStates: lineMeta.gaps_before_mm.map(() => ({
-            enabled: true,
-            overlapMm,
-          })),
-        }));
-        setLineStates(newStates);
         setInterLineGaps(r.metadata.inter_line_gaps_mm.map(String));
       }
-    } catch (caught) {
+    } catch (e) {
       setResult(null);
-      setError(caught instanceof Error ? caught.message : "Could not generate cake topper.");
+      setError(e instanceof Error ? e.message : "Could not generate cake topper.");
     } finally {
       setLoading(false);
     }
@@ -148,49 +137,45 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     callApi([], []);
   }
 
-  function updateLine(i: number, patch: Partial<LineState>, regen = true) {
+  function patchLine(i: number, patch: Partial<LineState>) {
     const updated = lineStates.map((s, idx) => idx === i ? { ...s, ...patch } : s);
     setLineStates(updated);
-    if (regen) callApi(updated, interLineGaps);
+    if (!("expanded" in patch)) callApi(updated, interLineGaps);
   }
 
-  function updateGap(i: number, value: string) {
-    const updated = interLineGaps.map((g, idx) => idx === i ? value : g);
-    setInterLineGaps(updated);
-    const parsed = parseFloat(value);
-    if (!isNaN(parsed)) callApi(lineStates, updated);
-  }
-
-  function toggleGap(lineIdx: number, gapIdx: number) {
+  function toggleGap(li: number, gi: number) {
     const updated = lineStates.map((s, i) =>
-      i !== lineIdx ? s : {
+      i !== li ? s : {
         ...s,
-        gapStates: s.gapStates.map((g, j) =>
-          j === gapIdx ? { ...g, enabled: !g.enabled } : g
-        ),
-      }
+        gapStates: s.gapStates.map((g, j) => j === gi ? { ...g, enabled: !g.enabled } : g),
+      },
     );
     setLineStates(updated);
     callApi(updated, interLineGaps);
   }
 
-  function updateGapMm(lineIdx: number, gapIdx: number, value: string) {
+  function setGapMm(li: number, gi: number, value: string) {
     const updated = lineStates.map((s, i) =>
-      i !== lineIdx ? s : {
+      i !== li ? s : {
         ...s,
-        gapStates: s.gapStates.map((g, j) =>
-          j === gapIdx ? { ...g, overlapMm: value } : g
-        ),
-      }
+        gapStates: s.gapStates.map((g, j) => j === gi ? { ...g, overlapMm: value } : g),
+      },
     );
     setLineStates(updated);
     if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps);
   }
 
+  function setInterGap(i: number, value: string) {
+    const updated = interLineGaps.map((g, idx) => idx === i ? value : g);
+    setInterLineGaps(updated);
+    if (!isNaN(parseFloat(value))) callApi(lineStates, updated);
+  }
+
   function applyGlobalOverlap(mode: OverlapMode) {
     setDefaultOverlap(mode);
+    if (lineStates.length === 0) return;
     const mm = OVERLAP_MODES.find((m) => m.value === mode)?.mm;
-    if (mm === null || mm === undefined || lineStates.length === 0) return;
+    if (mm == null) return;
     const updated = lineStates.map((s) => ({
       ...s,
       overlapMode: mode,
@@ -201,41 +186,42 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   }
 
   const meta = result?.metadata;
+  const overlapMmForMode = OVERLAP_MODES.find((m) => m.value === defaultOverlap)?.mm ?? 1.5;
 
   return (
     <div className="ct-panel">
-      <div className="ct-description">
-        <p>
-          Multi-line text for cake toppers. Each line has its own font, size, alignment,
-          and letter-spacing controls. Vertical gaps between lines are independently adjustable.
-        </p>
-      </div>
-
-      {/* Global controls */}
-      <div className="ct-global-row">
-        <label className="ct-global-field">
-          <span>Text</span>
+      {/* ── Top bar ──────────────────────────────────────────── */}
+      <div className="ct-topbar">
+        <div className="ct-topbar-text">
+          <label className="ct-label" htmlFor="ct-text">Text</label>
           <input
+            id="ct-text"
             type="text"
-            value={text}
-            onChange={(e) => { setText(e.target.value); setLineStates([]); setInterLineGaps([]); setResult(null); }}
-            placeholder="Happy Birthday Sarah"
             className="ct-text-input"
+            value={text}
+            placeholder="Happy Birthday Sarah"
+            onChange={(e) => {
+              setText(e.target.value);
+              setLineStates([]);
+              setInterLineGaps([]);
+              setResult(null);
+            }}
           />
-        </label>
-        <label className="ct-global-field">
-          <span>Default Font</span>
-          <div className="ct-font-row">
+        </div>
+
+        <div className="ct-topbar-font">
+          <label className="ct-label">Font</label>
+          <div className="ct-font-combo">
             <input
               type="text"
-              placeholder="search…"
+              placeholder="Search…"
               value={fontSearch}
               onChange={(e) => setFontSearch(e.target.value)}
               className="ct-font-search"
             />
             <select
               value={defaultFontId}
-              onChange={(e) => { setDefaultFontId(e.target.value); setLineStates([]); }}
+              onChange={(e) => setDefaultFontId(e.target.value)}
               aria-label="Default font"
             >
               {filteredFonts.map((f) => (
@@ -243,18 +229,17 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
               ))}
             </select>
           </div>
-        </label>
-        <label className="ct-global-field ct-global-field--narrow">
-          <span>Size (mm)</span>
+        </div>
+
+        <div className="ct-topbar-size">
+          <label className="ct-label">Size&nbsp;(mm)</label>
           <input
-            type="number"
-            min="5"
-            max="300"
-            step="1"
-            value={defaultFontSize}
-            onChange={(e) => setDefaultFontSize(e.target.value)}
+            type="number" min="5" max="300" step="1"
+            value={defaultSize}
+            onChange={(e) => setDefaultSize(e.target.value)}
           />
-        </label>
+        </div>
+
         <button
           className="generate-button"
           type="button"
@@ -262,155 +247,184 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           disabled={loading || !defaultFontId || words.length === 0}
         >
           <Wand2 size={18} aria-hidden="true" />
-          {loading ? "Generating" : "Generate"}
+          {loading ? "Generating…" : "Generate"}
         </button>
       </div>
 
-      {/* Word preview chips */}
+      {/* Word chips */}
       {words.length > 0 && (
-        <div className="ct-word-chips">
+        <div className="ct-chips">
           {words.map((w, i) => (
-            <span key={i} className="ct-word-chip">Line {i + 1}: {w}</span>
+            <span key={i} className="ct-chip">Line {i + 1}: {w}</span>
           ))}
         </div>
       )}
 
-      {/* Global overlap shortcut */}
-      <div className="overlap-mode-row">
-        <span className="overlap-mode-label">
-          {lineStates.length > 0 ? "Set all letter gaps to" : "Letter overlap"}
-        </span>
-        <div className="overlap-mode-buttons">
+      {/* Letter overlap shortcut */}
+      <div className="ct-overlap-row">
+        <span className="ct-label">{lineStates.length > 0 ? "Set all letter gaps" : "Letter overlap"}</span>
+        <div className="ct-overlap-btns">
           {OVERLAP_MODES.map((m) => (
             <button
               key={m.value}
               type="button"
-              className={`overlap-mode-btn${defaultOverlap === m.value ? " overlap-mode-btn--active" : ""}`}
+              className={`ct-overlap-btn${defaultOverlap === m.value ? " ct-overlap-btn--active" : ""}`}
               onClick={() => applyGlobalOverlap(m.value)}
             >
-              {m.label}{m.mm !== null ? ` (${m.mm}mm)` : ""}
+              {m.label}{m.mm != null ? ` ${m.mm}mm` : ""}
             </button>
           ))}
         </div>
       </div>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <div className="ct-error" role="alert">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
 
-      {/* Per-line controls — appear after first generation */}
-      {lineStates.length > 0 && meta && meta.lines.map((lineMeta, li) => {
-        const ls = lineStates[li];
-        if (!ls) return null;
+      {/* ── Per-line accordion cards ─────────────────────────── */}
+      {lineStates.length > 0 && meta && lineStates.slice(0, words.length).map((ls, li) => {
+        const lineMeta = meta.lines[li];
+        if (!lineMeta) return null;
+        const fontName = fonts.find((f) => f.id === (ls.fontId || defaultFontId))?.full_name ?? "—";
         const pairLabels = lineMeta.glyph_chars.slice(0, -1).map(
-          (ch, i) => `${ch}→${lineMeta.glyph_chars[i + 1]}`
+          (ch, i) => `${ch}→${lineMeta.glyph_chars[i + 1]}`,
         );
+        const activeGaps = ls.gapStates.filter((g) => g.enabled).length;
 
         return (
-          <div key={li} className="ct-line-block">
-            <div className="ct-line-header">
-              <span className="ct-line-title">Line {li + 1} — {lineMeta.text}</span>
-              <span className="ct-line-dims">{lineMeta.width_mm.toFixed(1)} × {lineMeta.height_mm.toFixed(1)} mm</span>
-            </div>
+          <div key={li} className="ct-card">
+            {/* Card header — always visible, click to expand/collapse */}
+            <button
+              type="button"
+              className="ct-card-header"
+              onClick={() => patchLine(li, { expanded: !ls.expanded })}
+              aria-expanded={ls.expanded}
+            >
+              <span className="ct-card-chevron">
+                {ls.expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+              <span className="ct-card-word">Line {li + 1} — <em>{lineMeta.text}</em></span>
+              <span className="ct-card-meta">
+                {fontName} · {ls.fontSizeMm}mm · {ls.alignment}
+                {activeGaps > 0 && <span className="ct-card-gaps-badge">{activeGaps} gap{activeGaps !== 1 ? "s" : ""}</span>}
+              </span>
+              <span className="ct-card-dims">{lineMeta.width_mm.toFixed(1)} × {lineMeta.height_mm.toFixed(1)} mm</span>
+            </button>
 
-            {/* Per-line font, size, alignment */}
-            <div className="ct-line-controls">
-              <label className="ct-line-field">
-                <span>Font</span>
-                <select
-                  value={ls.fontId || defaultFontId}
-                  onChange={(e) => updateLine(li, { fontId: e.target.value })}
-                >
-                  {fonts.map((f) => (
-                    <option key={f.id} value={f.id}>{f.full_name}</option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="ct-line-field ct-line-field--narrow">
-                <span>Size (mm)</span>
-                <input
-                  type="number" min="5" max="300" step="1"
-                  value={ls.fontSizeMm}
-                  onChange={(e) => updateLine(li, { fontSizeMm: e.target.value })}
-                />
-              </label>
-
-              <label className="ct-line-field ct-line-field--narrow">
-                <span>Align</span>
-                <select
-                  value={ls.alignment}
-                  onChange={(e) => updateLine(li, { alignment: e.target.value as AlignmentMode })}
-                >
-                  {ALIGNMENTS.map((a) => (
-                    <option key={a.value} value={a.value}>{a.label}</option>
-                  ))}
-                </select>
-              </label>
-
-              {ls.alignment === "manual" && (
-                <label className="ct-line-field ct-line-field--narrow">
-                  <span>X offset (mm)</span>
-                  <input
-                    type="number" min="-500" max="500" step="0.5"
-                    value={ls.alignmentOffsetMm}
-                    onChange={(e) => updateLine(li, { alignmentOffsetMm: e.target.value })}
-                  />
-                </label>
-              )}
-            </div>
-
-            {/* Per-letter gap controls */}
-            {ls.gapStates.length > 0 && (
-              <div className="gap-controls">
-                <span className="gap-controls-heading">Letter gaps</span>
-                <div className="gap-controls-grid">
-                  {ls.gapStates.map((gs, gi) => (
-                    <div key={gi} className={`gap-row${gs.enabled ? " gap-row--on" : " gap-row--off"}`}>
-                      <button
-                        type="button"
-                        className={`gap-toggle${gs.enabled ? " gap-toggle--on" : ""}`}
-                        onClick={() => toggleGap(li, gi)}
-                        aria-pressed={gs.enabled}
-                      >
-                        {gs.enabled ? "✓" : "○"}
-                      </button>
-                      <span className="gap-label">{pairLabels[gi] ?? `Gap ${gi + 1}`}</span>
-                      {gs.enabled ? (
-                        <label className="gap-mm-input">
-                          <input
-                            type="number" min="0.1" max="10" step="0.1"
-                            value={gs.overlapMm}
-                            onChange={(e) => updateGapMm(li, gi, e.target.value)}
-                          />
-                          <span>mm</span>
-                        </label>
-                      ) : (
-                        <span className="gap-disabled-label">disabled</span>
-                      )}
-                      {lineMeta && (
-                        <span className="gap-result">
-                          → {lineMeta.gaps_after_mm[gi]?.toFixed(2)} mm
-                        </span>
-                      )}
+            {/* Card body — collapsible */}
+            {ls.expanded && (
+              <div className="ct-card-body">
+                {/* Font / size / alignment row */}
+                <div className="ct-card-controls">
+                  <div className="ct-card-field">
+                    <span className="ct-label">Font</span>
+                    <select
+                      value={ls.fontId || defaultFontId}
+                      onChange={(e) => patchLine(li, { fontId: e.target.value })}
+                    >
+                      {fonts.map((f) => (
+                        <option key={f.id} value={f.id}>{f.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="ct-card-field ct-card-field--sm">
+                    <span className="ct-label">Size (mm)</span>
+                    <input
+                      type="number" min="5" max="300" step="1"
+                      value={ls.fontSizeMm}
+                      onChange={(e) => patchLine(li, { fontSizeMm: e.target.value })}
+                    />
+                  </div>
+                  <div className="ct-card-field ct-card-field--sm">
+                    <span className="ct-label">Align</span>
+                    <div className="ct-align-btns">
+                      {ALIGNMENTS.map((a) => (
+                        <button
+                          key={a}
+                          type="button"
+                          className={`ct-align-btn${ls.alignment === a ? " ct-align-btn--active" : ""}`}
+                          onClick={() => patchLine(li, { alignment: a })}
+                          title={a}
+                        >
+                          {a === "left" ? "⬛︎←" : a === "center" ? "↔" : a === "right" ? "→⬛︎" : "X"}
+                        </button>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  {ls.alignment === "manual" && (
+                    <div className="ct-card-field ct-card-field--sm">
+                      <span className="ct-label">X offset (mm)</span>
+                      <input
+                        type="number" min="-500" max="500" step="0.5"
+                        value={ls.alignmentOffsetMm}
+                        onChange={(e) => patchLine(li, { alignmentOffsetMm: e.target.value })}
+                      />
+                    </div>
+                  )}
                 </div>
+
+                {/* Letter gaps — compact pill row */}
+                {ls.gapStates.length > 0 && (
+                  <div className="ct-gaps-section">
+                    <span className="ct-label">Letter gaps</span>
+                    <div className="ct-gap-pills">
+                      {ls.gapStates.map((gs, gi) => (
+                        <div
+                          key={gi}
+                          className={`ct-gap-pill${gs.enabled ? " ct-gap-pill--on" : " ct-gap-pill--off"}`}
+                        >
+                          <button
+                            type="button"
+                            className="ct-gap-pill-toggle"
+                            onClick={() => toggleGap(li, gi)}
+                            title={gs.enabled ? "Click to disable" : "Click to enable"}
+                          >
+                            {pairLabels[gi] ?? `Gap ${gi + 1}`}
+                          </button>
+                          {gs.enabled && (
+                            <input
+                              type="number"
+                              min="0.1"
+                              max="10"
+                              step="0.1"
+                              value={gs.overlapMm}
+                              className="ct-gap-pill-input"
+                              onChange={(e) => setGapMm(li, gi, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          )}
+                          {lineMeta && gs.enabled && (
+                            <span className="ct-gap-pill-result">
+                              {lineMeta.gaps_after_mm[gi]?.toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Vertical gap below this line (not after last) */}
+            {/* Vertical gap row — between this card and the next */}
             {li < lineStates.length - 1 && (
-              <div className="ct-vgap-row">
-                <span className="ct-vgap-label">↕ Line {li + 1} → {li + 2} vertical gap</span>
-                <label className="ct-vgap-input">
-                  <input
-                    type="number" min="-200" max="200" step="0.5"
-                    value={interLineGaps[li] ?? DEFAULT_INTER_GAP}
-                    onChange={(e) => updateGap(li, e.target.value)}
-                  />
-                  <span>mm</span>
-                </label>
+              <div className="ct-vgap">
+                <span className="ct-vgap-icon">↕</span>
+                <span className="ct-vgap-label">Gap {li + 1}→{li + 2}</span>
+                <input
+                  type="number"
+                  min="-200"
+                  max="200"
+                  step="0.5"
+                  value={interLineGaps[li] ?? DEFAULT_INTER_GAP}
+                  className="ct-vgap-input"
+                  onChange={(e) => setInterGap(li, e.target.value)}
+                />
+                <span className="ct-vgap-unit">mm</span>
                 <span className="ct-vgap-hint">
-                  {parseFloat(interLineGaps[li] ?? DEFAULT_INTER_GAP) < 0 ? "overlap ↑" : "space ↓"}
+                  {parseFloat(interLineGaps[li] ?? DEFAULT_INTER_GAP) < 0 ? "↑ overlap" : "↓ space"}
                 </span>
               </div>
             )}
@@ -425,9 +439,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         <div>
           <span>SVG-first export</span>
           <strong>
-            {meta
-              ? `${meta.canvas_width_mm}mm × ${meta.canvas_height_mm}mm`
-              : "Ready"}
+            {meta ? `${meta.canvas_width_mm}mm × ${meta.canvas_height_mm}mm` : "Ready"}
           </strong>
         </div>
         <ExportControls
