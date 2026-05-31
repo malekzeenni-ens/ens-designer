@@ -5,7 +5,7 @@ import svgwrite
 from .models import CanonicalGeometry, GeometryPath, PathCommand
 
 
-def export_svg(geometry: CanonicalGeometry) -> str:
+def export_svg(geometry: CanonicalGeometry, fill_rule: str = "evenodd") -> str:
     width = geometry.dimensions.width
     height = geometry.dimensions.height
     min_x = geometry.bounds.min_x
@@ -16,7 +16,7 @@ def export_svg(geometry: CanonicalGeometry) -> str:
     drawing.attribs["version"] = "1.1"
 
     for path in geometry.paths:
-        drawing.add(drawing.path(d=_path_data(path), fill="#000000", stroke="none", fill_rule="evenodd"))
+        drawing.add(drawing.path(d=_path_data(path), fill="#000000", stroke="none", fill_rule=fill_rule))
 
     return drawing.tostring()
 

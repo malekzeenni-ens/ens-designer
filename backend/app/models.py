@@ -143,3 +143,26 @@ class Preset(BaseModel):
     preset_name: str
     default_material_id: str
     description: str
+
+
+class OverlapRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=80)
+    font_id: str
+    overlap_mode: Literal["auto", "light", "medium", "strong", "custom"] = "medium"
+    overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
+
+
+class OverlapMetadata(BaseModel):
+    mode: str
+    target_overlap_mm: float
+    gaps_before_mm: list[float]
+    gaps_after_mm: list[float]
+
+
+class OverlapResponse(BaseModel):
+    svg: str
+    png_base64: str
+    svg_filename: str
+    png_filename: str
+    overlap_metadata: OverlapMetadata
+    dimensions: dict

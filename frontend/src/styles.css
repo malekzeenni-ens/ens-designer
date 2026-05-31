@@ -59,6 +59,123 @@ h1 {
   line-height: 0.95;
 }
 
+/* ── Tab bar ─────────────────────────────────────────────── */
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #d9d6ca;
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: #66736f;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  position: relative;
+  bottom: -2px;
+}
+
+.tab-btn:hover {
+  color: #18241f;
+  background: #f0ede4;
+}
+
+.tab-btn--active {
+  border-color: #d9d6ca;
+  background: #ffffff;
+  color: #111816;
+  border-bottom-color: #ffffff;
+}
+
+/* ── Overlap Engine ──────────────────────────────────────── */
+
+.overlap-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.overlap-description p {
+  margin: 0;
+  color: #66736f;
+  font-size: 0.9rem;
+}
+
+.overlap-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.overlap-mode-label {
+  color: #4d5a55;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.overlap-mode-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.overlap-mode-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid #cfcabe;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #28332f;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.overlap-mode-btn:hover {
+  border-color: #18241f;
+  background: #f0ede4;
+}
+
+.overlap-mode-btn--active {
+  border-color: #18241f;
+  background: #18241f;
+  color: #ffffff;
+}
+
+.overlap-custom-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4d5a55;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.overlap-custom-input input {
+  width: 70px;
+  height: 34px;
+}
+
+.overlap-meta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: #66736f;
+}
+
+/* ── Preset bar ──────────────────────────────────────────── */
+
 .preset-bar {
   display: flex;
   align-items: center;

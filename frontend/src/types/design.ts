@@ -1,3 +1,23 @@
+export type OverlapMode = "auto" | "light" | "medium" | "strong" | "custom";
+
+export interface OverlapResult {
+  svg: string;
+  png_base64: string;
+  svg_filename: string;
+  png_filename: string;
+  overlap_metadata: {
+    mode: string;
+    target_overlap_mm: number;
+    gaps_before_mm: number[];
+    gaps_after_mm: number[];
+  };
+  dimensions: {
+    width: number;
+    height: number;
+    units: string;
+  };
+}
+
 export interface BridgeOverride {
   pair_index: number;
   action: "add" | "remove" | "set_width";
