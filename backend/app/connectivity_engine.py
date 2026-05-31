@@ -11,12 +11,11 @@ from .welding_engine import apply_welding
 
 logger = logging.getLogger(__name__)
 
-_COMPRESSION_STEP_MM = 0.3
-_MAX_COMPRESSION_STEPS = 20
-# Maximum per-gap shift allowed during compression. Any font whose largest
-# inter-glyph gap exceeds this value is rejected immediately and sent to the
-# bridge fallback. Keeps compression visually non-destructive.
-_MAX_COMPRESSION_PER_GAP_MM = 1.5
+# A gap smaller than this is treated as "touching" — no compression needed for this pair.
+_TOUCH_TOLERANCE_MM = 0.05
+# Maximum single-pair gap that per-pair compression will attempt to close.
+# Wide enough to cover typical script-font uppercase → lowercase gaps (~3 mm).
+_MAX_PER_PAIR_GAP_MM = 5.0
 
 
 def resolve_connectivity(
@@ -28,7 +27,8 @@ def resolve_connectivity(
     Three-level connectivity resolution.
 
     Level 1 — Natural Connectivity: already one component — return unchanged.
-    Level 2 — Letter Compression: close small gaps by shifting glyphs.
+    Level 2 — Per-pair Compression: close specific disconnected gaps while
+               leaving naturally-overlapping pairs untouched.
     Level 3 — Bridge Fallback: place structural bridge rectangles.
     """
     path_map = {p.path_id: p for p in geometry.paths}
@@ -55,10 +55,10 @@ def resolve_connectivity(
             components_before, components_before, 0, [], 0, 0.0,
         )
 
-    # Level 2 — Intelligent Letter Compression.
+    # Level 2 — Per-pair Compression.
     compressed, compression_mm = _apply_compression(geometry)
     if compressed is not None:
-        logger.debug("Level 2: compression succeeded at %.3f mm/gap.", compression_mm)
+        logger.debug("Level 2: per-pair compression succeeded (max gap closed: %.3f mm).", compression_mm)
         result = _with_metadata(
             compressed, material, "compression", True,
             components_before, 1, 0, [], 0, compression_mm,
@@ -87,80 +87,86 @@ def _apply_compression(
     geometry: CanonicalGeometry,
 ) -> tuple[CanonicalGeometry | None, float]:
     """
-    Attempt to connect glyphs by uniformly reducing inter-glyph spacing.
+    Per-pair compression: close only disconnected gaps while leaving
+    naturally-overlapping pairs untouched.
 
-    Guard rails:
-    1. Bounding-box pre-check: if the largest inter-glyph gap already exceeds
-       _MAX_COMPRESSION_PER_GAP_MM, skip all Shapely work and return None.
-       This fast-paths bold/wide-spaced fonts (e.g. Anton) to bridge fallback
-       without destructive compression.
-    2. Shift limit: each compression step shifts glyphs by _COMPRESSION_STEP_MM.
-       The loop breaks when shift_per_gap > _MAX_COMPRESSION_PER_GAP_MM.
-    3. Geometry is NOT merged after compression — original letter shapes are
-       preserved so the SVG preview remains readable.
+    Key distinction:
+    - Fully disconnected fonts (Anton, Arial — all gaps positive): return None.
+      Bridge fallback is structurally superior; per-pair compression would only
+      produce weak single-line contact between every letter pair.
+    - Partially connected fonts (script fonts — some gaps negative, some positive):
+      only the positive gaps are closed. Each disconnected pair closes to exactly
+      _TOUCH_TOLERANCE_MM. Subsequent glyphs accumulate the shift cumulatively,
+      preserving relative spacing among naturally-connected letters.
+
+    Example — "Oliver" in a script font:
+      O→l gap = +3.1 mm  (disconnected — compress this)
+      l→i gap = −3.4 mm  (naturally overlapping — leave untouched)
+      i→v gap = −2.9 mm  (naturally overlapping — leave untouched)
+      ...
+      Result: O slides right to touch l; l-i-v-e-r remain at natural positions.
     """
     glyph_path_ids = [list(g.path_ids) for g in geometry.glyphs]
-
-    # --- Step 1: bounding-box gap pre-check (fast, no Shapely) ---------------
     gaps = _bbox_gaps(geometry)
-    for i, gap in enumerate(gaps):
-        logger.debug(
-            "Pre-check gap glyph[%d]->[%d]: %.3f mm  (limit=%.3f mm)",
-            i, i + 1, gap, _MAX_COMPRESSION_PER_GAP_MM,
-        )
 
     if not gaps:
         return None, 0.0
 
-    max_gap = max(g for g in gaps if g > 0.0) if any(g > 0.0 for g in gaps) else 0.0
+    for i, gap in enumerate(gaps):
+        logger.debug("Per-pair gap glyph[%d]->[%d]: %.3f mm", i, i + 1, gap)
 
-    if max_gap > _MAX_COMPRESSION_PER_GAP_MM:
+    has_naturally_connected_pair = any(g <= _TOUCH_TOLERANCE_MM for g in gaps)
+    positive_gaps = [(i, g) for i, g in enumerate(gaps) if g > _TOUCH_TOLERANCE_MM]
+
+    if not positive_gaps:
+        # All pairs already touching or overlapping — Level 1 should have caught this.
+        return None, 0.0
+
+    if not has_naturally_connected_pair:
+        # Every pair is disconnected (Anton/Arial style).
+        # Per-pair compression would close every gap to single-line contact —
+        # structurally weak. Bridge fallback is the correct strategy.
         logger.debug(
-            "Compression rejected: max gap %.3f mm > readability limit %.3f mm. "
-            "Font requires bridge fallback.",
-            max_gap, _MAX_COMPRESSION_PER_GAP_MM,
+            "All %d pairs positive — fully disconnected font. "
+            "Bridge fallback preferred over weak per-pair compression.",
+            len(gaps),
         )
         return None, 0.0
 
-    logger.debug(
-        "Compression eligible: max gap %.3f mm within limit %.3f mm. "
-        "Starting Shapely connectivity loop.",
-        max_gap, _MAX_COMPRESSION_PER_GAP_MM,
-    )
-
-    # --- Step 2: iterative Shapely connectivity checks -----------------------
-    for step in range(1, _MAX_COMPRESSION_STEPS + 1):
-        shift_per_gap = step * _COMPRESSION_STEP_MM
-        if shift_per_gap > _MAX_COMPRESSION_PER_GAP_MM:
+    # Validate: each positive gap must be within the per-pair limit.
+    for pair_index, gap in positive_gaps:
+        if gap > _MAX_PER_PAIR_GAP_MM:
             logger.debug(
-                "Compression loop ended at step %d (%.3f mm > limit). "
-                "No connectivity achieved — bridge fallback required.",
-                step, shift_per_gap,
+                "Pair %d gap %.3f mm exceeds per-pair limit %.3f mm — bridge fallback.",
+                pair_index, gap, _MAX_PER_PAIR_GAP_MM,
             )
-            break
+            return None, 0.0
 
-        compressed_paths = _shift_paths(geometry.paths, glyph_path_ids, shift_per_gap)
-        path_map = {p.path_id: p for p in compressed_paths}
-        geoms = [glyph_to_shapely(g, path_map) for g in geometry.glyphs]
+    # Compute cumulative shifts.
+    # Each positive gap contributes a shift to all subsequent glyphs.
+    # Negative-gap pairs contribute nothing extra — relative positions preserved.
+    cumulative_shifts = [0.0] * len(geometry.glyphs)
+    max_closed_gap = 0.0
 
-        if count_connected_components(geoms) <= 1:
-            logger.debug(
-                "Compression step %d (%.3f mm/gap): all glyphs connected. "
-                "Returning shifted paths without geometry merge.",
-                step, shift_per_gap,
-            )
-            # Return shifted paths WITHOUT merging — preserves original letter
-            # shapes and keeps the SVG preview readable.
-            updated = geometry.model_copy(update={"paths": compressed_paths}, deep=True)
-            return updated, shift_per_gap
+    for pair_index, gap in positive_gaps:
+        pair_shift = gap - _TOUCH_TOLERANCE_MM
+        for glyph_index in range(pair_index + 1, len(geometry.glyphs)):
+            cumulative_shifts[glyph_index] += pair_shift
+        max_closed_gap = max(max_closed_gap, gap)
+        logger.debug(
+            "Pair %d: closing %.3f mm gap → shift downstream glyphs by %.3f mm.",
+            pair_index, gap, pair_shift,
+        )
 
-    return None, 0.0
+    compressed_paths = _shift_paths_by_cumulative(geometry.paths, glyph_path_ids, cumulative_shifts)
+    updated = geometry.model_copy(update={"paths": compressed_paths}, deep=True)
+    return updated, max_closed_gap
 
 
 def _bbox_gaps(geometry: CanonicalGeometry) -> list[float]:
     """
     Compute inter-glyph gaps using bounding-box x-coordinates.
-    Returns one gap value per adjacent glyph pair (positive = gap, negative = overlap).
+    Positive = gap, negative = overlap.
     """
     path_map = {p.path_id: p for p in geometry.paths}
     glyph_ranges: list[tuple[float, float] | None] = []
@@ -184,19 +190,19 @@ def _bbox_gaps(geometry: CanonicalGeometry) -> list[float]:
         if left is None or right is None:
             gaps.append(0.0)
         else:
-            gaps.append(right[0] - left[1])  # right.min_x - left.max_x
+            gaps.append(right[0] - left[1])
     return gaps
 
 
-def _shift_paths(
+def _shift_paths_by_cumulative(
     paths: list[GeometryPath],
     glyph_path_ids: list[list[str]],
-    shift_per_gap: float,
+    cumulative_shifts: list[float],
 ) -> list[GeometryPath]:
-    """Shift each glyph group leftward by glyph_index × shift_per_gap (group 0 stays fixed)."""
+    """Shift each glyph leftward by its individually computed cumulative shift."""
     pid_to_shift: dict[str, float] = {}
-    for idx, pid_group in enumerate(glyph_path_ids):
-        shift = idx * shift_per_gap
+    for glyph_index, pid_group in enumerate(glyph_path_ids):
+        shift = cumulative_shifts[glyph_index]
         for pid in pid_group:
             pid_to_shift[pid] = shift
 

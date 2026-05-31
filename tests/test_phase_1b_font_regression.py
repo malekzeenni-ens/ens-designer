@@ -137,11 +137,12 @@ class TestScriptFontRegression:
         self, client: TestClient, catalogue: dict, font_keyword: str
     ) -> None:
         """
-        Script fonts flow between lowercase letters, so mixed-case "Oliver"
-        (uppercase O → lowercase l) typically has one gap that requires a
-        bridge. "natural" is the expected outcome for all-lowercase inputs;
-        "bridge" (with 0 compression) is the correct outcome for "Oliver".
-        Either way: NO compression must be applied.
+        Mixed-case "Oliver" in a script font: lowercase letters overlap naturally,
+        but uppercase O → lowercase l typically has a gap.
+        Per-pair compression closes only the O→l gap — strategy is "compression".
+        Natural is also acceptable if the font's O already touches l.
+        Bridge is acceptable as a fallback.
+        Compression must never exceed the per-pair limit (5 mm).
         """
         font = _find(catalogue, font_keyword)
         if font is None:
@@ -149,14 +150,14 @@ class TestScriptFontRegression:
         r = client.post("/api/generate", json={"text": "Oliver", "font_id": font["id"]})
         assert r.status_code == 200
         welding = r.json()["geometry"]["welding"]
-        # Script fonts must not use destructive compression.
-        assert welding["compression_amount_mm"] == 0.0, (
-            f"{font_keyword}: compression was applied ({welding['compression_amount_mm']} mm) "
-            f"on a script font — letters may have collapsed."
+        # Any connected strategy is valid — per-pair compression is now the expected path.
+        assert welding["strategy"] in ("natural", "compression", "bridge"), (
+            f"{font_keyword}: unexpected strategy {welding['strategy']!r}"
         )
-        # The outcome is connected (natural or bridge), never destructive.
-        assert welding["strategy"] in ("natural", "bridge"), (
-            f"{font_keyword}: expected natural or bridge, got {welding['strategy']!r}"
+        # Compression, if applied, must be within the per-pair safety limit.
+        assert welding["compression_amount_mm"] <= 5.0, (
+            f"{font_keyword}: compression {welding['compression_amount_mm']} mm "
+            f"exceeds per-pair safety limit of 5 mm"
         )
 
     @pytest.mark.parametrize("font_keyword", ["pacifico", "peanut butter", "dancing script"])

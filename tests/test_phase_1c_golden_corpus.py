@@ -233,16 +233,17 @@ class TestGoldenCorpusMaterials:
 class TestGoldenCorpusCompressionSafety:
 
     @pytest.mark.parametrize("name", ["Oliver", "Amelia", "Muhammad", "Hannah"])
-    def test_compression_never_exceeds_limit(
+    def test_compression_never_exceeds_per_pair_limit(
         self, client: TestClient, catalogue: dict, name: str
     ) -> None:
+        """Per-pair compression can close gaps up to 5 mm; uniform over-compression is gone."""
         fonts = client.get("/api/fonts").json()
         if not fonts:
             pytest.skip("No fonts")
         r = client.post("/api/generate", json={"text": name, "font_id": fonts[0]["id"]})
         assert r.status_code == 200
         mm = r.json()["geometry"]["welding"]["compression_amount_mm"]
-        assert mm <= 1.5, f"'{name}': compression {mm} mm exceeds 1.5 mm safety limit"
+        assert mm <= 5.0, f"'{name}': compression {mm} mm exceeds per-pair safety limit of 5 mm"
 
 
 # ---------------------------------------------------------------------------
