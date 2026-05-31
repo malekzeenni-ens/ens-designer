@@ -283,8 +283,19 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         </div>
       )}
 
-      {/* ── Per-line accordion cards ─────────────────────────── */}
-      {lineStates.length > 0 && meta && lineStates.slice(0, words.length).map((ls, li) => {
+      {/* Two-column: preview left, accordion cards right */}
+      <div className="two-col-main">
+        <div className="two-col-preview">
+          <PreviewPanel svg={result?.svg ?? null} />
+        </div>
+
+        <div className="two-col-settings">
+          {lineStates.length === 0 && (
+            <div className="two-col-empty">
+              Generate a design to see per-line controls.
+            </div>
+          )}
+          {lineStates.length > 0 && meta && lineStates.slice(0, words.length).map((ls, li) => {
         const lineMeta = meta.lines[li];
         if (!lineMeta) return null;
         const fontName = fonts.find((f) => f.id === (ls.fontId || defaultFontId))?.full_name ?? "—";
@@ -430,10 +441,9 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
             )}
           </div>
         );
-      })}
-
-      {/* Preview */}
-      <PreviewPanel svg={result?.svg ?? null} />
+        })}
+        </div>{/* two-col-settings */}
+      </div>{/* two-col-main */}
 
       <div className="footer-bar">
         <div>

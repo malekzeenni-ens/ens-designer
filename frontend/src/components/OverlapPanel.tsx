@@ -203,55 +203,65 @@ export function OverlapPanel({ fonts }: OverlapPanelProps) {
         )}
       </div>
 
-      {/* Per-gap controls — appear after first generation */}
-      {gapStates.length > 0 && (
-        <div className="gap-controls" aria-label="Per-gap overlap controls">
-          <span className="gap-controls-heading">Gap controls</span>
-          <div className="gap-controls-grid">
-            {gapStates.map((state, i) => (
-              <div key={i} className={`gap-row${state.enabled ? " gap-row--on" : " gap-row--off"}`}>
-                <button
-                  type="button"
-                  className={`gap-toggle${state.enabled ? " gap-toggle--on" : ""}`}
-                  onClick={() => handleGapToggle(i)}
-                  aria-pressed={state.enabled}
-                  title={state.enabled ? "Click to disable this gap" : "Click to enable this gap"}
-                >
-                  {state.enabled ? "✓" : "○"}
-                </button>
-                <span className="gap-label">{pairLabels[i] ?? `Gap ${i + 1}`}</span>
-                {state.enabled ? (
-                  <label className="gap-mm-input">
-                    <input
-                      type="number"
-                      min="0.1"
-                      max="10"
-                      step="0.1"
-                      value={state.overlapMm}
-                      onChange={(e) => handleGapMm(i, e.target.value)}
-                      aria-label={`Overlap for gap ${i + 1} in mm`}
-                    />
-                    <span>mm</span>
-                  </label>
-                ) : (
-                  <span className="gap-disabled-label">disabled</span>
-                )}
-                {meta && (
-                  <span className="gap-result">
-                    {state.enabled
-                      ? `→ ${meta.gaps_after_mm[i]?.toFixed(2)} mm`
-                      : `→ ${meta.gaps_before_mm[i]?.toFixed(2)} mm`}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {error && <p className="error">{error}</p>}
 
-      <PreviewPanel svg={result?.svg ?? null} />
+      {/* Two-column: preview left, gap controls right */}
+      <div className="two-col-main">
+        <div className="two-col-preview">
+          <PreviewPanel svg={result?.svg ?? null} />
+        </div>
+
+        <div className="two-col-settings">
+          {gapStates.length > 0 ? (
+            <div className="gap-controls" aria-label="Per-gap overlap controls">
+              <span className="gap-controls-heading">Gap controls</span>
+              <div className="gap-controls-grid">
+                {gapStates.map((state, i) => (
+                  <div key={i} className={`gap-row${state.enabled ? " gap-row--on" : " gap-row--off"}`}>
+                    <button
+                      type="button"
+                      className={`gap-toggle${state.enabled ? " gap-toggle--on" : ""}`}
+                      onClick={() => handleGapToggle(i)}
+                      aria-pressed={state.enabled}
+                      title={state.enabled ? "Click to disable this gap" : "Click to enable this gap"}
+                    >
+                      {state.enabled ? "✓" : "○"}
+                    </button>
+                    <span className="gap-label">{pairLabels[i] ?? `Gap ${i + 1}`}</span>
+                    {state.enabled ? (
+                      <label className="gap-mm-input">
+                        <input
+                          type="number"
+                          min="0.1"
+                          max="10"
+                          step="0.1"
+                          value={state.overlapMm}
+                          onChange={(e) => handleGapMm(i, e.target.value)}
+                          aria-label={`Overlap for gap ${i + 1} in mm`}
+                        />
+                        <span>mm</span>
+                      </label>
+                    ) : (
+                      <span className="gap-disabled-label">disabled</span>
+                    )}
+                    {meta && (
+                      <span className="gap-result">
+                        {state.enabled
+                          ? `→ ${meta.gaps_after_mm[i]?.toFixed(2)} mm`
+                          : `→ ${meta.gaps_before_mm[i]?.toFixed(2)} mm`}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="two-col-empty">
+              Generate a design to see per-gap controls.
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="footer-bar">
         <div>
