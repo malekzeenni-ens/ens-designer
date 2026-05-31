@@ -2,6 +2,7 @@ import type {
   BridgeOverride,
   CakeTopperLineConfig,
   CakeTopperResult,
+  FloatingComponentOffset,
   FontInfo,
   GenerateResponse,
   MaterialProfile,
@@ -85,6 +86,7 @@ export async function generateOverlap(
   mode: OverlapMode,
   customMm?: number,
   gapConfigs?: OverlapGapConfig[],
+  floatingOffsets?: FloatingComponentOffset[],
 ): Promise<OverlapResult> {
   const r = await fetch("/api/overlap", {
     method: "POST",
@@ -95,6 +97,7 @@ export async function generateOverlap(
       overlap_mode: mode,
       overlap_custom_mm: customMm ?? null,
       gap_configs: gapConfigs ?? [],
+      floating_offsets: floatingOffsets ?? [],
     }),
   });
   if (!r.ok) return _readError(r, "Could not generate overlap design.");

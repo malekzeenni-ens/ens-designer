@@ -19,6 +19,7 @@ export interface CakeTopperLineMetadata {
   width_mm: number;
   height_mm: number;
   x_offset_mm: number;
+  floating_components: FloatingComponentInfo[];
 }
 
 export interface CakeTopperResult {
@@ -41,6 +42,17 @@ export interface OverlapGapConfig {
   overlap_mm: number;
 }
 
+export interface FloatingComponentOffset {
+  glyph_index: number;
+  x_offset_mm: number;
+  y_offset_mm: number;
+}
+
+export interface FloatingComponentInfo {
+  glyph_index: number;
+  char: string;
+}
+
 export interface OverlapResult {
   svg: string;
   png_base64: string;
@@ -52,6 +64,7 @@ export interface OverlapResult {
     glyph_chars: string[];
     gaps_before_mm: number[];
     gaps_after_mm: number[];
+    floating_components: FloatingComponentInfo[];
   };
   dimensions: {
     width: number;

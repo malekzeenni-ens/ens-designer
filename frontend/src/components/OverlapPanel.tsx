@@ -5,6 +5,8 @@ import { ExportControls } from "./ExportControls";
 import { FontSelector } from "./FontSelector";
 import { PreviewPanel } from "./PreviewPanel";
 import { TextInput } from "./TextInput";
+import { FloatingControls, toFloatingOffsets } from "./FloatingControls";
+import type { FloatingOffsetMap } from "./FloatingControls";
 import { generateOverlap } from "../services/generationApi";
 import type { FontInfo, OverlapGapConfig, OverlapMode, OverlapResult } from "../types/design";
 
@@ -36,6 +38,7 @@ export function OverlapPanel({ fonts }: OverlapPanelProps) {
   const [mode, setMode] = useState<OverlapMode>("medium");
   const [customMm, setCustomMm] = useState("1.5");
   const [gapStates, setGapStates] = useState<GapState[]>([]);
+  const [floatingOffsets, setFloatingOffsets] = useState<FloatingOffsetMap>({});
   const [result, setResult] = useState<OverlapResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +82,7 @@ export function OverlapPanel({ fonts }: OverlapPanelProps) {
     try {
       const custom = currentMode === "custom" ? parseFloat(currentCustom) || 1.5 : undefined;
       const configs = states.length > 0 ? buildConfigs(states) : [];
-      const r = await generateOverlap(text, fontId, currentMode, custom, configs);
+      const r = await generateOverlap(text, fontId, currentMode, custom, configs, toFloatingOffsets(floatingOffsets));
       setResult(r);
       // Initialise gap states on first generation
       if (states.length === 0) {
@@ -93,10 +96,25 @@ export function OverlapPanel({ fonts }: OverlapPanelProps) {
     }
   }
 
+  function handleFloatingChange(glyphIndex: number, axis: "x" | "y", value: string) {
+    const updated: FloatingOffsetMap = {
+      ...floatingOffsets,
+      [glyphIndex]: {
+        ...(floatingOffsets[glyphIndex] ?? { xMm: "0", yMm: "0" }),
+        [axis === "x" ? "xMm" : "yMm"]: value,
+      },
+    };
+    setFloatingOffsets(updated);
+    if (!isNaN(parseFloat(value))) {
+      callApi(gapStates, mode, customMm);
+    }
+  }
+
   function handleGenerate() {
-    // Reset gap states so first generation applies global mode to all gaps
+    // Reset gap states and floating offsets on new generation
     const newStates: GapState[] = [];
     setGapStates(newStates);
+    setFloatingOffsets({});
     callApi(newStates, mode, customMm);
   }
 
@@ -259,6 +277,14 @@ export function OverlapPanel({ fonts }: OverlapPanelProps) {
             <div className="two-col-empty">
               Generate a design to see per-gap controls.
             </div>
+          )}
+
+          {meta && meta.floating_components.length > 0 && (
+            <FloatingControls
+              floatingComponents={meta.floating_components}
+              offsets={floatingOffsets}
+              onChange={handleFloatingChange}
+            />
           )}
         </div>
       </div>

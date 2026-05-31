@@ -2,6 +2,8 @@ import { ChevronDown, ChevronRight, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { ExportControls } from "./ExportControls";
+import { FloatingControls, toFloatingOffsets } from "./FloatingControls";
+import type { FloatingOffsetMap } from "./FloatingControls";
 import { PreviewPanel } from "./PreviewPanel";
 import { generateCakeTopper } from "../services/generationApi";
 import type {
@@ -36,6 +38,7 @@ type LineState = {
   overlapMode: OverlapMode;
   overlapCustomMm: string;
   gapStates: GapState[];
+  floatingOffsets: FloatingOffsetMap;
   expanded: boolean;
 };
 
@@ -52,6 +55,7 @@ function initLine(fontId: string, overlapMm: string, numGaps: number): LineState
     overlapMode: DEFAULT_OVERLAP,
     overlapCustomMm: "1.5",
     gapStates: Array.from({ length: numGaps }, () => ({ enabled: true, overlapMm })),
+    floatingOffsets: {},
     expanded: true,
   };
 }
@@ -101,6 +105,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         enabled: g.enabled,
         overlap_mm: parseFloat(g.overlapMm) || 1.5,
       })),
+      floating_offsets: toFloatingOffsets(s.floatingOffsets),
     }));
   }
 
@@ -415,6 +420,30 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                       ))}
                     </div>
                   </div>
+                )}
+
+                {/* Floating component controls — dots, accents */}
+                {lineMeta.floating_components.length > 0 && (
+                  <FloatingControls
+                    floatingComponents={lineMeta.floating_components}
+                    offsets={ls.floatingOffsets}
+                    onChange={(glyphIndex, axis, value) => {
+                      const updated = lineStates.map((s, i) =>
+                        i !== li ? s : {
+                          ...s,
+                          floatingOffsets: {
+                            ...s.floatingOffsets,
+                            [glyphIndex]: {
+                              ...(s.floatingOffsets[glyphIndex] ?? { xMm: "0", yMm: "0" }),
+                              [axis === "x" ? "xMm" : "yMm"]: value,
+                            },
+                          },
+                        },
+                      );
+                      setLineStates(updated);
+                      if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps);
+                    }}
+                  />
                 )}
               </div>
             )}

@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .canonical_geometry import build_geometry, recalculate_geometry_bounds
+from .floating_component import apply_floating_offsets, detect_floating_components
 from .font_loader import FontCatalog
 from .models import (
     CakeTopperLineConfig,
@@ -29,6 +30,7 @@ from .models import (
     CakeTopperMetadata,
     CakeTopperRequest,
     CakeTopperResponse,
+    FloatingComponentInfo,
     GeometryPath,
     OverlapGapConfig,
     PathCommand,
@@ -121,6 +123,7 @@ class CakeTopperService:
                 width_mm=round(ink_width, 3),
                 height_mm=round(ink_height, 3),
                 x_offset_mm=round(x_offset, 3),
+                floating_components=meta.get("floating_components", []),
             ))
 
             y_cursor += ink_height
@@ -180,15 +183,30 @@ class CakeTopperService:
 
         glyph_path_ids = [list(g.path_ids) for g in geometry.glyphs]
         shifted_paths = _shift_paths(geometry.paths, glyph_path_ids, shifts)
+
+        # Apply floating component X/Y offsets per glyph (dot on 'i', accents, etc.)
+        if cfg.floating_offsets:
+            shifted_paths = apply_floating_offsets(
+                shifted_paths, geometry.glyphs, cfg.floating_offsets
+            )
+
         geometry = geometry.model_copy(update={"paths": shifted_paths}, deep=True)
         geometry = recalculate_geometry_bounds(geometry)
 
         glyph_chars = _extract_chars(normalised, len(geometry.glyphs))
 
+        # Detect floating components for UI labelling
+        floating_info = detect_floating_components(geometry.glyphs, geometry.paths, glyph_chars)
+        floating_components = [
+            FloatingComponentInfo(glyph_index=f["glyph_index"], char=f["char"])
+            for f in floating_info
+        ]
+
         meta = {
             "glyph_chars": glyph_chars,
             "gaps_before_mm": [round(g, 3) for g in gaps_before],
             "gaps_after_mm": [round(g, 3) for g in gaps_after],
+            "floating_components": floating_components,
         }
         return geometry, meta
 

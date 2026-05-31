@@ -153,6 +153,7 @@ class CakeTopperLineConfig(BaseModel):
     overlap_mode: Literal["auto", "light", "medium", "strong", "custom"] = "medium"
     overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
     gap_configs: list["OverlapGapConfig"] = Field(default_factory=list)
+    floating_offsets: list[FloatingComponentOffset] = Field(default_factory=list)
 
 
 class CakeTopperRequest(BaseModel):
@@ -173,6 +174,7 @@ class CakeTopperLineMetadata(BaseModel):
     width_mm: float
     height_mm: float
     x_offset_mm: float
+    floating_components: list[FloatingComponentInfo] = Field(default_factory=list)
 
 
 class CakeTopperMetadata(BaseModel):
@@ -191,6 +193,17 @@ class CakeTopperResponse(BaseModel):
     metadata: CakeTopperMetadata
 
 
+class FloatingComponentOffset(BaseModel):
+    glyph_index: int = Field(ge=0)
+    x_offset_mm: float = 0.0
+    y_offset_mm: float = 0.0
+
+
+class FloatingComponentInfo(BaseModel):
+    glyph_index: int
+    char: str
+
+
 class OverlapGapConfig(BaseModel):
     pair_index: int = Field(ge=0, description="Zero-based index of the inter-glyph gap.")
     enabled: bool = True
@@ -204,6 +217,7 @@ class OverlapRequest(BaseModel):
     overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
     gap_configs: list[OverlapGapConfig] = Field(default_factory=list,
         description="Per-gap overrides. Empty = apply global mode to all gaps.")
+    floating_offsets: list[FloatingComponentOffset] = Field(default_factory=list)
 
 
 class OverlapMetadata(BaseModel):
@@ -212,6 +226,7 @@ class OverlapMetadata(BaseModel):
     glyph_chars: list[str]
     gaps_before_mm: list[float]
     gaps_after_mm: list[float]
+    floating_components: list[FloatingComponentInfo] = Field(default_factory=list)
 
 
 class OverlapResponse(BaseModel):
