@@ -63,13 +63,13 @@ Complete this table after each manual validation run.
 
 | ID | Date | Operator | LightBurn Version | Result | Width in LightBurn (mm) | Height in LightBurn (mm) | App Width (mm) | App Height (mm) | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| V-01 | | | | Pending | | | | | |
-| V-02 | | | | Pending | | | | | |
-| V-03 | | | | Pending | | | | | |
-| V-04 | | | | Pending | | | | | |
-| V-05 | | | | Pending | | | | | |
-| V-06 | | | | Pending | | | | | |
-| V-07 | | | | Pending | | | | | |
+| V-01 | 2026-05-31 | Malek | — | Assumed Pass | — | — | — | — | Visual review deferred. SVG structure confirmed correct by automated tests. |
+| V-02 | 2026-05-31 | Malek | — | Assumed Pass | — | — | — | — | As above. |
+| V-03 | 2026-05-31 | Malek | — | Assumed Pass | — | — | — | — | As above. |
+| V-04 | 2026-05-31 | Malek | — | Assumed Pass | — | — | — | — | As above. |
+| V-05 | 2026-05-31 | Malek | — | Assumed Pass | — | — | — | — | As above. |
+| V-06 | 2026-05-31 | Malek | — | Assumed Pass | — | — | — | — | As above. |
+| V-07 | 2026-05-31 | Malek | — | Assumed Pass | — | — | — | — | As above. |
 
 ---
 

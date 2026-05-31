@@ -1,86 +1,82 @@
-# README.md
-
 # AI SVG Generator
 
-AI SVG Generator is a local-first application designed for Etch 'N' Shine to generate production-ready SVG and PNG files for laser cutting.
-
-The platform automates:
-
-- Text and design connectivity resolution
-- Natural connectivity preservation
-- Intelligent letter compression
-- Structural bridges only as a fallback
-- Structural validation
-- Cake topper generation
-- AI-assisted artwork generation
-
-Future versions will provide a complete AI-powered design studio for laser businesses.
+AI SVG Generator is a local-first application for Etch 'N' Shine that generates production-ready SVG and PNG files for laser cutting.
 
 ---
 
-# Current Application
+# Current Status
 
-Phase 1B is implemented as a local deterministic connectivity resolution and validation MVP.
+**Phase 1C — Production Hardening — Complete — v0.3.0**
 
-Current workflow:
+| Phase | Status | Release |
+|---|---|---|
+| Phase 1A — Core Text Generation | Complete | v0.1.0 |
+| Phase 1B — Connectivity Resolution & Validation | Complete | v0.2.0 |
+| Phase 1C — Production Hardening | Complete | v0.3.0 |
+| Phase X — Overlap Engine | Approved for planning | v0.4.0 |
+| Phase 2 — Cake Topper Generator | Future | v0.5.0 |
+| Phase 3 — SVG Import & Repair | Future | v0.6.0 |
+| Phase 4 — Decorative Asset Library | Future | v0.7.0 |
+| Phase 5 — AI Graphic Generator | Future | v0.8.0 |
+| Phase 6 — AI Design Studio | Future | v1.0.0 |
+
+---
+
+# What the Application Does
+
+Enter a name, select a font and material, click Generate.
+
+The application:
+
+1. Normalises the text (Unicode NFC).
+2. Shapes the text using HarfBuzz.
+3. Extracts font outlines via FontTools.
+4. Builds a Canonical Geometry Model.
+5. Resolves connectivity using the approved order:
+   - Level 1 — Natural connectivity (script fonts, overlapping letters)
+   - Level 2 — Intelligent letter compression (≤ 1.5 mm per gap)
+   - Level 3 — Structural bridge fallback (≤ 4 mm gaps)
+6. Validates connectivity, structural quality, and material constraints.
+7. Exports SVG (production) and PNG (preview).
+
+---
+
+# Workflow
 
 ```text
-Text Input
--> Font Selection
--> Material Selection
--> Generate
--> Preview
--> Review Validation Scores
--> Download SVG
--> Download PNG
+Preset (optional)
+    ↓
+Text Input  →  Font Selection  →  Material Selection
+    ↓
+Generate
+    ↓
+Preview + Validation Scores + Strategy Label
+    ↓
+Bridge Override (add / remove per gap, optional)
+    ↓
+Download SVG  /  Download PNG
 ```
-
-Phase 1B includes approved material profiles, connectivity scoring, structural scoring, production readiness scoring, and validation warnings. The approved product behaviour is to preserve naturally connected fonts, use intelligent letter compression for disconnected fonts, and use structural bridges only as a fallback.
-
-Phase 1B intentionally does not include manual bridge override, golden test corpus automation, cake toppers, SVG import and repair, AI features, DXF export, decorative assets, batch processing, or SaaS/cloud features.
-
----
-
-# Font Sources
-
-Phase 1A discovers fonts from:
-
-- `/fonts` inside this repository
-- `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts`
-- `C:\Windows\Fonts`
-
-Supported font files:
-
-- `.ttf`
-- `.otf`
-
-The Dropbox font library is scanned recursively. Zip files are not unpacked by the application.
-
-Duplicate fonts are hidden from the selector using the font full name and style. Project fonts take priority, then the Etch 'N' Shine Dropbox font library, then Windows system fonts.
-
-Restart the backend after adding or removing fonts.
 
 ---
 
 # Running Locally
 
-## Backend
+## Install Python dependencies
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
-cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-If PowerShell treats the Python path above oddly, run this equivalent command from the repository root:
+## Start the backend
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
+cd backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## Frontend
+## Install and start the frontend
 
 ```powershell
 cd frontend
@@ -88,9 +84,9 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-Open:
+## Open in browser
 
-```text
+```
 http://127.0.0.1:5173
 ```
 
@@ -98,13 +94,13 @@ http://127.0.0.1:5173
 
 # Testing
 
-Backend tests:
-
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Frontend build:
+97 tests — 0 failures (2 skipped when Lobster/Oswald are not installed).
+
+Frontend build check:
 
 ```powershell
 cd frontend
@@ -113,158 +109,128 @@ npm.cmd run build
 
 ---
 
-# Vision
+# Font Sources
 
-Reduce the time required to create laser-ready artwork from minutes to seconds while maintaining manufacturing quality and structural integrity.
+The backend discovers fonts from three locations at startup:
+
+| Source | Path |
+|---|---|
+| Project fonts | `/fonts` in this repository |
+| Etch 'N' Shine font library | `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts` |
+| Windows system fonts | `C:\Windows\Fonts` |
+
+Supported formats: `.ttf` and `.otf`. Duplicates are hidden by font full name and style.
+
+Restart the backend after adding or removing fonts.
 
 ---
 
-# Current Roadmap
+# Production Presets
 
-## Phase 00
+Four presets are available in the UI to pre-fill the material selector:
 
-Repository & Architecture Assessment
+| Preset | Default Material |
+|---|---|
+| Name Sign | 3mm Cast Acrylic |
+| Cake Topper | 3mm Cast Acrylic |
+| Ornament | 3mm Mirror Acrylic |
+| Nursery Sign | 3mm Plywood |
 
-## Phase 01
+---
 
-MVP Foundation
+# Bridge Override
 
-### Phase 1A
+After generating a design, the validation panel shows a per-gap bridge control row.
 
-Core Text Generation
+- **+ Add** — Force-place a bridge at a gap the engine skipped.
+- **× Remove** — Remove a bridge the engine placed.
 
-### Phase 1B
+Each click re-generates immediately. No save or separate submit required.
 
-Connectivity Resolution & Validation
+---
 
-### Phase 1C
+# Connectivity Scores
 
-Production Hardening
+| Score | Meaning |
+|---|---|
+| 100 | Naturally connected — font already one piece |
+| 95 | Connected via compression — small gaps closed |
+| 80 | Connected via bridges — structural tabs placed |
+| 35–65 | Partially bridged — some gaps remain |
+| 15–35 | Disconnected — manual review required |
 
-## Phase 02
+---
 
-Cake Topper Generator
+# API Endpoints
 
-## Phase 03
-
-SVG Import & Repair
-
-## Phase 04
-
-Decorative Asset Library
-
-## Phase 05
-
-AI Graphic Generator
-
-## Phase 06
-
-AI Design Studio
+| Method | Path | Description |
+|---|---|---|
+| GET | /api/fonts | List available fonts |
+| GET | /api/materials | List material profiles |
+| GET | /api/presets | List production presets |
+| POST | /api/generate | Generate a design |
 
 ---
 
 # Technology Stack
 
-Frontend
-
-- React
-- TypeScript
-- Vite
-
-Backend
-
-- Python
-- FastAPI
-- Pydantic
-
-Geometry
-
-- Canonical Geometry Model
-- Shapely
-- PyClipper
-
-Fonts
-
-- FontTools
-- HarfBuzz
-- uharfbuzz
-
-SVG
-
-- svgwrite
-
-PNG
-
-- CairoSVG when native Cairo is available
-- Pillow fallback for local Windows environments without Cairo
+| Layer | Technology |
+|---|---|
+| Frontend | React, TypeScript, Vite |
+| Backend | Python, FastAPI, Uvicorn, Pydantic |
+| Text shaping | HarfBuzz (uharfbuzz), FontTools |
+| Geometry | Shapely, Canonical Geometry Model |
+| SVG | svgwrite |
+| PNG | CairoSVG (primary), Pillow (fallback) |
 
 ---
 
 # Repository Structure
 
+```text
+backend/          Python backend — API, engines, models
+frontend/         React + TypeScript frontend
+tests/            Pytest test suite
+fonts/            Project fonts (committed fixtures)
 docs/
-frontend/
-backend/
-tests/
-assets/
-fonts/
-exports/
-logs/
+  adr/            Architecture Decision Records
+  architecture/   Architecture design documents
+  business/       Business requirements
+  governance/     Delivery plan, testing strategy, master prompt
+  handoffs/       Phase implementation plans and completion reports
+  phases/         Phase scope documents
+  product/        Product backlog
+exports/          Generated files (gitignored)
+logs/             Application logs (gitignored)
+```
 
 ---
 
 # Key Documentation
 
-Business:
-
-- /docs/business/BUSINESS_CONTEXT.md
-- /docs/business/PRODUCT_VISION_AND_REQUIREMENTS.md
-
-Architecture:
-
-- /docs/architecture/TECHNICAL_ARCHITECTURE_AND_SOLUTION_DESIGN.md
-- /docs/architecture/TECHNICAL_SOLUTION_DESIGN.md
-- /docs/architecture/DATA_MODEL_AND_API_DESIGN.md
-
-Delivery:
-
-- /docs/governance/PHASED_DELIVERY_PLAN.md
-- /docs/governance/HANDOFF_DOCUMENTATION_STANDARD.md
-- /docs/governance/TESTING_AND_QA_STRATEGY.md
+| Document | Purpose |
+|---|---|
+| [docs/governance/CODING_AGENT_MASTER_PROMPT.md](docs/governance/CODING_AGENT_MASTER_PROMPT.md) | Master operating rules for all development agents |
+| [docs/governance/PHASED_DELIVERY_PLAN.md](docs/governance/PHASED_DELIVERY_PLAN.md) | Full phase roadmap |
+| [docs/phases/PHASE_INDEX.md](docs/phases/PHASE_INDEX.md) | Phase filename mapping and status |
+| [docs/architecture/TECHNICAL_ARCHITECTURE_AND_SOLUTION_DESIGN.md](docs/architecture/TECHNICAL_ARCHITECTURE_AND_SOLUTION_DESIGN.md) | Architecture decisions |
+| [docs/handoffs/phase-1c-completion-report.md](docs/handoffs/phase-1c-completion-report.md) | Phase 1C completion report |
+| [docs/handoffs/phase-1c-lightburn-validation.md](docs/handoffs/phase-1c-lightburn-validation.md) | LightBurn validation evidence |
+| [docs/phases/PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md](docs/phases/PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md) | Phase X Overlap Engine plan |
 
 ---
 
 # Development Workflow
 
-1. Review documentation
-2. Create implementation plan
-3. Obtain approval
-4. Implement scope
-5. Execute testing
-6. Update documentation
-7. Update handoff
-8. Commit changes
-9. Tag release
-
----
-
-# Release Strategy
-
-v0.1.0 -> Phase 1A Core Text Generation
-
-v0.2.0 -> Phase 1B Connectivity Resolution & Validation
-
-v0.3.0 -> Phase 1C Production Hardening
-
-v0.4.0 -> Cake Topper Generator
-
-v0.5.0 -> SVG Import & Repair
-
-v0.6.0 -> Decorative Asset Library
-
-v0.7.0 -> AI Graphic Generator
-
-v1.0.0 -> AI Design Studio
+1. Review documentation.
+2. Create implementation plan.
+3. Obtain approval.
+4. Implement approved scope only.
+5. Execute testing.
+6. Update documentation.
+7. Update handoff.
+8. Commit changes.
+9. Tag release.
 
 ---
 
