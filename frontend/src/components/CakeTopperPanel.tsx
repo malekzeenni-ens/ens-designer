@@ -304,8 +304,8 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         const lineMeta = meta.lines[li];
         if (!lineMeta) return null;
         const fontName = fonts.find((f) => f.id === (ls.fontId || defaultFontId))?.full_name ?? "—";
-        const pairLabels = lineMeta.glyph_chars.slice(0, -1).map(
-          (ch, i) => `${ch}→${lineMeta.glyph_chars[i + 1]}`,
+        const pairLabels = (lineMeta.glyph_chars ?? []).slice(0, -1).map(
+          (ch, i) => `${ch}→${(lineMeta.glyph_chars ?? [])[i + 1]}`,
         );
         const activeGaps = ls.gapStates.filter((g) => g.enabled).length;
 
@@ -423,9 +423,9 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                 )}
 
                 {/* Floating component controls — dots, accents */}
-                {lineMeta.floating_components.length > 0 && (
+                {(lineMeta.floating_components?.length ?? 0) > 0 && (
                   <FloatingControls
-                    floatingComponents={lineMeta.floating_components}
+                    floatingComponents={lineMeta.floating_components ?? []}
                     offsets={ls.floatingOffsets}
                     onChange={(glyphIndex, axis, value) => {
                       const updated = lineStates.map((s, i) =>
