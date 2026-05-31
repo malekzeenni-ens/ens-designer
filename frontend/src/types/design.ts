@@ -1,5 +1,11 @@
 export type OverlapMode = "auto" | "light" | "medium" | "strong" | "custom";
 
+export interface OverlapGapConfig {
+  pair_index: number;
+  enabled: boolean;
+  overlap_mm: number;
+}
+
 export interface OverlapResult {
   svg: string;
   png_base64: string;
@@ -8,6 +14,7 @@ export interface OverlapResult {
   overlap_metadata: {
     mode: string;
     target_overlap_mm: number;
+    glyph_chars: string[];
     gaps_before_mm: number[];
     gaps_after_mm: number[];
   };

@@ -1,4 +1,4 @@
-import type { BridgeOverride, FontInfo, GenerateResponse, MaterialProfile, OverlapMode, OverlapResult, Preset } from "../types/design";
+import type { BridgeOverride, FontInfo, GenerateResponse, MaterialProfile, OverlapGapConfig, OverlapMode, OverlapResult, Preset } from "../types/design";
 
 export async function fetchFonts(): Promise<FontInfo[]> {
   const response = await fetch("/api/fonts");
@@ -21,6 +21,7 @@ export async function generateOverlap(
   fontId: string,
   mode: OverlapMode,
   customMm?: number,
+  gapConfigs?: OverlapGapConfig[],
 ): Promise<OverlapResult> {
   const response = await fetch("/api/overlap", {
     method: "POST",
@@ -30,6 +31,7 @@ export async function generateOverlap(
       font_id: fontId,
       overlap_mode: mode,
       overlap_custom_mm: customMm ?? null,
+      gap_configs: gapConfigs ?? [],
     }),
   });
   if (!response.ok) {

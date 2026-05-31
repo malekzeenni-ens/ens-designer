@@ -145,16 +145,25 @@ class Preset(BaseModel):
     description: str
 
 
+class OverlapGapConfig(BaseModel):
+    pair_index: int = Field(ge=0, description="Zero-based index of the inter-glyph gap.")
+    enabled: bool = True
+    overlap_mm: float = Field(gt=0, le=10.0, description="Overlap to apply for this specific gap.")
+
+
 class OverlapRequest(BaseModel):
     text: str = Field(min_length=1, max_length=80)
     font_id: str
     overlap_mode: Literal["auto", "light", "medium", "strong", "custom"] = "medium"
     overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
+    gap_configs: list[OverlapGapConfig] = Field(default_factory=list,
+        description="Per-gap overrides. Empty = apply global mode to all gaps.")
 
 
 class OverlapMetadata(BaseModel):
     mode: str
     target_overlap_mm: float
+    glyph_chars: list[str]
     gaps_before_mm: list[float]
     gaps_after_mm: list[float]
 

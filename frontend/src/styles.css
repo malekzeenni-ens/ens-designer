@@ -166,6 +166,96 @@ h1 {
   height: 34px;
 }
 
+.gap-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.gap-controls-heading {
+  color: #4d5a55;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.gap-controls-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.gap-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid #d9d6ca;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.gap-row--off {
+  background: #f5f4ef;
+  opacity: 0.65;
+}
+
+.gap-toggle {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #cfcabe;
+  border-radius: 50%;
+  background: #f5f4ef;
+  color: #74827b;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gap-toggle--on {
+  border-color: #18241f;
+  background: #18241f;
+  color: #ffffff;
+}
+
+.gap-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #111816;
+  min-width: 70px;
+  letter-spacing: 0.02em;
+}
+
+.gap-mm-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: #4d5a55;
+  font-weight: 600;
+}
+
+.gap-mm-input input {
+  width: 62px;
+  height: 30px;
+  padding: 0 6px;
+  font-size: 0.85rem;
+}
+
+.gap-disabled-label {
+  font-size: 0.8rem;
+  color: #98a19c;
+  font-style: italic;
+}
+
+.gap-result {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #66736f;
+  font-variant-numeric: tabular-nums;
+}
+
 .overlap-meta {
   display: flex;
   gap: 18px;

@@ -1,23 +1,15 @@
 """
 Overlap Engine — Phase X
 
-Replicates the manual XCS tracking-reduction workflow:
-  enter text → reduce character spacing → letters overlap → export → cut.
-
-This engine does NOT:
-  - create bridges
-  - run connectivity analysis
-  - perform material validation
-  - merge geometry (boolean union)
-
-It ONLY shifts glyph x-positions so that adjacent letters overlap by a
-controlled amount. The SVG is exported with fill-rule="nonzero" so that
-overlapping filled paths render as solid black (not cancelled by evenodd).
+Replicates the manual XCS tracking-reduction workflow.
+Supports both global overlap modes and individual per-gap control.
 """
 from __future__ import annotations
 
+import base64
 import logging
 import re
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -25,6 +17,7 @@ from .canonical_geometry import build_geometry, recalculate_geometry_bounds
 from .font_loader import FontCatalog
 from .models import (
     GeometryPath,
+    OverlapGapConfig,
     OverlapMetadata,
     OverlapRequest,
     OverlapResponse,
@@ -38,7 +31,6 @@ from .unicode_normalisation import normalise_text
 
 logger = logging.getLogger(__name__)
 
-# Target overlap in mm for each named mode.
 _MODE_OVERLAP_MM: dict[str, float] = {
     "auto":   1.0,
     "light":  0.5,
@@ -60,37 +52,37 @@ class OverlapService:
         glyphs, paths = extract_outlines(font_path, shaped)
         geometry = build_geometry(normalised, font_info, glyphs, paths)
 
-        # Determine target overlap amount.
+        # Global default overlap
         if request.overlap_mode == "custom" and request.overlap_custom_mm is not None:
-            target_overlap = float(request.overlap_custom_mm)
+            default_overlap = float(request.overlap_custom_mm)
         else:
-            target_overlap = _MODE_OVERLAP_MM.get(request.overlap_mode, 1.0)
+            default_overlap = _MODE_OVERLAP_MM.get(request.overlap_mode, 1.0)
 
-        logger.debug(
-            "Overlap engine: text=%r  mode=%s  target_overlap=%.2f mm",
-            normalised, request.overlap_mode, target_overlap,
-        )
+        # Build per-pair config map from request
+        config_map: dict[int, OverlapGapConfig] = {
+            cfg.pair_index: cfg for cfg in request.gap_configs
+        }
 
-        # Compute per-pair gaps and shifts.
         gaps_before = _bbox_gaps(geometry.glyphs, geometry.paths)
-        shifts = _compute_shifts(gaps_before, target_overlap)
-        gaps_after = [g - s for g, s in zip(gaps_before, _pair_shifts(gaps_before, target_overlap))]
+        pair_s = _pair_shifts(gaps_before, default_overlap, config_map)
+        shifts = _cumulative(pair_s, len(geometry.glyphs))
+        gaps_after = [g - ps for g, ps in zip(gaps_before, pair_s)]
 
+        logger.debug("Overlap mode=%s default=%.2f mm", request.overlap_mode, default_overlap)
         logger.debug("Gaps before: %s", [round(g, 3) for g in gaps_before])
         logger.debug("Gaps after:  %s", [round(g, 3) for g in gaps_after])
 
-        # Apply shifts to path coordinates.
         glyph_path_ids = [list(g.path_ids) for g in geometry.glyphs]
         shifted_paths = _shift_paths(geometry.paths, glyph_path_ids, shifts)
         geometry = geometry.model_copy(update={"paths": shifted_paths}, deep=True)
         geometry = recalculate_geometry_bounds(geometry)
 
-        # Export — fill-rule="nonzero" so overlapping letters stay solid.
         svg = export_svg(geometry, fill_rule="nonzero")
         png = export_png(svg, geometry)
 
-        import base64
+        glyph_chars = _extract_chars(normalised, len(geometry.glyphs))
         base_name = _safe_filename(normalised)
+
         return OverlapResponse(
             svg=svg,
             png_base64=base64.b64encode(png).decode("ascii"),
@@ -98,7 +90,8 @@ class OverlapService:
             png_filename=f"{base_name}.png",
             overlap_metadata=OverlapMetadata(
                 mode=request.overlap_mode,
-                target_overlap_mm=round(target_overlap, 3),
+                target_overlap_mm=round(default_overlap, 3),
+                glyph_chars=glyph_chars,
                 gaps_before_mm=[round(g, 3) for g in gaps_before],
                 gaps_after_mm=[round(g, 3) for g in gaps_after],
             ),
@@ -111,14 +104,13 @@ class OverlapService:
 
 
 # ---------------------------------------------------------------------------
-# Algorithm helpers
+# Algorithm
 # ---------------------------------------------------------------------------
 
 def _bbox_gaps(glyphs, paths) -> list[float]:
-    """Bounding-box x-gap for each adjacent glyph pair. Positive = gap, negative = overlap."""
+    """Bounding-box gap per adjacent glyph pair. Positive = gap, negative = overlap."""
     path_map = {p.path_id: p for p in paths}
     ranges: list[tuple[float, float] | None] = []
-
     for glyph in glyphs:
         xs: list[float] = []
         for pid in glyph.path_ids:
@@ -138,36 +130,52 @@ def _bbox_gaps(glyphs, paths) -> list[float]:
     return gaps
 
 
-def _pair_shifts(gaps: list[float], target_overlap: float) -> list[float]:
-    """Per-pair shift: close gap and add target_overlap. Leave already-sufficient overlaps alone."""
+def _pair_shifts(
+    gaps: list[float],
+    default_overlap: float,
+    config_map: dict[int, OverlapGapConfig],
+) -> list[float]:
+    """
+    Per-pair shift amount.
+
+    Priority:
+    1. If a gap_config exists for this pair and enabled=False → shift = 0 (skip)
+    2. If a gap_config exists and enabled=True → use config.overlap_mm as target
+    3. Otherwise → use default_overlap
+
+    Pairs already overlapping more than the target receive no additional compression.
+    """
     result = []
-    for gap in gaps:
-        # If the current gap is already more overlap than needed, don't compress.
-        if gap <= -target_overlap:
+    for i, gap in enumerate(gaps):
+        cfg = config_map.get(i)
+        if cfg is not None and not cfg.enabled:
             result.append(0.0)
-        else:
-            result.append(gap + target_overlap)
+            continue
+        target = cfg.overlap_mm if cfg is not None else default_overlap
+        # If already more overlap than target, don't compress further
+        result.append(0.0 if gap <= -target else gap + target)
     return result
 
 
-def _compute_shifts(gaps: list[float], target_overlap: float) -> list[float]:
-    """Cumulative per-glyph leftward shift. Glyph 0 always stays at position 0."""
-    pair_s = _pair_shifts(gaps, target_overlap)
-    n_glyphs = len(gaps) + 1
-    cumulative = [0.0] * n_glyphs
-    for i, ps in enumerate(pair_s):
+def _cumulative(pair_shifts: list[float], n_glyphs: int) -> list[float]:
+    """Convert per-pair shifts to cumulative per-glyph leftward shifts."""
+    shifts = [0.0] * n_glyphs
+    for i, ps in enumerate(pair_shifts):
         for j in range(i + 1, n_glyphs):
-            cumulative[j] += ps
-    return cumulative
+            shifts[j] += ps
+    return shifts
 
 
-def _shift_paths(paths: list[GeometryPath], glyph_path_ids: list[list[str]], shifts: list[float]) -> list[GeometryPath]:
-    pid_to_shift: dict[str, float] = {}
-    for glyph_index, pid_group in enumerate(glyph_path_ids):
-        s = shifts[glyph_index]
-        for pid in pid_group:
-            pid_to_shift[pid] = s
-
+def _shift_paths(
+    paths: list[GeometryPath],
+    glyph_path_ids: list[list[str]],
+    shifts: list[float],
+) -> list[GeometryPath]:
+    pid_to_shift: dict[str, float] = {
+        pid: shifts[idx]
+        for idx, group in enumerate(glyph_path_ids)
+        for pid in group
+    }
     result: list[GeometryPath] = []
     for path in paths:
         s = pid_to_shift.get(path.path_id, 0.0)
@@ -183,6 +191,21 @@ def _shift_paths(paths: list[GeometryPath], glyph_path_ids: list[list[str]], shi
             new_cmds.append(PathCommand(**data))
         result.append(GeometryPath(path_id=path.path_id, commands=new_cmds, closed=path.closed))
     return result
+
+
+def _extract_chars(text: str, n_glyphs: int) -> list[str]:
+    """
+    Return one display character per glyph position.
+    Uses NFC-normalised grapheme clusters. Falls back gracefully
+    if glyph count differs from character count (ligatures etc.).
+    """
+    chars = list(unicodedata.normalize("NFC", text))
+    if len(chars) == n_glyphs:
+        return chars
+    # Mismatch (ligatures / combining marks): pad or truncate
+    if len(chars) < n_glyphs:
+        return chars + ["?"] * (n_glyphs - len(chars))
+    return chars[:n_glyphs]
 
 
 def _safe_filename(text: str) -> str:
