@@ -353,7 +353,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                       onChange={(e) => patchLine(li, { fontSizeMm: e.target.value })}
                     />
                   </div>
-                  <div className="ct-card-field ct-card-field--sm">
+                  <div className="ct-card-field">
                     <span className="ct-label">Align</span>
                     <div className="ct-align-btns">
                       {ALIGNMENTS.map((a) => (
@@ -364,7 +364,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                           onClick={() => patchLine(li, { alignment: a })}
                           title={a}
                         >
-                          {a === "left" ? "⬛︎←" : a === "center" ? "↔" : a === "right" ? "→⬛︎" : "X"}
+                          {a === "left" ? "L" : a === "center" ? "C" : a === "right" ? "R" : "M"}
                         </button>
                       ))}
                     </div>

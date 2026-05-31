@@ -245,7 +245,7 @@ h1 {
 .ct-card-field--sm { max-width: 110px; }
 
 /* Alignment buttons */
-.ct-align-btns { display: flex; gap: 3px; height: 34px; }
+.ct-align-btns { display: flex; gap: 3px; height: 34px; min-width: 148px; }
 .ct-align-btn {
   flex: 1;
   border: 1px solid #cfcabe;
