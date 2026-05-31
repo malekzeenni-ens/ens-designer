@@ -145,6 +145,52 @@ class Preset(BaseModel):
     description: str
 
 
+class CakeTopperLineConfig(BaseModel):
+    font_id: str
+    font_size_mm: float = Field(default=42.0, gt=0, le=300)
+    alignment: Literal["left", "center", "right", "manual"] = "center"
+    alignment_offset_mm: float = 0.0
+    overlap_mode: Literal["auto", "light", "medium", "strong", "custom"] = "medium"
+    overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
+    gap_configs: list["OverlapGapConfig"] = Field(default_factory=list)
+
+
+class CakeTopperRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=200)
+    default_font_id: str
+    default_font_size_mm: float = Field(default=42.0, gt=0, le=300)
+    default_overlap_mode: Literal["auto", "light", "medium", "strong", "custom"] = "medium"
+    default_overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
+    line_configs: list[CakeTopperLineConfig] = Field(default_factory=list)
+    inter_line_gaps_mm: list[float] = Field(default_factory=list)
+
+
+class CakeTopperLineMetadata(BaseModel):
+    text: str
+    glyph_chars: list[str]
+    gaps_before_mm: list[float]
+    gaps_after_mm: list[float]
+    width_mm: float
+    height_mm: float
+    x_offset_mm: float
+
+
+class CakeTopperMetadata(BaseModel):
+    words: list[str]
+    lines: list[CakeTopperLineMetadata]
+    inter_line_gaps_mm: list[float]
+    canvas_width_mm: float
+    canvas_height_mm: float
+
+
+class CakeTopperResponse(BaseModel):
+    svg: str
+    png_base64: str
+    svg_filename: str
+    png_filename: str
+    metadata: CakeTopperMetadata
+
+
 class OverlapGapConfig(BaseModel):
     pair_index: int = Field(ge=0, description="Zero-based index of the inter-glyph gap.")
     enabled: bool = True

@@ -1,4 +1,4 @@
-import type { BridgeOverride, FontInfo, GenerateResponse, MaterialProfile, OverlapGapConfig, OverlapMode, OverlapResult, Preset } from "../types/design";
+import type { BridgeOverride, CakeTopperLineConfig, CakeTopperResult, FontInfo, GenerateResponse, MaterialProfile, OverlapGapConfig, OverlapMode, OverlapResult, Preset } from "../types/design";
 
 export async function fetchFonts(): Promise<FontInfo[]> {
   const response = await fetch("/api/fonts");
@@ -37,6 +37,33 @@ export async function generateOverlap(
   if (!response.ok) {
     const error = await response.json().catch(() => null);
     throw new Error(error?.detail ?? "Could not generate overlap design.");
+  }
+  return response.json();
+}
+
+export async function generateCakeTopper(
+  text: string,
+  defaultFontId: string,
+  defaultFontSizeMm: number,
+  defaultOverlapMode: OverlapMode,
+  lineConfigs: CakeTopperLineConfig[],
+  interLineGapsMm: number[],
+): Promise<CakeTopperResult> {
+  const response = await fetch("/api/cake-topper", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text,
+      default_font_id: defaultFontId,
+      default_font_size_mm: defaultFontSizeMm,
+      default_overlap_mode: defaultOverlapMode,
+      line_configs: lineConfigs,
+      inter_line_gaps_mm: interLineGapsMm,
+    }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail ?? "Could not generate cake topper.");
   }
   return response.json();
 }

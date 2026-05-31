@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ExportControls } from "./components/ExportControls";
 import { FontSelector } from "./components/FontSelector";
 import { MaterialSelector } from "./components/MaterialSelector";
+import { CakeTopperPanel } from "./components/CakeTopperPanel";
 import { OverlapPanel } from "./components/OverlapPanel";
 import { PreviewPanel } from "./components/PreviewPanel";
 import { TextInput } from "./components/TextInput";
@@ -11,7 +12,7 @@ import { ValidationPanel } from "./components/ValidationPanel";
 import { fetchFonts, fetchMaterials, fetchPresets, generateDesign } from "./services/generationApi";
 import type { BridgeOverride, FontInfo, GenerateResponse, MaterialProfile, Preset } from "./types/design";
 
-type Tab = "generator" | "overlap";
+type Tab = "generator" | "overlap" | "cake-topper";
 
 export function App() {
   const [tab, setTab] = useState<Tab>("generator");
@@ -125,6 +126,14 @@ export function App() {
           >
             Overlap Engine
           </button>
+          <button
+            role="tab"
+            aria-selected={tab === "cake-topper"}
+            className={`tab-btn${tab === "cake-topper" ? " tab-btn--active" : ""}`}
+            onClick={() => setTab("cake-topper")}
+          >
+            Cake Topper
+          </button>
         </div>
 
         {/* ── Text Generator ─────────────────────────────────── */}
@@ -197,6 +206,9 @@ export function App() {
 
         {/* ── Overlap Engine ─────────────────────────────────── */}
         {tab === "overlap" && <OverlapPanel fonts={fonts} />}
+
+        {/* ── Cake Topper ────────────────────────────────────── */}
+        {tab === "cake-topper" && <CakeTopperPanel fonts={fonts} />}
       </section>
     </main>
   );

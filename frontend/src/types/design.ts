@@ -1,4 +1,39 @@
 export type OverlapMode = "auto" | "light" | "medium" | "strong" | "custom";
+export type AlignmentMode = "left" | "center" | "right" | "manual";
+
+export interface CakeTopperLineConfig {
+  font_id: string;
+  font_size_mm: number;
+  alignment: AlignmentMode;
+  alignment_offset_mm: number;
+  overlap_mode: OverlapMode;
+  overlap_custom_mm?: number | null;
+  gap_configs: OverlapGapConfig[];
+}
+
+export interface CakeTopperLineMetadata {
+  text: string;
+  glyph_chars: string[];
+  gaps_before_mm: number[];
+  gaps_after_mm: number[];
+  width_mm: number;
+  height_mm: number;
+  x_offset_mm: number;
+}
+
+export interface CakeTopperResult {
+  svg: string;
+  png_base64: string;
+  svg_filename: string;
+  png_filename: string;
+  metadata: {
+    words: string[];
+    lines: CakeTopperLineMetadata[];
+    inter_line_gaps_mm: number[];
+    canvas_width_mm: number;
+    canvas_height_mm: number;
+  };
+}
 
 export interface OverlapGapConfig {
   pair_index: number;

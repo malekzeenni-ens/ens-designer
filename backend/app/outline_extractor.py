@@ -53,12 +53,16 @@ class GeometryPen(BasePen):
         self.closed = True
 
 
-def extract_outlines(font_path: Path, shaped_glyphs: list[ShapedGlyph]) -> tuple[list[GlyphGeometry], list[GeometryPath]]:
+def extract_outlines(
+    font_path: Path,
+    shaped_glyphs: list[ShapedGlyph],
+    font_size_mm: float = FONT_SIZE_MM,
+) -> tuple[list[GlyphGeometry], list[GeometryPath]]:
     font = TTFont(font_path)
     try:
         glyph_set = font.getGlyphSet()
         upem = float(font["head"].unitsPerEm)
-        scale = FONT_SIZE_MM / upem
+        scale = font_size_mm / upem
         cursor_x = 0.0
         cursor_y = 0.0
         glyphs: list[GlyphGeometry] = []

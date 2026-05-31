@@ -59,6 +59,167 @@ h1 {
   line-height: 0.95;
 }
 
+/* ── Cake Topper ─────────────────────────────────────────── */
+
+.ct-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.ct-description p {
+  margin: 0;
+  color: #66736f;
+  font-size: 0.9rem;
+}
+
+.ct-global-row {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr minmax(90px, 0.5fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid #d9d6ca;
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.ct-global-field {
+  display: grid;
+  gap: 6px;
+}
+
+.ct-global-field span {
+  color: #4d5a55;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ct-global-field--narrow {
+  max-width: 100px;
+}
+
+.ct-font-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px;
+}
+
+.ct-font-search {
+  height: 46px;
+}
+
+.ct-text-input {
+  height: 46px;
+}
+
+.ct-word-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ct-word-chip {
+  padding: 4px 10px;
+  border: 1px solid #d9d6ca;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #28332f;
+  background: #ffffff;
+}
+
+.ct-line-block {
+  padding: 14px;
+  border: 1px solid #d9d6ca;
+  border-radius: 8px;
+  background: #fffdf8;
+  display: grid;
+  gap: 12px;
+}
+
+.ct-line-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ct-line-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #111816;
+}
+
+.ct-line-dims {
+  font-size: 0.8rem;
+  color: #66736f;
+}
+
+.ct-line-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.ct-line-field {
+  display: grid;
+  gap: 4px;
+}
+
+.ct-line-field span {
+  color: #4d5a55;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ct-line-field select,
+.ct-line-field input {
+  height: 36px;
+  font-size: 0.85rem;
+}
+
+.ct-line-field--narrow {
+  max-width: 110px;
+}
+
+.ct-vgap-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px dashed #cfcabe;
+  border-radius: 6px;
+  background: #f5f4ef;
+}
+
+.ct-vgap-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4d5a55;
+  white-space: nowrap;
+}
+
+.ct-vgap-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #4d5a55;
+}
+
+.ct-vgap-input input {
+  width: 70px;
+  height: 30px;
+  padding: 0 6px;
+}
+
+.ct-vgap-hint {
+  font-size: 0.78rem;
+  color: #98a19c;
+  margin-left: auto;
+}
+
 /* ── Tab bar ─────────────────────────────────────────────── */
 
 .tab-bar {
