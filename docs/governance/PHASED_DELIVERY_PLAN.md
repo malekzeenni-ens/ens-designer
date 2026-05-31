@@ -202,6 +202,59 @@ Harden the MVP for real Etch 'N' Shine production workflows.
 
 ---
 
+# Phase X
+
+## Overlap Engine
+
+### Objectives
+
+Automate the manual XCS overlap workflow for block fonts used in name sign production.
+
+### Background
+
+Users currently create overlapping text manually in XCS by reducing character spacing. This phase automates that workflow as a separate application tab, distinct from the Connectivity Engine.
+
+### Features
+
+- Text input
+- Font selection
+- Automatic inter-glyph gap measurement
+- Controlled tracking reduction (overlap mode)
+- Overlap strength selection: Auto, Light, Medium, Strong, Custom
+- SVG export with nonzero fill rule
+- PNG export
+- Preview
+
+### Out of Scope
+
+- Bridges
+- Weld groups
+- Boolean union
+- Connectivity analysis or scoring
+- Structural scoring
+- Material validation
+
+### Deliverables
+
+- Overlap Engine backend module
+- POST /api/overlap endpoint
+- Overlap Engine frontend tab
+- SVG and PNG export
+
+### Acceptance Criteria
+
+- Oliver / Anton: letters overlap, word readable, counters preserved
+- Happy Birthday / Anton: visual overlap only, no bridges
+- Custom overlap value respected
+- No connectivity or structural scores appear in Overlap Engine UI
+- LightBurn import successful
+
+### Target Release
+
+v0.4.0
+
+---
+
 # Phase 2
 
 ## Cake Topper Generator

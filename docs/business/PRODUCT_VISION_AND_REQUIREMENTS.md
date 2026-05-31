@@ -337,6 +337,18 @@ Geometry repair workflow.
 
 # Future Requirements
 
+## Phase X
+
+Overlap Engine
+
+Automate the manual XCS overlap workflow for block-font name signs. Introduces a second top-level workflow tab. Distinct from the Connectivity Engine — no bridges, no structural scoring, no material validation.
+
+Target users: production operators using Anton, Oswald, Bebas, League Spartan for name signs.
+
+Target release: v0.4.0
+
+---
+
 ## Phase 2
 
 Cake Topper Generator

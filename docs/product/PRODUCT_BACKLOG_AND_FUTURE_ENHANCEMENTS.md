@@ -34,6 +34,22 @@ Implement only if justified.
 
 ---
 
+# Approved Future Phases
+
+## Phase X — Overlap Engine
+
+Status: Approved For Planning — After Phase 1C
+
+See: /docs/phases/PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md
+
+Summary:
+
+Automate the manual XCS overlap workflow. Second top-level application tab. Controlled letter overlap for block fonts (Anton, Oswald, Bebas, League Spartan). No bridges, no connectivity scoring, no material validation.
+
+Target: v0.4.0
+
+---
+
 # P1 Backlog
 
 ## BL-000

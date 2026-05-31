@@ -86,6 +86,24 @@ Capabilities:
 
 ---
 
+## Phase X
+
+Overlap Engine
+
+Purpose:
+
+Automate the manual XCS overlap workflow for block fonts (Anton, Oswald, Bebas, League Spartan). Provides a separate application tab that introduces controlled letter overlap without connectivity analysis, bridge generation, or structural validation.
+
+Capabilities:
+
+- Automatic inter-glyph gap measurement
+- Controlled tracking reduction
+- Overlap strength modes: Auto, Light, Medium, Strong, Custom
+- SVG export with nonzero fill rule
+- Counter hole preservation
+
+---
+
 ## Future Phases
 
 ### Phase 2
