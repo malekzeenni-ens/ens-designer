@@ -77,6 +77,12 @@ class OverlapService:
         glyph_path_ids = [list(g.path_ids) for g in geometry.glyphs]
         shifted_paths = _shift_paths(geometry.paths, glyph_path_ids, shifts)
 
+        glyph_chars = _extract_chars(normalised, len(geometry.glyphs))
+
+        # Detect floating components BEFORE applying offsets so that moving
+        # the dot toward the stroke does not cause it to disappear from detection.
+        floating_info = detect_floating_components(geometry.glyphs, shifted_paths, glyph_chars)
+
         # Apply floating component X/Y offsets (dot on 'i', accents, etc.)
         if request.floating_offsets:
             shifted_paths = apply_floating_offsets(
@@ -85,11 +91,6 @@ class OverlapService:
 
         geometry = geometry.model_copy(update={"paths": shifted_paths}, deep=True)
         geometry = recalculate_geometry_bounds(geometry)
-
-        glyph_chars = _extract_chars(normalised, len(geometry.glyphs))
-
-        # Detect floating components for UI labelling
-        floating_info = detect_floating_components(geometry.glyphs, geometry.paths, glyph_chars)
         floating_components = [
             FloatingComponentInfo(glyph_index=f["glyph_index"], char=f["char"])
             for f in floating_info
