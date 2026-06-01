@@ -16,6 +16,7 @@ Release Tag: v0.4.0
 - Floating component X/Y controls: dots and accents repositionable independently of the main stroke.
 - Cake Topper tab: multi-line text composition with per-line font/size/alignment/overlap/vertical-gap and manual line positioning.
 - Cake Topper preview drag: dashed overlay handles let the operator drag generated lines; release persists the movement as backend manual X/Y offsets.
+- Cake Topper stakes: 0/1/2 stake controls generate 3mm x 50mm draggable stakes with flat tops and rounded/pointed lower ends.
 - Two-column layout for both tabs: preview left (sticky), settings right (scrollable).
 - Friendly error messages across all three generation endpoints.
 - Font search auto-select bug fixed in Overlap and Cake Topper panels.
@@ -44,17 +45,19 @@ Release Tag: v0.4.0
 
 | File | Change |
 |---|---|
-| `backend/app/models.py` | Added: FloatingComponentOffset, FloatingComponentInfo, OverlapGapConfig, OverlapRequest (+floating_offsets), OverlapMetadata (+floating_components, +glyph_chars), CakeTopperLineConfig (+floating_offsets, +manual_x_offset_mm, +manual_y_offset_mm), CakeTopperLineMetadata (+floating_components, +y_offset_mm, +manual offsets), CakeTopperMetadata, CakeTopperResponse, Preset |
+| `backend/app/models.py` | Added: FloatingComponentOffset, FloatingComponentInfo, OverlapGapConfig, OverlapRequest (+floating_offsets), OverlapMetadata (+floating_components, +glyph_chars), CakeTopperLineConfig (+floating_offsets, +manual_x_offset_mm, +manual_y_offset_mm), CakeTopperLineMetadata (+floating_components, +y_offset_mm, +manual offsets), CakeTopperStakeConfig, CakeTopperStakeOffset, CakeTopperStakeMetadata, CakeTopperMetadata, CakeTopperResponse, Preset |
 | `backend/app/main.py` | overlap_router, cake_topper_router, OverlapService, CakeTopperService registered |
 | `backend/app/outline_extractor.py` | `font_size_mm` parameter added (default 42mm) for per-line size in Cake Topper |
 | `backend/app/svg_exporter.py` | `fill_rule` parameter (default "evenodd"; Overlap/Cake Topper use "nonzero") |
 | `frontend/src/App.tsx` | Three-tab navigation (Text Generator / Overlap Engine / Cake Topper) |
-| `frontend/src/types/design.ts` | OverlapGapConfig, OverlapMode, FloatingComponentOffset, FloatingComponentInfo, OverlapResult, AlignmentMode, CakeTopperLineConfig, CakeTopperLineMetadata, CakeTopperResult |
+| `frontend/src/types/design.ts` | OverlapGapConfig, OverlapMode, FloatingComponentOffset, FloatingComponentInfo, OverlapResult, AlignmentMode, CakeTopperLineConfig, CakeTopperLineMetadata, CakeTopperStakeConfig, CakeTopperStakeMetadata, CakeTopperResult |
 | `frontend/src/services/generationApi.ts` | _readError() helper, generateOverlap, generateCakeTopper |
-| `frontend/src/components/PreviewPanel.tsx` | Shared SVG preview; Cake Topper line box overlay and robust native pointer drag handling |
-| `frontend/src/styles.css` | Two-column layout, per-gap pill styles, floating controls, cake topper accordion, alignment buttons, vertical gap row, canvas position controls, preview drag overlay |
+| `frontend/src/components/PreviewPanel.tsx` | Shared SVG preview; Cake Topper line/stake box overlays and robust native pointer drag handling |
+| `frontend/src/styles.css` | Two-column layout, per-gap pill styles, floating controls, cake topper accordion, alignment buttons, vertical gap row, canvas position controls, stake controls, preview drag overlay |
 
 Post-v0.4.1 UI note: `frontend/src/App.tsx` now renders Cake Topper directly and no longer shows the Text Generator or Overlap Engine tabs. The underlying Text Generator and Overlap Engine components, services, and backend endpoints remain in the repository for possible future reactivation.
+
+Post-v0.4.2 production note: Cake Topper now includes Etch N Shine branding, a full reset action, and backend-generated draggable stakes. Stake paths use IDs `S0-stake` and `S1-stake`, are exported as filled paths, and remain flat path assembly rather than boolean-unioned geometry.
 
 ---
 
@@ -73,6 +76,8 @@ Post-v0.4.1 UI note: `frontend/src/App.tsx` now renders Cake Topper directly and
 | Detection order: detect → floating offset → geometry recalc | Ensures floating_components metadata is always present even after the dot is moved |
 | Manual line offsets are additive after alignment/stacking | Keeps alignment modes predictable while allowing final composition nudges |
 | Preview drag uses native `document` pointer listeners in capture phase | Avoids React pointer-capture/delegation issues and survives selection re-render during drag |
+| Stake geometry generated in backend | Stakes must appear in production SVG/PNG output, not just as frontend preview decoration |
+| Stake top overlaps the design by default | Provides a practical connection area while preserving manual LightBurn verification workflow |
 
 ---
 

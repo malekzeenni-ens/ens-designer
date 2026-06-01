@@ -2,6 +2,7 @@ import type {
   BridgeOverride,
   CakeTopperLineConfig,
   CakeTopperResult,
+  CakeTopperStakeConfig,
   FloatingComponentOffset,
   FontInfo,
   GenerateResponse,
@@ -111,6 +112,7 @@ export async function generateCakeTopper(
   defaultOverlapMode: OverlapMode,
   lineConfigs: CakeTopperLineConfig[],
   interLineGapsMm: number[],
+  stakeConfig?: CakeTopperStakeConfig,
 ): Promise<CakeTopperResult> {
   let r: Response;
   try {
@@ -124,6 +126,7 @@ export async function generateCakeTopper(
         default_overlap_mode: defaultOverlapMode,
         line_configs: lineConfigs,
         inter_line_gaps_mm: interLineGapsMm,
+        stake_config: stakeConfig,
       }),
     });
   } catch {

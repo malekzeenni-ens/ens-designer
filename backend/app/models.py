@@ -166,6 +166,7 @@ class CakeTopperRequest(BaseModel):
     default_overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
     line_configs: list[CakeTopperLineConfig] = Field(default_factory=list)
     inter_line_gaps_mm: list[float] = Field(default_factory=list)
+    stake_config: "CakeTopperStakeConfig" = Field(default_factory=lambda: CakeTopperStakeConfig())
 
 
 class CakeTopperLineMetadata(BaseModel):
@@ -182,9 +183,34 @@ class CakeTopperLineMetadata(BaseModel):
     floating_components: list[FloatingComponentInfo] = Field(default_factory=list)
 
 
+class CakeTopperStakeOffset(BaseModel):
+    stake_index: int = Field(ge=0, le=1)
+    x_offset_mm: float = 0.0
+    y_offset_mm: float = 0.0
+
+
+class CakeTopperStakeConfig(BaseModel):
+    count: Literal[0, 1, 2] = 0
+    width_mm: float = Field(default=3.0, gt=0, le=20.0)
+    length_mm: float = Field(default=50.0, gt=0, le=150.0)
+    overlap_mm: float = Field(default=2.0, ge=0, le=20.0)
+    offsets: list[CakeTopperStakeOffset] = Field(default_factory=list)
+
+
+class CakeTopperStakeMetadata(BaseModel):
+    stake_index: int
+    width_mm: float
+    length_mm: float
+    x_offset_mm: float
+    y_offset_mm: float
+    manual_x_offset_mm: float = 0.0
+    manual_y_offset_mm: float = 0.0
+
+
 class CakeTopperMetadata(BaseModel):
     words: list[str]
     lines: list[CakeTopperLineMetadata]
+    stakes: list[CakeTopperStakeMetadata] = Field(default_factory=list)
     inter_line_gaps_mm: list[float]
     canvas_width_mm: float
     canvas_height_mm: float

@@ -14,6 +14,30 @@ export interface CakeTopperLineConfig {
   manual_y_offset_mm: number;
 }
 
+export interface CakeTopperStakeOffset {
+  stake_index: number;
+  x_offset_mm: number;
+  y_offset_mm: number;
+}
+
+export interface CakeTopperStakeConfig {
+  count: 0 | 1 | 2;
+  width_mm: number;
+  length_mm: number;
+  overlap_mm: number;
+  offsets: CakeTopperStakeOffset[];
+}
+
+export interface CakeTopperStakeMetadata {
+  stake_index: number;
+  width_mm: number;
+  length_mm: number;
+  x_offset_mm: number;
+  y_offset_mm: number;
+  manual_x_offset_mm: number;
+  manual_y_offset_mm: number;
+}
+
 export interface CakeTopperLineMetadata {
   text: string;
   glyph_chars: string[];
@@ -37,6 +61,7 @@ export interface CakeTopperResult {
   metadata: {
     words: string[];
     lines: CakeTopperLineMetadata[];
+    stakes: CakeTopperStakeMetadata[];
     inter_line_gaps_mm: number[];
     canvas_width_mm: number;
     canvas_height_mm: number;

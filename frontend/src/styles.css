@@ -348,6 +348,11 @@ h2 {
   background: rgba(76, 100, 124, 0.1);
 }
 
+.preview-drag-handle--stake {
+  border-style: solid;
+  border-radius: 2px 2px 999px 999px;
+}
+
 .preview-drag-handle:active {
   cursor: grabbing;
 }
@@ -565,6 +570,54 @@ h2 {
 .ct-lines-section {
   display: grid;
   gap: 10px;
+}
+
+.ct-stake-count-btns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ct-stake-btn {
+  background: #fff8eb;
+  color: var(--ens-ink);
+}
+
+.ct-stake-btn--active {
+  border-color: var(--ens-navy);
+  background: var(--ens-navy);
+  color: var(--ens-gold);
+}
+
+.ct-stake-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.ct-stake-summary span {
+  padding: 5px 8px;
+  border: 1px solid var(--ens-line);
+  border-radius: 999px;
+  background: #fff8eb;
+  color: var(--ens-muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.ct-stake-offset-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ct-stake-offset-row {
+  display: grid;
+  grid-template-columns: minmax(74px, 1fr) minmax(78px, 0.8fr) minmax(78px, 0.8fr);
+  gap: 8px;
+  align-items: center;
+  color: var(--ens-navy);
+  font-size: 0.82rem;
+  font-weight: 850;
 }
 
 .ct-lines-section .ct-inspector-section-body {

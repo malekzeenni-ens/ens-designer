@@ -11,6 +11,7 @@ import type {
   AlignmentMode,
   CakeTopperLineConfig,
   CakeTopperResult,
+  CakeTopperStakeConfig,
   FontInfo,
   OverlapGapConfig,
   OverlapMode,
@@ -31,7 +32,9 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
 const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
 
 type GapState = { enabled: boolean; overlapMm: string };
-type InspectorSectionId = "create" | "detected" | "overlap" | "layout" | "lines";
+type InspectorSectionId = "create" | "detected" | "overlap" | "layout" | "stakes" | "lines";
+type StakeCount = 0 | 1 | 2;
+type StakeOffsetState = { xMm: string; yMm: string };
 type LineState = {
   fontId: string;
   fontSizeMm: string;
@@ -49,12 +52,16 @@ type LineState = {
 const DEFAULT_SIZE = "42";
 const DEFAULT_OVERLAP: OverlapMode = "medium";
 const DEFAULT_INTER_GAP = "3";
+const DEFAULT_STAKE_WIDTH = 3;
+const DEFAULT_STAKE_LENGTH = 50;
+const DEFAULT_STAKE_OVERLAP = 2;
 
 const DEFAULT_OPEN_SECTIONS: Record<InspectorSectionId, boolean> = {
   create: true,
   detected: true,
   overlap: true,
   layout: true,
+  stakes: true,
   lines: true,
 };
 
@@ -128,6 +135,9 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<number | null>(null);
+  const [stakeCount, setStakeCount] = useState<StakeCount>(0);
+  const [stakeOffsets, setStakeOffsets] = useState<StakeOffsetState[]>([]);
+  const [selectedStake, setSelectedStake] = useState<number | null>(null);
   const [openSections, setOpenSections] =
     useState<Record<InspectorSectionId, boolean>>(DEFAULT_OPEN_SECTIONS);
 
@@ -169,7 +179,26 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     }));
   }
 
-  async function callApi(states: LineState[], gaps: string[]) {
+  function buildStakeConfig(count: StakeCount, offsets: StakeOffsetState[]): CakeTopperStakeConfig {
+    return {
+      count,
+      width_mm: DEFAULT_STAKE_WIDTH,
+      length_mm: DEFAULT_STAKE_LENGTH,
+      overlap_mm: DEFAULT_STAKE_OVERLAP,
+      offsets: offsets.slice(0, count).map((offset, index) => ({
+        stake_index: index,
+        x_offset_mm: parseFloat(offset.xMm) || 0,
+        y_offset_mm: parseFloat(offset.yMm) || 0,
+      })),
+    };
+  }
+
+  async function callApi(
+    states: LineState[],
+    gaps: string[],
+    count: StakeCount = stakeCount,
+    offsets: StakeOffsetState[] = stakeOffsets,
+  ) {
     const n = words.length;
     const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
     const gapValues = gaps.slice(0, n - 1).map((g) => {
@@ -186,6 +215,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         defaultOverlap,
         configs,
         gapValues,
+        buildStakeConfig(count, offsets),
       );
       setResult(r);
       if (states.length === 0) {
@@ -206,13 +236,13 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   function handleGenerate() {
     setLineStates([]);
     setInterLineGaps([]);
-    callApi([], []);
+    callApi([], [], stakeCount, stakeOffsets);
   }
 
   function patchLine(i: number, patch: Partial<LineState>) {
     const updated = lineStates.map((s, idx) => (idx === i ? { ...s, ...patch } : s));
     setLineStates(updated);
-    if (!("expanded" in patch)) callApi(updated, interLineGaps);
+    if (!("expanded" in patch)) callApi(updated, interLineGaps, stakeCount, stakeOffsets);
   }
 
   function toggleGap(li: number, gi: number) {
@@ -225,7 +255,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           },
     );
     setLineStates(updated);
-    callApi(updated, interLineGaps);
+    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
   }
 
   function setGapMm(li: number, gi: number, value: string) {
@@ -238,13 +268,13 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           },
     );
     setLineStates(updated);
-    if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps);
+    if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps, stakeCount, stakeOffsets);
   }
 
   function setInterGap(i: number, value: string) {
     const updated = interLineGaps.map((g, idx) => (idx === i ? value : g));
     setInterLineGaps(updated);
-    if (!isNaN(parseFloat(value))) callApi(lineStates, updated);
+    if (!isNaN(parseFloat(value))) callApi(lineStates, updated, stakeCount, stakeOffsets);
   }
 
   function applyGlobalOverlap(mode: OverlapMode) {
@@ -258,7 +288,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       gapStates: s.gapStates.map((g) => ({ ...g, overlapMm: String(mm) })),
     }));
     setLineStates(updated);
-    callApi(updated, interLineGaps);
+    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
   }
 
   function handleLineDrag(lineIndex: number, dxMm: number, dyMm: number) {
@@ -269,7 +299,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       return { ...s, manualXOffsetMm: String(newX), manualYOffsetMm: String(newY) };
     });
     setLineStates(updated);
-    callApi(updated, interLineGaps);
+    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
   }
 
   function resetPosition(lineIndex: number) {
@@ -277,7 +307,43 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       i !== lineIndex ? s : { ...s, manualXOffsetMm: "0", manualYOffsetMm: "0" },
     );
     setLineStates(updated);
-    callApi(updated, interLineGaps);
+    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
+  }
+
+  function handleStakeCountChange(count: StakeCount) {
+    const nextOffsets = Array.from({ length: count }, (_, index) => (
+      stakeOffsets[index] ?? { xMm: "0", yMm: "0" }
+    ));
+    setStakeCount(count);
+    setStakeOffsets(nextOffsets);
+    setSelectedStake(null);
+    if (result) {
+      callApi(lineStates, interLineGaps, count, nextOffsets);
+    }
+  }
+
+  function handleStakeDrag(stakeIndex: number, dxMm: number, dyMm: number) {
+    const nextOffsets = Array.from({ length: stakeCount }, (_, index) => {
+      const offset = stakeOffsets[index] ?? { xMm: "0", yMm: "0" };
+      if (index !== stakeIndex) return offset;
+      const newX = Math.round(((parseFloat(offset.xMm) || 0) + dxMm) * 10) / 10;
+      const newY = Math.round(((parseFloat(offset.yMm) || 0) + dyMm) * 10) / 10;
+      return { xMm: String(newX), yMm: String(newY) };
+    });
+    setStakeOffsets(nextOffsets);
+    setSelectedLine(null);
+    setSelectedStake(stakeIndex);
+    callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+  }
+
+  function selectLine(lineIndex: number) {
+    setSelectedLine(lineIndex);
+    setSelectedStake(null);
+  }
+
+  function selectStake(stakeIndex: number) {
+    setSelectedStake(stakeIndex);
+    setSelectedLine(null);
   }
 
   function toggleInspectorSection(id: InspectorSectionId) {
@@ -296,6 +362,9 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     setLoading(false);
     setError(null);
     setSelectedLine(null);
+    setStakeCount(0);
+    setStakeOffsets([]);
+    setSelectedStake(null);
     setOpenSections(DEFAULT_OPEN_SECTIONS);
   }
 
@@ -359,11 +428,20 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                 wMm: lm.width_mm,
                 hMm: lm.height_mm,
               }))}
+              stakeBoxes={meta?.stakes.map((stake) => ({
+                xMm: stake.x_offset_mm,
+                yMm: stake.y_offset_mm,
+                wMm: stake.width_mm,
+                hMm: stake.length_mm,
+              }))}
               canvasWidthMm={meta?.canvas_width_mm}
               canvasHeightMm={meta?.canvas_height_mm}
               selectedLine={selectedLine}
-              onSelectLine={setSelectedLine}
+              selectedStake={selectedStake}
+              onSelectLine={selectLine}
+              onSelectStake={selectStake}
               onLineDrag={handleLineDrag}
+              onStakeDrag={handleStakeDrag}
             />
           </div>
 
@@ -541,6 +619,88 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
               </div>
             ) : (
               <p className="ct-muted">Generate two or more lines to adjust line spacing.</p>
+            )}
+          </InspectorAccordion>
+
+          <InspectorAccordion
+            id="stakes"
+            title="Stakes"
+            description="Add draggable 3mm x 50mm cake stakes with flat tops and rounded points."
+            open={openSections.stakes}
+            onToggle={toggleInspectorSection}
+          >
+            <div className="ct-stake-count-btns" role="group" aria-label="Stake count">
+              {([0, 1, 2] as StakeCount[]).map((count) => (
+                <button
+                  key={count}
+                  type="button"
+                  className={`ct-stake-btn${stakeCount === count ? " ct-stake-btn--active" : ""}`}
+                  onClick={() => handleStakeCountChange(count)}
+                >
+                  {count} {count === 1 ? "stake" : "stakes"}
+                </button>
+              ))}
+            </div>
+            <div className="ct-stake-summary">
+              <span>Width {DEFAULT_STAKE_WIDTH}mm</span>
+              <span>Length {DEFAULT_STAKE_LENGTH}mm</span>
+              <span>Top overlap {DEFAULT_STAKE_OVERLAP}mm</span>
+            </div>
+            {stakeCount > 0 && (
+              <div className="ct-stake-offset-list">
+                {Array.from({ length: stakeCount }, (_, index) => {
+                  const offset = stakeOffsets[index] ?? { xMm: "0", yMm: "0" };
+                  return (
+                    <div key={index} className="ct-stake-offset-row">
+                      <span>Stake {index + 1}</span>
+                      <span className="ct-unit-input ct-unit-input--compact">
+                        <input
+                          type="number"
+                          min="-500"
+                          max="500"
+                          step="0.5"
+                          value={offset.xMm}
+                          aria-label={`Stake ${index + 1} X offset`}
+                          onChange={(e) => {
+                            const nextOffsets = Array.from({ length: stakeCount }, (_, i) => (
+                              i === index
+                                ? { ...(stakeOffsets[i] ?? { xMm: "0", yMm: "0" }), xMm: e.target.value }
+                                : stakeOffsets[i] ?? { xMm: "0", yMm: "0" }
+                            ));
+                            setStakeOffsets(nextOffsets);
+                            if (!isNaN(parseFloat(e.target.value))) {
+                              callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+                            }
+                          }}
+                        />
+                        <span>X</span>
+                      </span>
+                      <span className="ct-unit-input ct-unit-input--compact">
+                        <input
+                          type="number"
+                          min="-500"
+                          max="500"
+                          step="0.5"
+                          value={offset.yMm}
+                          aria-label={`Stake ${index + 1} Y offset`}
+                          onChange={(e) => {
+                            const nextOffsets = Array.from({ length: stakeCount }, (_, i) => (
+                              i === index
+                                ? { ...(stakeOffsets[i] ?? { xMm: "0", yMm: "0" }), yMm: e.target.value }
+                                : stakeOffsets[i] ?? { xMm: "0", yMm: "0" }
+                            ));
+                            setStakeOffsets(nextOffsets);
+                            if (!isNaN(parseFloat(e.target.value))) {
+                              callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+                            }
+                          }}
+                        />
+                        <span>Y</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </InspectorAccordion>
 

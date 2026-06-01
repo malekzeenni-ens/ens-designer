@@ -7,24 +7,34 @@ interface LineBox {
   hMm: number;
 }
 
+type DragKind = "line" | "stake";
+
 interface PreviewPanelProps {
   svg: string | null;
   lineBoxes?: LineBox[];
+  stakeBoxes?: LineBox[];
   canvasWidthMm?: number;
   canvasHeightMm?: number;
   selectedLine?: number | null;
+  selectedStake?: number | null;
   onSelectLine?: (i: number) => void;
+  onSelectStake?: (i: number) => void;
   onLineDrag?: (i: number, dxMm: number, dyMm: number) => void;
+  onStakeDrag?: (i: number, dxMm: number, dyMm: number) => void;
 }
 
 export function PreviewPanel({
   svg,
   lineBoxes,
+  stakeBoxes,
   canvasWidthMm,
   canvasHeightMm,
   selectedLine,
+  selectedStake,
   onSelectLine,
+  onSelectStake,
   onLineDrag,
+  onStakeDrag,
 }: PreviewPanelProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const cleanupDragRef = useRef<(() => void) | null>(null);
@@ -37,7 +47,8 @@ export function PreviewPanel({
 
   function startDrag(
     e: React.PointerEvent<HTMLDivElement>,
-    lineIndex: number,
+    kind: DragKind,
+    itemIndex: number,
   ) {
     e.preventDefault();
     e.stopPropagation();
@@ -59,7 +70,7 @@ export function PreviewPanel({
       handleEl.isConnected
         ? handleEl
         : hostRef.current?.querySelector<HTMLElement>(
-            `[data-line-index="${lineIndex}"]`,
+            `[data-${kind}-index="${itemIndex}"]`,
           ) ?? null;
 
     function cleanup() {
@@ -91,7 +102,11 @@ export function PreviewPanel({
       cleanup();
 
       const host = hostRef.current;
-      onSelectLine?.(lineIndex);
+      if (kind === "line") {
+        onSelectLine?.(itemIndex);
+      } else {
+        onSelectStake?.(itemIndex);
+      }
 
       if (!host || !canvasWidthMm || !canvasHeightMm) {
         return;
@@ -106,7 +121,11 @@ export function PreviewPanel({
       const dyMm = (ev.clientY - startY) * (canvasHeightMm / rect.height);
 
       if (Math.abs(dxMm) > 0.05 || Math.abs(dyMm) > 0.05) {
-        onLineDrag?.(lineIndex, dxMm, dyMm);
+        if (kind === "line") {
+          onLineDrag?.(itemIndex, dxMm, dyMm);
+        } else {
+          onStakeDrag?.(itemIndex, dxMm, dyMm);
+        }
       }
     }
 
@@ -117,7 +136,10 @@ export function PreviewPanel({
   }
 
   const showOverlay =
-    svg && lineBoxes && lineBoxes.length > 0 && canvasWidthMm && canvasHeightMm;
+    svg &&
+    ((lineBoxes && lineBoxes.length > 0) || (stakeBoxes && stakeBoxes.length > 0)) &&
+    canvasWidthMm &&
+    canvasHeightMm;
 
   return (
     <section className="preview-panel" aria-label="Generated design preview">
@@ -127,9 +149,9 @@ export function PreviewPanel({
             <div dangerouslySetInnerHTML={{ __html: svg }} />
             {showOverlay && (
               <div className="preview-drag-overlay">
-                {lineBoxes!.map((box, i) => (
+                {(lineBoxes ?? []).map((box, i) => (
                   <div
-                    key={i}
+                    key={`line-${i}`}
                     className={`preview-drag-handle${selectedLine === i ? " preview-drag-handle--selected" : ""}`}
                     style={{
                       left: `${(box.xMm / canvasWidthMm!) * 100}%`,
@@ -138,8 +160,23 @@ export function PreviewPanel({
                       height: `${(box.hMm / canvasHeightMm!) * 100}%`,
                     }}
                     data-line-index={i}
-                    onPointerDown={(e) => startDrag(e, i)}
+                    onPointerDown={(e) => startDrag(e, "line", i)}
                     title={`Drag to move Line ${i + 1}`}
+                  />
+                ))}
+                {(stakeBoxes ?? []).map((box, i) => (
+                  <div
+                    key={`stake-${i}`}
+                    className={`preview-drag-handle preview-drag-handle--stake${selectedStake === i ? " preview-drag-handle--selected" : ""}`}
+                    style={{
+                      left: `${(box.xMm / canvasWidthMm!) * 100}%`,
+                      top: `${(box.yMm / canvasHeightMm!) * 100}%`,
+                      width: `${(box.wMm / canvasWidthMm!) * 100}%`,
+                      height: `${(box.hMm / canvasHeightMm!) * 100}%`,
+                    }}
+                    data-stake-index={i}
+                    onPointerDown={(e) => startDrag(e, "stake", i)}
+                    title={`Drag to move Stake ${i + 1}`}
                   />
                 ))}
               </div>

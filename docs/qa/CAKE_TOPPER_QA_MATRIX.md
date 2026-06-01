@@ -165,6 +165,10 @@ Use this matrix during:
 | D-05 | Drag accumulation | Drag the same line twice | Second drag adds to the existing manual X/Y offsets | P0 | Manual |
 | D-06 | Drag no-op threshold | Press and release without meaningful movement | No unwanted offset change or regeneration loop | P1 | Manual |
 | D-07 | Export after drag | Drag a line, download SVG | Exported SVG contains the moved line position; overlay elements are not included | P0 | Manual + SVG inspection |
+| D-08 | Stake count controls | Toggle 0 / 1 / 2 stakes | Preview and metadata show matching stake count | P0 | Automated + manual |
+| D-09 | Stake drag persistence | Drag Stake 1 and release | Stake X/Y offsets persist through backend regeneration and SVG moves the stake | P0 | Automated + manual |
+| D-10 | Stake shape | Generate one stake | Stake has flat top and rounded/pointed lower end; default dimensions are 3mm x 50mm | P0 | Automated + manual |
+| D-11 | Export after stake drag | Drag a stake, download SVG | Exported SVG includes `S0-stake`/`S1-stake` paths; overlay elements are not included | P0 | Manual + SVG inspection |
 
 ---
 
@@ -183,8 +187,9 @@ Run this checklist on a generated SVG **before committing to production material
 | LB-07 | Check no text elements | LightBurn path-edit mode shows no text items requiring installed fonts |
 | LB-08 | Check connectivity | Lines and letters visually overlap as intended; no unexpected gaps |
 | LB-09 | Check floating dots | Any letter with a dot (i, j) shows the dot positioned as expected |
-| LB-10 | Weld if needed | If paths need to be merged, use LightBurn Optimise or Weld before cutting |
-| LB-11 | Test cut | Perform a test cut on scrap material before cutting production acrylic/wood |
+| LB-10 | Check stakes | Stakes are visible, correctly positioned, and overlap the design before cutting |
+| LB-11 | Weld if needed | If paths need to be merged, use LightBurn Optimise or Weld before cutting |
+| LB-12 | Test cut | Perform a test cut on scrap material before cutting production acrylic/wood |
 
 ---
 
@@ -197,7 +202,7 @@ cd backend
 ..\.venv\Scripts\python.exe -m pytest ../tests/ -q
 ```
 
-Current automated Cake Topper coverage lives in `tests/test_cake_topper.py`, including manual line offset tests.
+Current automated Cake Topper coverage lives in `tests/test_cake_topper.py`, including manual line offset and stake geometry tests.
 
 ---
 

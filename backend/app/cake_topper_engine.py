@@ -28,6 +28,7 @@ from .models import (
     CakeTopperMetadata,
     CakeTopperRequest,
     CakeTopperResponse,
+    CakeTopperStakeMetadata,
     FloatingComponentInfo,
     GeometryPath,
     OverlapGapConfig,
@@ -52,6 +53,7 @@ logger = logging.getLogger(__name__)
 MAX_LINES = 4
 CANVAS_PADDING_MM = 5.0
 DEFAULT_INTER_LINE_GAP_MM = 3.0
+DEFAULT_STAKE_COUNT = 0
 
 _MODE_OVERLAP_MM: dict[str, float] = {
     "auto":   1.0,
@@ -142,9 +144,17 @@ class CakeTopperService:
 
         canvas_height = y_cursor + CANVAS_PADDING_MM
 
-        translated_path_groups, line_metadata, canvas_width, canvas_height = _fit_canvas_to_paths(
+        stake_paths, stake_metadata = _build_stakes(
+            request,
+            [p for group in translated_path_groups for p in group],
+        )
+        if stake_paths:
+            translated_path_groups.append(stake_paths)
+
+        translated_path_groups, line_metadata, stake_metadata, canvas_width, canvas_height = _fit_canvas_to_paths(
             translated_path_groups,
             line_metadata,
+            stake_metadata,
             canvas_width,
             canvas_height,
         )
@@ -174,6 +184,7 @@ class CakeTopperService:
             metadata=CakeTopperMetadata(
                 words=words,
                 lines=line_metadata,
+                stakes=stake_metadata,
                 inter_line_gaps_mm=[round(g, 3) for g in inter_gaps[:n - 1]],
                 canvas_width_mm=round(canvas_width, 3),
                 canvas_height_mm=round(canvas_height, 3),
@@ -295,12 +306,96 @@ def _translate_paths(paths: list[GeometryPath], dx: float, dy: float, prefix: st
     return result
 
 
+def _build_stakes(
+    request: CakeTopperRequest,
+    content_paths: list[GeometryPath],
+) -> tuple[list[GeometryPath], list[CakeTopperStakeMetadata]]:
+    cfg = request.stake_config
+    if cfg.count == DEFAULT_STAKE_COUNT:
+        return [], []
+
+    bounds = _paths_bounds(content_paths)
+    if bounds is None:
+        return [], []
+
+    min_x, _, max_x, max_y = bounds
+    content_width = max_x - min_x
+    fractions = [0.5] if cfg.count == 1 else [0.28, 0.72]
+    offset_map = {offset.stake_index: offset for offset in cfg.offsets}
+    stake_paths: list[GeometryPath] = []
+    stake_metadata: list[CakeTopperStakeMetadata] = []
+
+    for index, fraction in enumerate(fractions):
+        offset = offset_map.get(index)
+        manual_x = offset.x_offset_mm if offset else 0.0
+        manual_y = offset.y_offset_mm if offset else 0.0
+        x = min_x + (content_width * fraction) - (cfg.width_mm / 2.0) + manual_x
+        y = max_y - cfg.overlap_mm + manual_y
+
+        stake_paths.append(_create_stake_path(
+            path_id=f"S{index}-stake",
+            x=x,
+            y=y,
+            width=cfg.width_mm,
+            length=cfg.length_mm,
+        ))
+        stake_metadata.append(CakeTopperStakeMetadata(
+            stake_index=index,
+            width_mm=round(cfg.width_mm, 3),
+            length_mm=round(cfg.length_mm, 3),
+            x_offset_mm=round(x, 3),
+            y_offset_mm=round(y, 3),
+            manual_x_offset_mm=round(manual_x, 3),
+            manual_y_offset_mm=round(manual_y, 3),
+        ))
+
+    return stake_paths, stake_metadata
+
+
+def _create_stake_path(path_id: str, x: float, y: float, width: float, length: float) -> GeometryPath:
+    shoulder_y = y + max(length - width * 1.8, length * 0.82)
+    point_y = y + length
+    mid_x = x + width / 2.0
+    return GeometryPath(
+        path_id=path_id,
+        closed=True,
+        commands=[
+            PathCommand(type="M", x=round(x, 3), y=round(y, 3)),
+            PathCommand(type="L", x=round(x + width, 3), y=round(y, 3)),
+            PathCommand(type="L", x=round(x + width, 3), y=round(shoulder_y, 3)),
+            PathCommand(
+                type="Q",
+                x1=round(x + width, 3),
+                y1=round(point_y - width * 0.35, 3),
+                x=round(mid_x, 3),
+                y=round(point_y, 3),
+            ),
+            PathCommand(
+                type="Q",
+                x1=round(x, 3),
+                y1=round(point_y - width * 0.35, 3),
+                x=round(x, 3),
+                y=round(shoulder_y, 3),
+            ),
+            PathCommand(type="L", x=round(x, 3), y=round(y, 3)),
+            PathCommand(type="Z"),
+        ],
+    )
+
+
 def _fit_canvas_to_paths(
     path_groups: list[list[GeometryPath]],
     line_metadata: list[CakeTopperLineMetadata],
+    stake_metadata: list[CakeTopperStakeMetadata],
     width: float,
     height: float,
-) -> tuple[list[list[GeometryPath]], list[CakeTopperLineMetadata], float, float]:
+) -> tuple[
+    list[list[GeometryPath]],
+    list[CakeTopperLineMetadata],
+    list[CakeTopperStakeMetadata],
+    float,
+    float,
+]:
     """Grow and, when needed, rebase the canvas so dragged lines are not clipped."""
     all_paths = [p for group in path_groups for p in group]
     bounds = _paths_bounds(all_paths)
@@ -330,8 +425,15 @@ def _fit_canvas_to_paths(
             })
             for meta in line_metadata
         ]
+        stake_metadata = [
+            meta.model_copy(update={
+                "x_offset_mm": round(meta.x_offset_mm + shift_x, 3),
+                "y_offset_mm": round(meta.y_offset_mm + shift_y, 3),
+            })
+            for meta in stake_metadata
+        ]
 
-    return path_groups, line_metadata, fitted_width, fitted_height
+    return path_groups, line_metadata, stake_metadata, fitted_width, fitted_height
 
 
 def _paths_bounds(paths: list[GeometryPath]) -> tuple[float, float, float, float] | None:
@@ -362,7 +464,13 @@ def _assemble_svg(paths: list[GeometryPath], width: float, height: float) -> str
     drawing.attribs["version"] = "1.1"
     for path in paths:
         d = " ".join(_cmd_str(c) for c in path.commands)
-        drawing.add(drawing.path(d=d, fill="#000000", stroke="none", fill_rule="nonzero"))
+        drawing.add(drawing.path(
+            d=d,
+            id=path.path_id,
+            fill="#000000",
+            stroke="none",
+            fill_rule="nonzero",
+        ))
     return drawing.tostring()
 
 
@@ -385,4 +493,3 @@ def _render_png(svg: str, paths: list[GeometryPath], width_mm: float, height_mm:
     except (ImportError, OSError):
         # Cairo native library not available — fall back to Pillow polygon renderer.
         return render_paths_png(paths, width_mm, height_mm)
-

@@ -426,3 +426,45 @@ class TestManualOffsets:
         assert line["y_offset_mm"] + line["height_mm"] <= (
             shifted["metadata"]["canvas_height_mm"] - CANVAS_PADDING_MM + 0.01
         )
+
+
+# ---------------------------------------------------------------------------
+# Stakes
+# ---------------------------------------------------------------------------
+
+class TestCakeTopperStakes:
+    def test_default_has_no_stakes(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy")
+        assert data["metadata"]["stakes"] == []
+
+    def test_one_stake_metadata_and_dimensions(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy", stake_config={"count": 1})
+        stakes = data["metadata"]["stakes"]
+        assert len(stakes) == 1
+        assert stakes[0]["width_mm"] == 3.0
+        assert stakes[0]["length_mm"] == 50.0
+        assert stakes[0]["y_offset_mm"] < data["metadata"]["canvas_height_mm"]
+
+    def test_two_stakes_metadata(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy", stake_config={"count": 2})
+        stakes = data["metadata"]["stakes"]
+        assert len(stakes) == 2
+        assert stakes[0]["x_offset_mm"] < stakes[1]["x_offset_mm"]
+
+    def test_stake_offsets_shift_metadata(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy", stake_config={"count": 1})
+        shifted = _ct(client, font_id, text="Happy", stake_config={
+            "count": 1,
+            "offsets": [{"stake_index": 0, "x_offset_mm": 12.0, "y_offset_mm": 6.0}],
+        })
+        base_stake = base["metadata"]["stakes"][0]
+        shifted_stake = shifted["metadata"]["stakes"][0]
+        assert shifted_stake["manual_x_offset_mm"] == 12.0
+        assert shifted_stake["manual_y_offset_mm"] == 6.0
+        assert shifted_stake["x_offset_mm"] - base_stake["x_offset_mm"] == pytest.approx(12.0, abs=0.01)
+        assert shifted_stake["y_offset_mm"] - base_stake["y_offset_mm"] == pytest.approx(6.0, abs=0.01)
+
+    def test_stake_shape_uses_flat_top_and_curved_point(self, client: TestClient, font_id: str) -> None:
+        svg = _ct(client, font_id, text="Happy", stake_config={"count": 1})["svg"]
+        assert 'id="S0-stake"' in svg
+        assert " Q " in svg
