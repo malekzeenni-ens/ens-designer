@@ -394,3 +394,35 @@ class TestManualOffsets:
                                       "manual_x_offset_mm": 0.0, "manual_y_offset_mm": 0.0}])
         assert base["metadata"]["lines"][0]["x_offset_mm"] == explicit["metadata"]["lines"][0]["x_offset_mm"]
         assert base["metadata"]["lines"][0]["y_offset_mm"] == explicit["metadata"]["lines"][0]["y_offset_mm"]
+
+    def test_large_positive_x_offset_expands_canvas(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42}])
+        shifted = _ct(client, font_id, text="Happy",
+                      line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                     "manual_x_offset_mm": 80.0}])
+        line = shifted["metadata"]["lines"][0]
+        assert shifted["metadata"]["canvas_width_mm"] > base["metadata"]["canvas_width_mm"]
+        assert line["x_offset_mm"] + line["width_mm"] <= (
+            shifted["metadata"]["canvas_width_mm"] - CANVAS_PADDING_MM + 0.01
+        )
+
+    def test_large_negative_x_offset_rebases_canvas(self, client: TestClient, font_id: str) -> None:
+        shifted = _ct(client, font_id, text="Happy",
+                      line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                     "manual_x_offset_mm": -80.0}])
+        line = shifted["metadata"]["lines"][0]
+        assert line["manual_x_offset_mm"] == -80.0
+        assert line["x_offset_mm"] >= CANVAS_PADDING_MM - 0.01
+
+    def test_large_positive_y_offset_expands_canvas(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42}])
+        shifted = _ct(client, font_id, text="Happy",
+                      line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                     "manual_y_offset_mm": 80.0}])
+        line = shifted["metadata"]["lines"][0]
+        assert shifted["metadata"]["canvas_height_mm"] > base["metadata"]["canvas_height_mm"]
+        assert line["y_offset_mm"] + line["height_mm"] <= (
+            shifted["metadata"]["canvas_height_mm"] - CANVAS_PADDING_MM + 0.01
+        )

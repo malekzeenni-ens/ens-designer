@@ -142,6 +142,13 @@ class CakeTopperService:
 
         canvas_height = y_cursor + CANVAS_PADDING_MM
 
+        translated_path_groups, line_metadata, canvas_width, canvas_height = _fit_canvas_to_paths(
+            translated_path_groups,
+            line_metadata,
+            canvas_width,
+            canvas_height,
+        )
+
         # 5. Assemble combined SVG
         all_paths = [p for group in translated_path_groups for p in group]
         svg = _assemble_svg(all_paths, canvas_width, canvas_height)
@@ -288,6 +295,62 @@ def _translate_paths(paths: list[GeometryPath], dx: float, dy: float, prefix: st
     return result
 
 
+def _fit_canvas_to_paths(
+    path_groups: list[list[GeometryPath]],
+    line_metadata: list[CakeTopperLineMetadata],
+    width: float,
+    height: float,
+) -> tuple[list[list[GeometryPath]], list[CakeTopperLineMetadata], float, float]:
+    """Grow and, when needed, rebase the canvas so dragged lines are not clipped."""
+    all_paths = [p for group in path_groups for p in group]
+    bounds = _paths_bounds(all_paths)
+    if bounds is None:
+        return path_groups, line_metadata, width, height
+
+    min_x, min_y, max_x, max_y = bounds
+    canvas_min_x = min(0.0, min_x - CANVAS_PADDING_MM)
+    canvas_min_y = min(0.0, min_y - CANVAS_PADDING_MM)
+    canvas_max_x = max(width, max_x + CANVAS_PADDING_MM)
+    canvas_max_y = max(height, max_y + CANVAS_PADDING_MM)
+
+    shift_x = -canvas_min_x
+    shift_y = -canvas_min_y
+    fitted_width = canvas_max_x - canvas_min_x
+    fitted_height = canvas_max_y - canvas_min_y
+
+    if shift_x or shift_y:
+        path_groups = [
+            _translate_paths(group, shift_x, shift_y)
+            for group in path_groups
+        ]
+        line_metadata = [
+            meta.model_copy(update={
+                "x_offset_mm": round(meta.x_offset_mm + shift_x, 3),
+                "y_offset_mm": round(meta.y_offset_mm + shift_y, 3),
+            })
+            for meta in line_metadata
+        ]
+
+    return path_groups, line_metadata, fitted_width, fitted_height
+
+
+def _paths_bounds(paths: list[GeometryPath]) -> tuple[float, float, float, float] | None:
+    xs: list[float] = []
+    ys: list[float] = []
+    for path in paths:
+        for cmd in path.commands:
+            for x in (cmd.x, cmd.x1, cmd.x2):
+                if x is not None:
+                    xs.append(x)
+            for y in (cmd.y, cmd.y1, cmd.y2):
+                if y is not None:
+                    ys.append(y)
+
+    if not xs or not ys:
+        return None
+    return min(xs), min(ys), max(xs), max(ys)
+
+
 def _assemble_svg(paths: list[GeometryPath], width: float, height: float) -> str:
     import svgwrite
     drawing = svgwrite.Drawing(
@@ -322,5 +385,4 @@ def _render_png(svg: str, paths: list[GeometryPath], width_mm: float, height_mm:
     except (ImportError, OSError):
         # Cairo native library not available — fall back to Pillow polygon renderer.
         return render_paths_png(paths, width_mm, height_mm)
-
 

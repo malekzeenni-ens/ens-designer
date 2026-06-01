@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronRight, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
 import { ExportControls } from "./ExportControls";
 import { FloatingControls, toFloatingOffsets } from "./FloatingControls";
@@ -30,6 +31,7 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
 const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
 
 type GapState = { enabled: boolean; overlapMm: string };
+type InspectorSectionId = "create" | "detected" | "overlap" | "layout" | "lines";
 type LineState = {
   fontId: string;
   fontSizeMm: string;
@@ -48,6 +50,24 @@ const DEFAULT_SIZE = "42";
 const DEFAULT_OVERLAP: OverlapMode = "medium";
 const DEFAULT_INTER_GAP = "3";
 
+const DEFAULT_OPEN_SECTIONS: Record<InspectorSectionId, boolean> = {
+  create: true,
+  detected: true,
+  overlap: true,
+  layout: true,
+  lines: true,
+};
+
+interface InspectorAccordionProps {
+  id: InspectorSectionId;
+  title: string;
+  description: string;
+  open: boolean;
+  onToggle: (id: InspectorSectionId) => void;
+  className?: string;
+  children: ReactNode;
+}
+
 function initLine(fontId: string, overlapMm: string, numGaps: number): LineState {
   return {
     fontId,
@@ -64,6 +84,38 @@ function initLine(fontId: string, overlapMm: string, numGaps: number): LineState
   };
 }
 
+function InspectorAccordion({
+  id,
+  title,
+  description,
+  open,
+  onToggle,
+  className = "",
+  children,
+}: InspectorAccordionProps) {
+  return (
+    <section className={`ct-inspector-section ct-accordion-section${className ? ` ${className}` : ""}`}>
+      <button
+        type="button"
+        className="ct-inspector-section-header"
+        onClick={() => onToggle(id)}
+        aria-expanded={open}
+      >
+        <div className="ct-section-heading">
+          <div>
+            <h2>{title}</h2>
+            <p>{description}</p>
+          </div>
+        </div>
+        <span className="ct-section-chevron" aria-hidden="true">
+          {open ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
+        </span>
+      </button>
+      {open && <div className="ct-inspector-section-body">{children}</div>}
+    </section>
+  );
+}
+
 export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [text, setText] = useState("Happy Birthday");
   const [fontSearch, setFontSearch] = useState("");
@@ -76,6 +128,8 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<number | null>(null);
+  const [openSections, setOpenSections] =
+    useState<Record<InspectorSectionId, boolean>>(DEFAULT_OPEN_SECTIONS);
 
   const words = useMemo(
     () => text.trim().split(/\s+/).filter(Boolean).slice(0, 4),
@@ -226,6 +280,10 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     callApi(updated, interLineGaps);
   }
 
+  function toggleInspectorSection(id: InspectorSectionId) {
+    setOpenSections((current) => ({ ...current, [id]: !current[id] }));
+  }
+
   const meta = result?.metadata;
 
   return (
@@ -288,11 +346,13 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         </section>
 
         <aside className="ct-inspector" aria-label="Design controls">
-          <section className="ct-inspector-section">
-            <div className="ct-section-heading">
-              <h2>Create design</h2>
-              <p>Enter the topper wording and base text style.</p>
-            </div>
+          <InspectorAccordion
+            id="create"
+            title="Create design"
+            description="Enter the topper wording and base text style."
+            open={openSections.create}
+            onToggle={toggleInspectorSection}
+          >
             <label className="ct-field" htmlFor="ct-text">
               <span>Topper text</span>
               <input
@@ -361,13 +421,15 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                 {loading ? "Generating..." : "Generate design"}
               </button>
             </div>
-          </section>
+          </InspectorAccordion>
 
-          <section className="ct-inspector-section">
-            <div className="ct-section-heading">
-              <h2>Detected lines</h2>
-              <p>Text splits into up to four editable lines.</p>
-            </div>
+          <InspectorAccordion
+            id="detected"
+            title="Detected lines"
+            description="Text splits into up to four editable lines."
+            open={openSections.detected}
+            onToggle={toggleInspectorSection}
+          >
             {words.length > 0 ? (
               <div className="ct-chips">
                 {words.map((w, i) => (
@@ -379,13 +441,15 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
             ) : (
               <p className="ct-muted">Type at least one word to create a line.</p>
             )}
-          </section>
+          </InspectorAccordion>
 
-          <section className="ct-inspector-section">
-            <div className="ct-section-heading">
-              <h2>Default letter overlap</h2>
-              <p>Applies a default overlap between neighbouring letters to help create a connected cut shape.</p>
-            </div>
+          <InspectorAccordion
+            id="overlap"
+            title="Default letter overlap"
+            description="Applies a default overlap between neighbouring letters to help create a connected cut shape."
+            open={openSections.overlap}
+            onToggle={toggleInspectorSection}
+          >
             <div className="ct-overlap-btns" role="group" aria-label="Default letter overlap">
               {OVERLAP_MODES.map((m) => (
                 <button
@@ -399,7 +463,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                 </button>
               ))}
             </div>
-          </section>
+          </InspectorAccordion>
 
           {error && (
             <div className="ct-error" role="alert">
@@ -418,11 +482,13 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
             </div>
           )}
 
-          <section className="ct-inspector-section">
-            <div className="ct-section-heading">
-              <h2>Layout</h2>
-              <p>Set spacing between generated lines.</p>
-            </div>
+          <InspectorAccordion
+            id="layout"
+            title="Layout"
+            description="Set spacing between generated lines."
+            open={openSections.layout}
+            onToggle={toggleInspectorSection}
+          >
             {lineStates.length > 1 ? (
               <div className="ct-line-spacing-list">
                 {lineStates.slice(0, words.length - 1).map((_, li) => (
@@ -445,14 +511,16 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
             ) : (
               <p className="ct-muted">Generate two or more lines to adjust line spacing.</p>
             )}
-          </section>
+          </InspectorAccordion>
 
-          <section className="ct-inspector-section ct-lines-section">
-            <div className="ct-section-heading">
-              <h2>Lines</h2>
-              <p>Fine-tune each line's font, position, letter overlap, and detached dots.</p>
-            </div>
-
+          <InspectorAccordion
+            id="lines"
+            title="Lines"
+            description="Fine-tune each line's font, position, letter overlap, and detached dots."
+            open={openSections.lines}
+            onToggle={toggleInspectorSection}
+            className="ct-lines-section"
+          >
             {lineStates.length === 0 && (
               <div className="two-col-empty">
                 Generate a design to see per-line controls.
@@ -677,7 +745,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                 </article>
               );
             })}
-          </section>
+          </InspectorAccordion>
         </aside>
       </div>
 
