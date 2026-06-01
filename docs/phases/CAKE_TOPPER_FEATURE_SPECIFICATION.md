@@ -49,13 +49,15 @@ The Cake Topper tab automates this workflow:
 
 As a laser business owner,
 I want to type "Happy Birthday" and generate a two-line design,
-so that I get a laser-ready SVG without any manual vector editing.
+so that I get a LightBurn-compatible composition SVG ready for operator validation before cutting.
 
 **Acceptance Criteria:**
 - "Happy" appears on Line 1
 - "Birthday" appears on Line 2
 - Both lines use the selected font
 - Output is a single centred SVG with both lines composed
+- SVG contains path outlines, not editable text elements
+- SVG uses millimetre dimensions with a matching viewBox
 
 ---
 
@@ -147,6 +149,10 @@ System accepts a text input of up to 4 space-separated words.
 Each word becomes one line in the composition.
 Maximum 4 lines.
 
+The cap is enforced by the `MAX_LINES = 4` constant in `backend/app/cake_topper_engine.py`. Words beyond position 4 are silently discarded. The frontend derives the same word list using the same `text.split()[:4]` logic so the UI and backend always agree.
+
+If a phrase produces fewer than 4 words, only those lines are generated. There is no minimum word requirement beyond 1.
+
 ---
 
 ## FR-CT-02
@@ -181,16 +187,19 @@ Vertical gap controls appear between each pair of consecutive lines.
 
 The output is a single combined SVG containing all lines positioned and aligned.
 
-Lines are composited in order from top to bottom.
-SVG uses `fill-rule="nonzero"` for correct rendering of overlapping paths.
+Lines are composited in order from top to bottom using **flat path assembly** — individual path outlines are placed at their computed positions. No boolean union or path welding is performed.
+
+SVG uses `fill-rule="nonzero"` for correct rendering of overlapping paths. Overlapping regions of same-winding paths remain visually solid. Counter holes (inside letters such as O, e, a) are preserved because standard fonts use opposite winding for inner contours.
 
 ---
 
 ## FR-CT-06
 
 System exports:
-- SVG (production — LightBurn compatible)
-- PNG (preview — CairoSVG primary, Pillow fallback)
+- SVG (production — LightBurn-compatible composition output)
+- PNG (preview only — not a production cutting file)
+
+PNG generation uses CairoSVG as the primary renderer. CairoSVG requires `libcairo-2.dll` to be installed on Windows. If the native library is absent, the fallback currently produces a blank transparent image. See Section 17 for the dependency and setup details.
 
 ---
 
@@ -505,12 +514,14 @@ All pipeline runs are sequential (not parallelised). Parallelisation would reduc
 
 | Limitation | Severity | Recommendation |
 |---|---|---|
-| Maximum 4 lines (hardcoded) | Low | Configurable MAX_LINES in Phase 2 |
-| Floating detection is bounding-box vertical only | Low | Shapely-based detection for Phase 2 |
-| Canvas uses flat path assembly (no boolean union) | Low | Per-line overlap is visible in LightBurn path-edit mode; LightBurn Optimise handles it |
-| PNG Pillow fallback has lower fidelity than CairoSVG | Medium | Install Cairo for Windows in Phase 1C/2 |
-| No auto-alignment suggestion | Low | Could suggest alignment based on word length ratios in Phase 2 |
-| Per-line pipeline runs sequentially | Low | Parallelise for speed in Phase 2 |
+| Maximum 4 lines (hardcoded via `MAX_LINES = 4`) | Low | Configurable MAX_LINES in a future phase if needed |
+| Floating detection is bounding-box vertical only | Low | Shapely-based detection for a future phase |
+| Canvas uses flat path assembly — no boolean union | Medium | Visual overlap is correct; overlapping outlines are visible in LightBurn path-edit mode. LightBurn's Optimise/Weld function can merge paths if required by the operator. |
+| CairoSVG requires `libcairo-2.dll` on Windows — if absent, PNG fallback is a blank transparent image | High | Install GTK3 runtime (includes libcairo-2.dll) for Windows. PNG is preview only — SVG export is unaffected. See Section 17. |
+| No auto-alignment suggestion | Low | Could suggest alignment based on word length ratios in a future phase |
+| Per-line pipeline runs sequentially | Low | Parallelise for speed in a future phase |
+| No missing glyph detection or warning | Medium | A character without a glyph in the chosen font produces a `?` placeholder path with no user warning. Planned for Improvement Phase 2A. |
+| TypeScript `CakeTopperLineConfig` type does not declare `floating_offsets` | Low | The field is correctly sent in the API payload but is absent from the TypeScript interface definition. Build currently passes. Planned fix in Improvement Phase 2A. |
 
 ---
 
@@ -536,6 +547,232 @@ The formal Phase 2 (Cake Topper Generator) will build on this foundation with:
 | Phase X Implementation Handoff | /docs/handoffs/phase-x-implementation-handoff.md |
 | Phase 2 Cake Topper (formal) | /docs/phases/PHASE_04_DECORATIVE_LIBRARY_IMPLEMENTATION.md |
 | Phase Index | /docs/phases/PHASE_INDEX.md |
+| Cake Topper QA Matrix | /docs/qa/CAKE_TOPPER_QA_MATRIX.md |
+| Improvement Phase 1 Handoff | /docs/handoffs/cake-topper-improvement-phase1-handoff.md |
+| Spec Review | /docs/reviews/cake_topper_spec_review.md |
+| Coding Agent Prompt | /docs/prompts/cake_topper_recommendations_coding_agent_prompt.md |
+
+---
+
+# 13. Visual Overlap vs Boolean Union Behaviour
+
+## What the app does
+
+The Cake Topper engine places letter paths and line paths at computed canvas positions. When two letters overlap (via the per-gap overlap controls) or two lines overlap (via negative vertical gap), the SVG contains the individual path outlines positioned so they visually share the same region.
+
+SVG rendering uses `fill-rule="nonzero"`, which means:
+
+- Where two same-winding paths overlap, the region renders as solid black (visually connected).
+- Counter holes inside letters (O, e, a, b, d, p, 0, 6, 8, 9) use opposite winding in standard fonts and remain visible as holes.
+
+## What the app does NOT do
+
+The engine does **not** perform:
+
+- Boolean path union — individual path outlines remain separate objects in the SVG file.
+- Path welding — no SVG path element merges the shapes into a single continuous outline.
+- Connectivity analysis — the engine does not check whether all shapes form one connected piece.
+- Structural validation — no check for minimum feature size, thin bridges, or isolated floating pieces.
+
+## Practical consequence
+
+When imported into LightBurn in path-edit mode, you will see individual letter outlines that may overlap but are not merged. LightBurn's **Optimise** function (or manually applying **Weld** in LightBurn) can merge overlapping same-winding paths into a true single outline if required.
+
+For most operator workflows, visual overlap at `fill-rule="nonzero"` is sufficient to produce a correct cut. However, the operator should verify the design in LightBurn before cutting, particularly if the font or phrase produces unusual glyph boundaries.
+
+## Recommended user guidance
+
+> The Cake Topper tab produces a composed, outline-based SVG intended for import into LightBurn. It visually overlaps letters and lines according to your spacing controls. In the current phase the system does not guarantee a boolean-unioned single continuous path, does not perform structural validation, and does not certify the design as cut-ready without operator review.
+
+---
+
+# 14. Export Contract
+
+The SVG produced by the Cake Topper engine must satisfy the following invariants on every generation:
+
+| Invariant | Value |
+|---|---|
+| Width unit | `mm` (e.g., `width="134.4mm"`) |
+| Height unit | `mm` (e.g., `height="92.5mm"`) |
+| viewBox | `0 0 <width_mm> <height_mm>` — zero-origin, matches physical dimensions |
+| SVG namespace | `xmlns="http://www.w3.org/2000/svg"` |
+| Contains `<text>` elements | No — all text is converted to path outlines before export |
+| Contains editable font references | No — output is independent of installed fonts |
+| Fill rule | `fill-rule="nonzero"` on every path element |
+| Stroke | `stroke="none"` on every path element |
+| Fill colour | `fill="#000000"` (solid black) |
+| Background rectangle | Not present |
+| Path ID prefixing | Line 0 paths: `L0-…`, Line 1 paths: `L1-…`, etc. (avoids ID conflicts) |
+| Canvas padding | 5mm padding on all sides (`CANVAS_PADDING_MM = 5.0`) |
+| Minimum canvas width | `max(line ink widths) + 10mm` |
+| Boolean union performed | No |
+| Structural validation performed | No |
+
+### PNG export note
+
+PNG output is **preview only**. It must not be used as the production cutting file.
+
+The PNG is generated from the SVG using CairoSVG. If CairoSVG's native library (`libcairo-2.dll` on Windows) is not installed, a blank transparent PNG is returned. The SVG export is unaffected by CairoSVG availability.
+
+---
+
+# 15. Cut-Readiness Disclaimer
+
+The Cake Topper tab **does not** produce a guaranteed single-piece, structurally validated, laser-cut-ready file.
+
+What it does produce:
+
+- A correctly dimensioned, outline-based, LightBurn-compatible SVG.
+- Visual letter-level overlap where configured.
+- Visual line-level overlap where configured via negative vertical gap.
+- Font counter holes preserved via `fill-rule="nonzero"` and standard font winding conventions.
+
+What requires operator verification before cutting:
+
+1. Import the SVG into LightBurn and check the displayed dimensions match the expected physical size.
+2. Visually confirm all letters are visible and no glyphs are missing.
+3. Confirm counter holes (O, e, a, b, d, p, 0, 6, 8, 9) are open, not filled.
+4. Confirm the design appears connected — lines and letters should visually overlap where intended.
+5. If LightBurn shows disconnected path segments, use LightBurn's **Optimise** or **Weld** function.
+6. Perform a test cut before cutting production material.
+
+If any of these checks fail, do not proceed to cutting.
+
+---
+
+# 16. Error Handling Contract
+
+### Backend error responses
+
+The backend returns HTTP 400 with a plain-text `detail` field for the following conditions:
+
+| Condition | HTTP Status | Message |
+|---|---|---|
+| Text produces zero words after stripping whitespace | 400 | `Text must contain at least one word.` |
+| Font ID not found in catalogue | 400 | Font-loader error message |
+| Any internal generation failure | 400 | Error message from the exception |
+
+Pydantic validation errors (e.g., `font_size_mm` out of range, `overlap_mm` invalid) return HTTP 422 with a structured detail array. The frontend `_readError()` helper handles both 400 and 422 formats.
+
+### Frontend error display
+
+Errors are displayed in a `<div class="ct-error">` block between the overlap shortcut row and the canvas. The message is extracted from the API response and shown verbatim for 400 errors, or as a formatted field-level summary for 422 errors.
+
+### Currently unhandled (planned for Improvement Phase 2A)
+
+- Backend server not running — currently shows "Could not generate cake topper." Should detect network failure and show "Backend is not running. Start the local server and retry."
+- Missing glyph in selected font — currently silently produces a `?` path with no warning.
+- Font size or gap value produces zero-width geometry — no guard currently.
+
+---
+
+# 17. Local Runtime and Startup
+
+This is a local web application. No internet connection is required after initial dependency installation.
+
+### Backend
+
+```bash
+# From the repository root
+cd backend
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Or using the project's standard run script if one exists.
+
+The backend binds to `127.0.0.1` only (not `0.0.0.0`) — accessible from the local machine only.
+
+### Frontend
+
+```bash
+# From the repository root
+cd frontend
+npm run dev
+```
+
+The Vite dev server starts on `http://localhost:5173`. The frontend proxies API calls to `http://localhost:8000`.
+
+### Required Python dependencies
+
+Key dependencies for Cake Topper functionality:
+
+| Package | Purpose | Required |
+|---|---|---|
+| `fastapi` | API framework | Yes |
+| `uvicorn` | ASGI server | Yes |
+| `pydantic` | Data validation | Yes |
+| `uharfbuzz` | Text shaping | Yes |
+| `fonttools` | Outline extraction | Yes |
+| `svgwrite` | SVG generation | Yes |
+| `Pillow` | PNG fallback renderer | Yes |
+| `cairosvg` | PNG renderer (primary) | Optional — see note |
+| `cairocffi` | Cairo Python bindings | Optional — see note |
+
+### CairoSVG on Windows
+
+CairoSVG requires the native Cairo graphics library (`libcairo-2.dll`) to be installed as a system dependency, separate from the Python package. On Windows:
+
+- The Python package `cairosvg` can be `pip install`ed without error.
+- The import will succeed, but calling `cairosvg.svg2png()` will raise `OSError: no library called "cairo-2" was found` if the native DLL is absent.
+- The cake topper engine catches this and falls back to a **blank transparent PNG**.
+
+**To enable proper PNG preview on Windows:**
+
+Install the [GTK3 runtime for Windows](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer). This provides `libcairo-2.dll`. After installation, restart the backend server.
+
+**Current machine status (confirmed 2026-06-01):** CairoSVG Python package installed, `libcairo-2.dll` NOT present. PNG previews are blank. SVG export is unaffected.
+
+### Ports
+
+| Service | Host | Port |
+|---|---|---|
+| Backend | 127.0.0.1 | 8000 |
+| Frontend dev server | localhost | 5173 |
+
+### Offline behaviour
+
+Once all dependencies are installed and fonts are present in the project font directory, the application runs with no internet access required. No external API calls are made during generation or export.
+
+### Font location
+
+Fonts are loaded from the project font directory by `backend/app/font_loader.py`. The exact path is configured in the font catalogue. Fonts must be present before the backend starts — there is no dynamic font download.
+
+### Export and download
+
+SVG and PNG downloads use browser-based blob download initiated by the `ExportControls` component. Files are not written to disk by the backend; they are streamed via the API response and downloaded by the browser.
+
+---
+
+# 18. Font Handling Rules
+
+### Supported font formats
+
+The font loader accepts font files compatible with HarfBuzz and FontTools. TrueType (`.ttf`) and OpenType (`.otf`) fonts are supported. Web font formats (`.woff`, `.woff2`) are not supported without prior conversion.
+
+### Font catalogue
+
+Fonts are catalogued at startup by `backend/app/font_loader.py`. Each font is assigned a stable `font_id` derived from its filename. Fonts added to the font directory are available after a backend restart.
+
+### Missing font handling
+
+If a `font_id` in the request does not correspond to a catalogued font, `font_catalog.get_font_path()` raises a `ValueError`. The route handler converts this to an HTTP 400 response.
+
+### Missing glyph handling (current limitation)
+
+If the selected font does not contain a glyph for a character in the input text, HarfBuzz and FontTools will produce either:
+
+- A `.notdef` glyph (empty box or zero-width path), or
+- No path commands for that character.
+
+The `_extract_chars()` function pads or truncates the character list with `?` if the glyph count does not match the text character count. No user warning is currently shown.
+
+**Impact:** A phrase using characters not supported by the selected font may produce missing letters in the output without any error or warning. The operator should visually inspect the SVG preview before cutting.
+
+**Planned fix:** Improvement Phase 2A will add explicit missing glyph detection and a warning in the API response.
+
+### Font licensing
+
+The font catalogue contains fonts made available for the Etch 'N' Shine production workflow. Font licensing is the responsibility of the operator. Do not add fonts to the catalogue that are not licensed for commercial production use.
 
 ---
 

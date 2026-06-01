@@ -288,6 +288,12 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         </div>
       )}
 
+      {/* Visual overlap disclaimer — always visible */}
+      <div className="ct-info-notice" role="note">
+        This tab visually overlaps paths for composition. It does not perform boolean union, welding,
+        or structural validation. Please verify the SVG in LightBurn before cutting.
+      </div>
+
       {/* Two-column: preview left, accordion cards right */}
       <div className="two-col-main">
         <div className="two-col-preview">
