@@ -54,6 +54,8 @@ Release Tag: v0.4.0
 | `frontend/src/components/PreviewPanel.tsx` | Shared SVG preview; Cake Topper line box overlay and robust native pointer drag handling |
 | `frontend/src/styles.css` | Two-column layout, per-gap pill styles, floating controls, cake topper accordion, alignment buttons, vertical gap row, canvas position controls, preview drag overlay |
 
+Post-v0.4.1 UI note: `frontend/src/App.tsx` now renders Cake Topper directly and no longer shows the Text Generator or Overlap Engine tabs. The underlying Text Generator and Overlap Engine components, services, and backend endpoints remain in the repository for possible future reactivation.
+
 ---
 
 # 4. Technical Decisions

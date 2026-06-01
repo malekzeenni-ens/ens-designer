@@ -2,7 +2,7 @@
 
 ## Document Information
 
-Feature: Cake Topper Tab
+Feature: Cake Topper Designer
 Phase: X (delivered), Phase 2 (formal phase)
 Version: 1.1
 Date: 2026-06-01
@@ -32,7 +32,7 @@ This process takes several minutes per design, is inconsistent between operators
 
 ## 1.2 The Solution
 
-The Cake Topper tab automates this workflow:
+The Cake Topper Designer workspace automates this workflow:
 
 1. Type the full phrase once ("Happy Birthday Sarah")
 2. System auto-splits by space into separate lines
@@ -245,6 +245,8 @@ The preview supports direct drag-to-move for generated lines.
 # 4. UI / UX Specification
 
 ## 4.1 Layout
+
+Current UI mode: Cake Topper-only. The older Text Generator and Overlap Engine workflows remain in the repository for possible future reactivation, but their tabs are not shown in the app shell.
 
 ```
 ┌────────────────────────────────────────────────────────────┐
