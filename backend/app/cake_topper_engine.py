@@ -112,9 +112,13 @@ class CakeTopperService:
             # Horizontal alignment
             x_offset = _compute_x_offset(cfg, ink_width, canvas_width)
 
-            # Translate paths to canvas position
-            x_translate = x_offset - geom.bounds.min_x
-            y_translate = y_cursor - geom.bounds.min_y
+            # Manual canvas offset — additive after alignment and stacking
+            manual_x = cfg.manual_x_offset_mm
+            manual_y = cfg.manual_y_offset_mm
+
+            # Translate paths to canvas position (including manual offset)
+            x_translate = x_offset - geom.bounds.min_x + manual_x
+            y_translate = y_cursor - geom.bounds.min_y + manual_y
             translated = _translate_paths(geom.paths, x_translate, y_translate, prefix=f"L{i}-")
             translated_path_groups.append(translated)
 
@@ -125,7 +129,10 @@ class CakeTopperService:
                 gaps_after_mm=meta["gaps_after_mm"],
                 width_mm=round(ink_width, 3),
                 height_mm=round(ink_height, 3),
-                x_offset_mm=round(x_offset, 3),
+                x_offset_mm=round(x_offset + manual_x, 3),
+                y_offset_mm=round(y_cursor + manual_y, 3),
+                manual_x_offset_mm=round(manual_x, 3),
+                manual_y_offset_mm=round(manual_y, 3),
                 floating_components=meta.get("floating_components", []),
             ))
 

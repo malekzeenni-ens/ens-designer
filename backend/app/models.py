@@ -154,6 +154,8 @@ class CakeTopperLineConfig(BaseModel):
     overlap_custom_mm: Optional[float] = Field(default=None, gt=0, le=10.0)
     gap_configs: list["OverlapGapConfig"] = Field(default_factory=list)
     floating_offsets: list[FloatingComponentOffset] = Field(default_factory=list)
+    manual_x_offset_mm: float = 0.0
+    manual_y_offset_mm: float = 0.0
 
 
 class CakeTopperRequest(BaseModel):
@@ -174,6 +176,9 @@ class CakeTopperLineMetadata(BaseModel):
     width_mm: float
     height_mm: float
     x_offset_mm: float
+    y_offset_mm: float = 0.0
+    manual_x_offset_mm: float = 0.0
+    manual_y_offset_mm: float = 0.0
     floating_components: list[FloatingComponentInfo] = Field(default_factory=list)
 
 

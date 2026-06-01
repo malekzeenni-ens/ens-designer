@@ -10,6 +10,8 @@ export interface CakeTopperLineConfig {
   overlap_custom_mm?: number | null;
   gap_configs: OverlapGapConfig[];
   floating_offsets: FloatingComponentOffset[];
+  manual_x_offset_mm: number;
+  manual_y_offset_mm: number;
 }
 
 export interface CakeTopperLineMetadata {
@@ -20,6 +22,9 @@ export interface CakeTopperLineMetadata {
   width_mm: number;
   height_mm: number;
   x_offset_mm: number;
+  y_offset_mm: number;
+  manual_x_offset_mm: number;
+  manual_y_offset_mm: number;
   floating_components: FloatingComponentInfo[];
 }
 

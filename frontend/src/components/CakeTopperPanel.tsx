@@ -39,6 +39,8 @@ type LineState = {
   overlapCustomMm: string;
   gapStates: GapState[];
   floatingOffsets: FloatingOffsetMap;
+  manualXOffsetMm: string;
+  manualYOffsetMm: string;
   expanded: boolean;
 };
 
@@ -56,6 +58,8 @@ function initLine(fontId: string, overlapMm: string, numGaps: number): LineState
     overlapCustomMm: "1.5",
     gapStates: Array.from({ length: numGaps }, () => ({ enabled: true, overlapMm })),
     floatingOffsets: {},
+    manualXOffsetMm: "0",
+    manualYOffsetMm: "0",
     expanded: true,
   };
 }
@@ -71,6 +75,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [result, setResult] = useState<CakeTopperResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLine, setSelectedLine] = useState<number | null>(null);
 
   const words = useMemo(
     () => text.trim().split(/\s+/).filter(Boolean).slice(0, 4),
@@ -106,6 +111,8 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         overlap_mm: parseFloat(g.overlapMm) || 1.5,
       })),
       floating_offsets: toFloatingOffsets(s.floatingOffsets),
+      manual_x_offset_mm: parseFloat(s.manualXOffsetMm) || 0,
+      manual_y_offset_mm: parseFloat(s.manualYOffsetMm) || 0,
     }));
   }
 
@@ -186,6 +193,25 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       overlapMode: mode,
       gapStates: s.gapStates.map((g) => ({ ...g, overlapMm: String(mm) })),
     }));
+    setLineStates(updated);
+    callApi(updated, interLineGaps);
+  }
+
+  function handleLineDrag(lineIndex: number, dxMm: number, dyMm: number) {
+    const updated = lineStates.map((s, i) => {
+      if (i !== lineIndex) return s;
+      const newX = Math.round(((parseFloat(s.manualXOffsetMm) || 0) + dxMm) * 10) / 10;
+      const newY = Math.round(((parseFloat(s.manualYOffsetMm) || 0) + dyMm) * 10) / 10;
+      return { ...s, manualXOffsetMm: String(newX), manualYOffsetMm: String(newY) };
+    });
+    setLineStates(updated);
+    callApi(updated, interLineGaps);
+  }
+
+  function resetPosition(lineIndex: number) {
+    const updated = lineStates.map((s, i) =>
+      i !== lineIndex ? s : { ...s, manualXOffsetMm: "0", manualYOffsetMm: "0" },
+    );
     setLineStates(updated);
     callApi(updated, interLineGaps);
   }
@@ -306,7 +332,20 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       {/* Two-column: preview left, accordion cards right */}
       <div className="two-col-main">
         <div className="two-col-preview">
-          <PreviewPanel svg={result?.svg ?? null} />
+          <PreviewPanel
+            svg={result?.svg ?? null}
+            lineBoxes={meta?.lines.map((lm) => ({
+              xMm: lm.x_offset_mm,
+              yMm: lm.y_offset_mm,
+              wMm: lm.width_mm,
+              hMm: lm.height_mm,
+            }))}
+            canvasWidthMm={meta?.canvas_width_mm}
+            canvasHeightMm={meta?.canvas_height_mm}
+            selectedLine={selectedLine}
+            onSelectLine={setSelectedLine}
+            onLineDrag={handleLineDrag}
+          />
         </div>
 
         <div className="two-col-settings">
@@ -460,6 +499,48 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                     }}
                   />
                 )}
+
+                {/* Canvas position offset controls */}
+                <div className="ct-position-section">
+                  <span className="ct-label">Canvas position offset</span>
+                  <div className="ct-position-row">
+                    <label className="ct-position-field">
+                      X
+                      <input
+                        type="number"
+                        min="-500"
+                        max="500"
+                        step="0.5"
+                        value={ls.manualXOffsetMm}
+                        className="ct-position-input"
+                        onChange={(e) => patchLine(li, { manualXOffsetMm: e.target.value })}
+                      />
+                      mm
+                    </label>
+                    <label className="ct-position-field">
+                      Y
+                      <input
+                        type="number"
+                        min="-500"
+                        max="500"
+                        step="0.5"
+                        value={ls.manualYOffsetMm}
+                        className="ct-position-input"
+                        onChange={(e) => patchLine(li, { manualYOffsetMm: e.target.value })}
+                      />
+                      mm
+                    </label>
+                    {(parseFloat(ls.manualXOffsetMm) !== 0 || parseFloat(ls.manualYOffsetMm) !== 0) && (
+                      <button
+                        type="button"
+                        className="ct-position-reset"
+                        onClick={() => resetPosition(li)}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

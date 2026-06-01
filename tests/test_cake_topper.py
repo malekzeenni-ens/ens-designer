@@ -347,3 +347,50 @@ class TestOverlapControls:
             for before, after in zip(line["gaps_before_mm"], line["gaps_after_mm"]):
                 if before > 0:
                     assert after < before
+
+
+# ---------------------------------------------------------------------------
+# Manual canvas offset
+# ---------------------------------------------------------------------------
+
+class TestManualOffsets:
+    def test_manual_offsets_default_to_zero(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy")
+        lm = data["metadata"]["lines"][0]
+        assert lm["manual_x_offset_mm"] == 0.0
+        assert lm["manual_y_offset_mm"] == 0.0
+
+    def test_manual_x_offset_shifts_metadata(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42}])
+        shifted = _ct(client, font_id, text="Happy",
+                      line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                     "manual_x_offset_mm": 10.0}])
+        delta = shifted["metadata"]["lines"][0]["x_offset_mm"] - base["metadata"]["lines"][0]["x_offset_mm"]
+        assert abs(delta - 10.0) < 0.01
+
+    def test_manual_y_offset_shifts_metadata(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42}])
+        shifted = _ct(client, font_id, text="Happy",
+                      line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                     "manual_y_offset_mm": 8.0}])
+        delta = shifted["metadata"]["lines"][0]["y_offset_mm"] - base["metadata"]["lines"][0]["y_offset_mm"]
+        assert abs(delta - 8.0) < 0.01
+
+    def test_manual_offsets_reflected_in_metadata(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                  "manual_x_offset_mm": 3.5, "manual_y_offset_mm": -2.0}])
+        lm = data["metadata"]["lines"][0]
+        assert lm["manual_x_offset_mm"] == 3.5
+        assert lm["manual_y_offset_mm"] == -2.0
+
+    def test_zero_offsets_preserve_alignment(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42}])
+        explicit = _ct(client, font_id, text="Happy",
+                       line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                      "manual_x_offset_mm": 0.0, "manual_y_offset_mm": 0.0}])
+        assert base["metadata"]["lines"][0]["x_offset_mm"] == explicit["metadata"]["lines"][0]["x_offset_mm"]
+        assert base["metadata"]["lines"][0]["y_offset_mm"] == explicit["metadata"]["lines"][0]["y_offset_mm"]

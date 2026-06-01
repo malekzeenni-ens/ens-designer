@@ -867,12 +867,101 @@ button:disabled {
   border-left-color: #bc6c25;
 }
 
-.preview-surface svg {
+.preview-svg-host {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.preview-svg-host svg {
   display: block;
   max-width: 100%;
   max-height: 360px;
   width: auto;
   height: auto;
+}
+
+/* Drag overlay — sits on top of the SVG, same dimensions */
+.preview-drag-overlay {
+  position: absolute;
+  inset: 0;
+  cursor: default;
+}
+
+/* Per-line draggable handle — invisible by default, shows on hover/select */
+.preview-drag-handle {
+  position: absolute;
+  border: 2px dashed transparent;
+  border-radius: 2px;
+  cursor: grab;
+  touch-action: none;
+  transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+
+.preview-drag-handle:hover {
+  border-color: rgba(24, 36, 31, 0.35);
+  background: rgba(24, 36, 31, 0.03);
+}
+
+.preview-drag-handle--selected {
+  border-color: #18241f;
+  background: rgba(24, 36, 31, 0.05);
+}
+
+.preview-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Canvas position offset controls */
+.ct-position-section {
+  display: grid;
+  gap: 6px;
+}
+
+.ct-position-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ct-position-field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: #4d5a55;
+  font-weight: 700;
+  cursor: default;
+}
+
+.ct-position-input {
+  width: 62px;
+  height: 28px;
+  padding: 0 5px;
+  border: 1px solid #cfcabe;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.ct-position-reset {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid #cfcabe;
+  border-radius: 4px;
+  background: #fff;
+  color: #4d5a55;
+  cursor: pointer;
+}
+
+.ct-position-reset:hover {
+  border-color: #18241f;
+  background: #f0ede4;
+  color: #18241f;
 }
 
 .preview-empty {
