@@ -196,6 +196,19 @@ h2 {
   color: var(--ens-gold-soft);
 }
 
+.ct-reset-action {
+  border-color: rgba(221, 191, 147, 0.42);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ens-gold-soft);
+}
+
+.ct-reset-action:hover,
+.ct-app-header .export-controls button:not(:first-child):hover {
+  border-color: var(--ens-gold);
+  background: rgba(221, 191, 147, 0.12);
+  color: var(--ens-gold);
+}
+
 .ct-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(380px, 0.95fr);

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Wand2 } from "lucide-react";
+import { ChevronDown, ChevronRight, RotateCcw, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -284,6 +284,21 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     setOpenSections((current) => ({ ...current, [id]: !current[id] }));
   }
 
+  function resetDesigner() {
+    setText("Happy Birthday");
+    setFontSearch("");
+    setDefaultFontId(fonts[0]?.id ?? "");
+    setDefaultSize(DEFAULT_SIZE);
+    setDefaultOverlap(DEFAULT_OVERLAP);
+    setLineStates([]);
+    setInterLineGaps([]);
+    setResult(null);
+    setLoading(false);
+    setError(null);
+    setSelectedLine(null);
+    setOpenSections(DEFAULT_OPEN_SECTIONS);
+  }
+
   const meta = result?.metadata;
 
   return (
@@ -302,6 +317,15 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         </div>
         <div className="ct-header-actions">
           <span>{meta ? "Ready to export" : "Create a design to export"}</span>
+          <button
+            type="button"
+            className="ct-reset-action"
+            onClick={resetDesigner}
+            title="Reset canvas and settings"
+          >
+            <RotateCcw size={17} aria-hidden="true" />
+            Reset
+          </button>
           <ExportControls
             svg={result?.svg ?? null}
             pngBase64={result?.png_base64 ?? null}
