@@ -16,8 +16,6 @@ from __future__ import annotations
 
 import base64
 import logging
-import re
-import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -36,6 +34,14 @@ from .models import (
     PathCommand,
 )
 from .outline_extractor import FONT_SIZE_MM, extract_outlines
+from .overlap_helpers import (
+    _bbox_gaps,
+    _cumulative,
+    _extract_chars,
+    _pair_shifts,
+    _safe_filename,
+    _shift_paths,
+)
 from .png_exporter import export_png, render_paths_png
 from .svg_exporter import export_svg
 from .text_shaper import shape_text
@@ -53,11 +59,6 @@ _MODE_OVERLAP_MM: dict[str, float] = {
     "medium": 1.5,
     "strong": 2.5,
 }
-
-
-@dataclass
-class OverlapService:
-    pass  # local alias — avoids circular import
 
 
 @dataclass
@@ -241,74 +242,8 @@ class CakeTopperService:
         return geometry, meta
 
 
-# ---------------------------------------------------------------------------
-# Overlap helpers (duplicated from overlap_engine for independence)
-# ---------------------------------------------------------------------------
-
-def _bbox_gaps(glyphs, paths) -> list[float]:
-    path_map = {p.path_id: p for p in paths}
-    ranges = []
-    for glyph in glyphs:
-        xs = [
-            getattr(cmd, attr, None)
-            for pid in glyph.path_ids
-            if (path := path_map.get(pid))
-            for cmd in path.commands
-            for attr in ("x", "x1", "x2")
-            if getattr(cmd, attr, None) is not None
-        ]
-        ranges.append((min(xs), max(xs)) if xs else None)
-    return [
-        (ranges[i + 1][0] - ranges[i][1]) if ranges[i] and ranges[i + 1] else 0.0
-        for i in range(len(ranges) - 1)
-    ]
-
-
-def _pair_shifts(gaps, default_overlap, config_map):
-    result = []
-    for i, gap in enumerate(gaps):
-        cfg = config_map.get(i)
-        if cfg is not None and not cfg.enabled:
-            result.append(0.0)
-            continue
-        target = cfg.overlap_mm if cfg is not None else default_overlap
-        result.append(0.0 if gap <= -target else gap + target)
-    return result
-
-
-def _cumulative(pair_shifts, n_glyphs):
-    shifts = [0.0] * n_glyphs
-    for i, ps in enumerate(pair_shifts):
-        for j in range(i + 1, n_glyphs):
-            shifts[j] += ps
-    return shifts
-
-
-def _shift_paths(paths, glyph_path_ids, shifts):
-    pid_to_shift = {pid: shifts[idx] for idx, group in enumerate(glyph_path_ids) for pid in group}
-    result = []
-    for path in paths:
-        s = pid_to_shift.get(path.path_id, 0.0)
-        if s == 0.0:
-            result.append(path)
-            continue
-        new_cmds = []
-        for cmd in path.commands:
-            data = cmd.model_dump()
-            for k in ("x", "x1", "x2"):
-                if data[k] is not None:
-                    data[k] = round(data[k] - s, 3)
-            new_cmds.append(PathCommand(**data))
-        result.append(GeometryPath(path_id=path.path_id, commands=new_cmds, closed=path.closed))
-    return result
-
-
-def _extract_chars(text, n_glyphs):
-    chars = list(unicodedata.normalize("NFC", text))
-    if len(chars) == n_glyphs:
-        return chars
-    return (chars + ["?"] * n_glyphs)[:n_glyphs]
-
+# Overlap algorithm helpers (_bbox_gaps, _pair_shifts, _cumulative,
+# _shift_paths, _extract_chars, _safe_filename) live in overlap_helpers.py.
 
 # ---------------------------------------------------------------------------
 # Canvas assembly helpers
@@ -382,6 +317,3 @@ def _render_png(svg: str, paths: list[GeometryPath], width_mm: float, height_mm:
         return render_paths_png(paths, width_mm, height_mm)
 
 
-def _safe_filename(text: str) -> str:
-    value = re.sub(r"[^A-Za-z0-9_-]+", "-", text.strip()).strip("-").lower()
-    return value or "design"
