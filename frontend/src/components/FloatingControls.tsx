@@ -21,14 +21,17 @@ export function FloatingControls({ floatingComponents, offsets, onChange }: Floa
 
   return (
     <div className="floating-controls">
-      <span className="gap-controls-heading">Floating dots / accents</span>
+      <div className="ct-subsection-copy">
+        <span className="ct-subsection-title">Detached dots & accents</span>
+        <p>Move detached dots or accent marks so they visually connect or sit correctly before export.</p>
+      </div>
       <div className="floating-controls-grid">
         {floatingComponents.map((fc) => {
           const off = offsets[fc.glyph_index] ?? { xMm: "0", yMm: "0" };
           return (
             <div key={fc.glyph_index} className="floating-row">
               <span className="floating-char" title={`Glyph index ${fc.glyph_index}`}>
-                '{fc.char}' dot
+                "{fc.char}" dot
               </span>
               <label className="floating-axis-label">
                 <span>↔ X</span>

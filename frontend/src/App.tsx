@@ -17,11 +17,6 @@ export function App() {
   return (
     <main className="app-shell">
       <section className="workspace">
-        <header>
-          <p>Etch N Shine</p>
-          <h1>Cake Topper Designer</h1>
-        </header>
-
         {error ? (
           <p className="error">{error}</p>
         ) : (

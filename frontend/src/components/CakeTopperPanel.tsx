@@ -20,8 +20,8 @@ interface CakeTopperPanelProps {
 }
 
 const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] = [
-  { value: "light",  label: "Light",  mm: 0.5 },
-  { value: "auto",   label: "Auto",   mm: 1.0 },
+  { value: "light", label: "Light", mm: 0.5 },
+  { value: "auto", label: "Auto", mm: 1.0 },
   { value: "medium", label: "Medium", mm: 1.5 },
   { value: "strong", label: "Strong", mm: 2.5 },
   { value: "custom", label: "Custom", mm: null },
@@ -90,7 +90,6 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     );
   }, [fonts, fontSearch]);
 
-  // Auto-select first visible font when the current selection is filtered out
   useEffect(() => {
     if (filteredFonts.length > 0 && !filteredFonts.some((f) => f.id === defaultFontId)) {
       setDefaultFontId(filteredFonts[0].id);
@@ -119,13 +118,20 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   async function callApi(states: LineState[], gaps: string[]) {
     const n = words.length;
     const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
-    const gapValues = gaps.slice(0, n - 1).map((g) => { const v = parseFloat(g); return isNaN(v) ? 3 : v; });
+    const gapValues = gaps.slice(0, n - 1).map((g) => {
+      const v = parseFloat(g);
+      return isNaN(v) ? 3 : v;
+    });
     setLoading(true);
     setError(null);
     try {
       const r = await generateCakeTopper(
-        text, defaultFontId, parseFloat(defaultSize) || 42,
-        defaultOverlap, configs, gapValues,
+        text,
+        defaultFontId,
+        parseFloat(defaultSize) || 42,
+        defaultOverlap,
+        configs,
+        gapValues,
       );
       setResult(r);
       if (states.length === 0) {
@@ -150,17 +156,19 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   }
 
   function patchLine(i: number, patch: Partial<LineState>) {
-    const updated = lineStates.map((s, idx) => idx === i ? { ...s, ...patch } : s);
+    const updated = lineStates.map((s, idx) => (idx === i ? { ...s, ...patch } : s));
     setLineStates(updated);
     if (!("expanded" in patch)) callApi(updated, interLineGaps);
   }
 
   function toggleGap(li: number, gi: number) {
     const updated = lineStates.map((s, i) =>
-      i !== li ? s : {
-        ...s,
-        gapStates: s.gapStates.map((g, j) => j === gi ? { ...g, enabled: !g.enabled } : g),
-      },
+      i !== li
+        ? s
+        : {
+            ...s,
+            gapStates: s.gapStates.map((g, j) => (j === gi ? { ...g, enabled: !g.enabled } : g)),
+          },
     );
     setLineStates(updated);
     callApi(updated, interLineGaps);
@@ -168,17 +176,19 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
 
   function setGapMm(li: number, gi: number, value: string) {
     const updated = lineStates.map((s, i) =>
-      i !== li ? s : {
-        ...s,
-        gapStates: s.gapStates.map((g, j) => j === gi ? { ...g, overlapMm: value } : g),
-      },
+      i !== li
+        ? s
+        : {
+            ...s,
+            gapStates: s.gapStates.map((g, j) => (j === gi ? { ...g, overlapMm: value } : g)),
+          },
     );
     setLineStates(updated);
     if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps);
   }
 
   function setInterGap(i: number, value: string) {
-    const updated = interLineGaps.map((g, idx) => idx === i ? value : g);
+    const updated = interLineGaps.map((g, idx) => (idx === i ? value : g));
     setInterLineGaps(updated);
     if (!isNaN(parseFloat(value))) callApi(lineStates, updated);
   }
@@ -217,364 +227,465 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   }
 
   const meta = result?.metadata;
-  const overlapMmForMode = OVERLAP_MODES.find((m) => m.value === defaultOverlap)?.mm ?? 1.5;
 
   return (
     <div className="ct-panel">
-      {/* ── Top bar ──────────────────────────────────────────── */}
-      <div className="ct-topbar">
-        <div className="ct-topbar-text">
-          <label className="ct-label" htmlFor="ct-text">Text</label>
-          <input
-            id="ct-text"
-            type="text"
-            className="ct-text-input"
-            value={text}
-            placeholder="Happy Birthday Sarah"
-            onChange={(e) => {
-              setText(e.target.value);
-              setLineStates([]);
-              setInterLineGaps([]);
-              setResult(null);
-            }}
-          />
+      <header className="ct-app-header">
+        <div>
+          <p>Etch N Shine</p>
+          <h1>Cake Topper Designer</h1>
         </div>
-
-        <div className="ct-topbar-font">
-          <label className="ct-label">Font</label>
-          <div className="ct-font-combo">
-            <input
-              type="text"
-              placeholder="Search…"
-              value={fontSearch}
-              onChange={(e) => setFontSearch(e.target.value)}
-              className="ct-font-search"
-            />
-            <select
-              value={defaultFontId}
-              onChange={(e) => setDefaultFontId(e.target.value)}
-              aria-label="Default font"
-            >
-              {filteredFonts.map((f) => (
-                <option key={f.id} value={f.id}>{f.full_name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="ct-topbar-size">
-          <label className="ct-label">Size&nbsp;(mm)</label>
-          <input
-            type="number" min="5" max="300" step="1"
-            value={defaultSize}
-            onChange={(e) => setDefaultSize(e.target.value)}
-          />
-        </div>
-
-        <button
-          className="generate-button"
-          type="button"
-          onClick={handleGenerate}
-          disabled={loading || !defaultFontId || words.length === 0}
-        >
-          <Wand2 size={18} aria-hidden="true" />
-          {loading ? "Generating…" : "Generate"}
-        </button>
-      </div>
-
-      {/* Word chips */}
-      {words.length > 0 && (
-        <div className="ct-chips">
-          {words.map((w, i) => (
-            <span key={i} className="ct-chip">Line {i + 1}: {w}</span>
-          ))}
-        </div>
-      )}
-
-      {/* Letter overlap shortcut */}
-      <div className="ct-overlap-row">
-        <span className="ct-label">{lineStates.length > 0 ? "Set all letter gaps" : "Letter overlap"}</span>
-        <div className="ct-overlap-btns">
-          {OVERLAP_MODES.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              className={`ct-overlap-btn${defaultOverlap === m.value ? " ct-overlap-btn--active" : ""}`}
-              onClick={() => applyGlobalOverlap(m.value)}
-            >
-              {m.label}{m.mm != null ? ` ${m.mm}mm` : ""}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {error && (
-        <div className="ct-error" role="alert">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {result?.warnings && result.warnings.length > 0 && (
-        <div className="ct-warnings" role="alert">
-          <strong>Warning{result.warnings.length > 1 ? "s" : ""}:</strong>
-          <ul className="ct-warnings-list">
-            {result.warnings.map((w, i) => <li key={i}>{w}</li>)}
-          </ul>
-        </div>
-      )}
-
-      {/* Visual overlap disclaimer — always visible */}
-      <div className="ct-info-notice" role="note">
-        This tab visually overlaps paths for composition. It does not perform boolean union, welding,
-        or structural validation. Please verify the SVG in LightBurn before cutting.
-      </div>
-
-      {/* Two-column: preview left, accordion cards right */}
-      <div className="two-col-main">
-        <div className="two-col-preview">
-          <PreviewPanel
+        <div className="ct-header-actions">
+          <span>{meta ? "Ready to export" : "Create a design to export"}</span>
+          <ExportControls
             svg={result?.svg ?? null}
-            lineBoxes={meta?.lines.map((lm) => ({
-              xMm: lm.x_offset_mm,
-              yMm: lm.y_offset_mm,
-              wMm: lm.width_mm,
-              hMm: lm.height_mm,
-            }))}
-            canvasWidthMm={meta?.canvas_width_mm}
-            canvasHeightMm={meta?.canvas_height_mm}
-            selectedLine={selectedLine}
-            onSelectLine={setSelectedLine}
-            onLineDrag={handleLineDrag}
+            pngBase64={result?.png_base64 ?? null}
+            svgFilename={result?.svg_filename ?? "cake-topper.svg"}
+            pngFilename={result?.png_filename ?? "cake-topper.png"}
           />
         </div>
+      </header>
 
-        <div className="two-col-settings">
-          {lineStates.length === 0 && (
-            <div className="two-col-empty">
-              Generate a design to see per-line controls.
+      <div className="ct-workspace">
+        <section className="ct-preview-column" aria-label="Preview and export">
+          <div className="ct-preview-card">
+            <div className="ct-section-heading ct-preview-heading">
+              <div>
+                <h2>Preview</h2>
+                <p>SVG export preview</p>
+              </div>
+              <div className="ct-size-chip">
+                <span>Final cut size</span>
+                <strong>
+                  {meta ? `${meta.canvas_width_mm} x ${meta.canvas_height_mm} mm` : "Not generated"}
+                </strong>
+              </div>
+            </div>
+
+            <PreviewPanel
+              svg={result?.svg ?? null}
+              lineBoxes={meta?.lines.map((lm) => ({
+                xMm: lm.x_offset_mm,
+                yMm: lm.y_offset_mm,
+                wMm: lm.width_mm,
+                hMm: lm.height_mm,
+              }))}
+              canvasWidthMm={meta?.canvas_width_mm}
+              canvasHeightMm={meta?.canvas_height_mm}
+              selectedLine={selectedLine}
+              onSelectLine={setSelectedLine}
+              onLineDrag={handleLineDrag}
+            />
+          </div>
+
+          <div className="ct-cutting-note" role="note">
+            <strong>Cutting note</strong>
+            <span>
+              This designer visually overlaps letters for composition. It does not permanently weld or
+              boolean-union the paths. Always open the SVG in LightBurn and verify before cutting.
+            </span>
+          </div>
+        </section>
+
+        <aside className="ct-inspector" aria-label="Design controls">
+          <section className="ct-inspector-section">
+            <div className="ct-section-heading">
+              <h2>Create design</h2>
+              <p>Enter the topper wording and base text style.</p>
+            </div>
+            <label className="ct-field" htmlFor="ct-text">
+              <span>Topper text</span>
+              <input
+                id="ct-text"
+                type="text"
+                className="ct-text-input"
+                value={text}
+                placeholder="Happy Birthday Sarah"
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setLineStates([]);
+                  setInterLineGaps([]);
+                  setResult(null);
+                }}
+              />
+            </label>
+
+            <div className="ct-field">
+              <span>Font</span>
+              <div className="ct-font-combo">
+                <input
+                  type="text"
+                  placeholder="Search fonts"
+                  value={fontSearch}
+                  onChange={(e) => setFontSearch(e.target.value)}
+                  className="ct-font-search"
+                  aria-label="Search fonts"
+                />
+                <select
+                  value={defaultFontId}
+                  onChange={(e) => setDefaultFontId(e.target.value)}
+                  aria-label="Base font"
+                >
+                  {filteredFonts.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="ct-create-row">
+              <label className="ct-field ct-field--size">
+                <span>Base size</span>
+                <span className="ct-unit-input">
+                  <input
+                    type="number"
+                    min="5"
+                    max="300"
+                    step="1"
+                    value={defaultSize}
+                    onChange={(e) => setDefaultSize(e.target.value)}
+                  />
+                  <span>mm</span>
+                </span>
+              </label>
+
+              <button
+                className="ct-primary-action"
+                type="button"
+                onClick={handleGenerate}
+                disabled={loading || !defaultFontId || words.length === 0}
+              >
+                <Wand2 size={18} aria-hidden="true" />
+                {loading ? "Generating..." : "Generate design"}
+              </button>
+            </div>
+          </section>
+
+          <section className="ct-inspector-section">
+            <div className="ct-section-heading">
+              <h2>Detected lines</h2>
+              <p>Text splits into up to four editable lines.</p>
+            </div>
+            {words.length > 0 ? (
+              <div className="ct-chips">
+                {words.map((w, i) => (
+                  <span key={i} className={`ct-chip${selectedLine === i ? " ct-chip--active" : ""}`}>
+                    Line {i + 1} · {w}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="ct-muted">Type at least one word to create a line.</p>
+            )}
+          </section>
+
+          <section className="ct-inspector-section">
+            <div className="ct-section-heading">
+              <h2>Default letter overlap</h2>
+              <p>Applies a default overlap between neighbouring letters to help create a connected cut shape.</p>
+            </div>
+            <div className="ct-overlap-btns" role="group" aria-label="Default letter overlap">
+              {OVERLAP_MODES.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  className={`ct-overlap-btn${defaultOverlap === m.value ? " ct-overlap-btn--active" : ""}`}
+                  onClick={() => applyGlobalOverlap(m.value)}
+                >
+                  <span>{m.label}</span>
+                  {m.mm != null && <small>{m.mm.toFixed(1)}mm</small>}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {error && (
+            <div className="ct-error" role="alert">
+              <strong>Error:</strong> {error}
             </div>
           )}
-          {lineStates.length > 0 && meta && lineStates.slice(0, words.length).map((ls, li) => {
-        const lineMeta = meta.lines[li];
-        if (!lineMeta) return null;
-        const fontName = fonts.find((f) => f.id === (ls.fontId || defaultFontId))?.full_name ?? "—";
-        const pairLabels = (lineMeta.glyph_chars ?? []).slice(0, -1).map(
-          (ch, i) => `${ch}→${(lineMeta.glyph_chars ?? [])[i + 1]}`,
-        );
-        const activeGaps = ls.gapStates.filter((g) => g.enabled).length;
 
-        return (
-          <div key={li} className="ct-card">
-            {/* Card header — always visible, click to expand/collapse */}
-            <button
-              type="button"
-              className="ct-card-header"
-              onClick={() => patchLine(li, { expanded: !ls.expanded })}
-              aria-expanded={ls.expanded}
-            >
-              <span className="ct-card-chevron">
-                {ls.expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </span>
-              <span className="ct-card-word">Line {li + 1} — <em>{lineMeta.text}</em></span>
-              <span className="ct-card-meta">
-                {fontName} · {ls.fontSizeMm}mm · {ls.alignment}
-                {activeGaps > 0 && <span className="ct-card-gaps-badge">{activeGaps} gap{activeGaps !== 1 ? "s" : ""}</span>}
-              </span>
-              <span className="ct-card-dims">{lineMeta.width_mm.toFixed(1)} × {lineMeta.height_mm.toFixed(1)} mm</span>
-            </button>
+          {result?.warnings && result.warnings.length > 0 && (
+            <div className="ct-warnings" role="alert">
+              <strong>Warning{result.warnings.length > 1 ? "s" : ""}:</strong>
+              <ul className="ct-warnings-list">
+                {result.warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-            {/* Card body — collapsible */}
-            {ls.expanded && (
-              <div className="ct-card-body">
-                {/* Font / size / alignment row */}
-                <div className="ct-card-controls">
-                  <div className="ct-card-field">
-                    <span className="ct-label">Font</span>
-                    <select
-                      value={ls.fontId || defaultFontId}
-                      onChange={(e) => patchLine(li, { fontId: e.target.value })}
-                    >
-                      {fonts.map((f) => (
-                        <option key={f.id} value={f.id}>{f.full_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="ct-card-field ct-card-field--sm">
-                    <span className="ct-label">Size (mm)</span>
-                    <input
-                      type="number" min="5" max="300" step="1"
-                      value={ls.fontSizeMm}
-                      onChange={(e) => patchLine(li, { fontSizeMm: e.target.value })}
-                    />
-                  </div>
-                  <div className="ct-card-field">
-                    <span className="ct-label">Align</span>
-                    <div className="ct-align-btns">
-                      {ALIGNMENTS.map((a) => (
-                        <button
-                          key={a}
-                          type="button"
-                          className={`ct-align-btn${ls.alignment === a ? " ct-align-btn--active" : ""}`}
-                          onClick={() => patchLine(li, { alignment: a })}
-                          title={a}
-                        >
-                          {a === "left" ? "L" : a === "center" ? "C" : a === "right" ? "R" : "M"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {ls.alignment === "manual" && (
-                    <div className="ct-card-field ct-card-field--sm">
-                      <span className="ct-label">X offset (mm)</span>
+          <section className="ct-inspector-section">
+            <div className="ct-section-heading">
+              <h2>Layout</h2>
+              <p>Set spacing between generated lines.</p>
+            </div>
+            {lineStates.length > 1 ? (
+              <div className="ct-line-spacing-list">
+                {lineStates.slice(0, words.length - 1).map((_, li) => (
+                  <label key={li} className="ct-spacing-row">
+                    <span>Line spacing: Line {li + 1} to Line {li + 2}</span>
+                    <span className="ct-unit-input ct-unit-input--compact">
                       <input
-                        type="number" min="-500" max="500" step="0.5"
-                        value={ls.alignmentOffsetMm}
-                        onChange={(e) => patchLine(li, { alignmentOffsetMm: e.target.value })}
+                        type="number"
+                        min="-200"
+                        max="200"
+                        step="0.5"
+                        value={interLineGaps[li] ?? DEFAULT_INTER_GAP}
+                        onChange={(e) => setInterGap(li, e.target.value)}
                       />
-                    </div>
-                  )}
-                </div>
+                      <span>mm</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="ct-muted">Generate two or more lines to adjust line spacing.</p>
+            )}
+          </section>
 
-                {/* Letter gaps — compact pill row */}
-                {ls.gapStates.length > 0 && (
-                  <div className="ct-gaps-section">
-                    <span className="ct-label">Letter gaps</span>
-                    <div className="ct-gap-pills">
-                      {ls.gapStates.map((gs, gi) => (
-                        <div
-                          key={gi}
-                          className={`ct-gap-pill${gs.enabled ? " ct-gap-pill--on" : " ct-gap-pill--off"}`}
-                        >
-                          <button
-                            type="button"
-                            className="ct-gap-pill-toggle"
-                            onClick={() => toggleGap(li, gi)}
-                            title={gs.enabled ? "Click to disable" : "Click to enable"}
+          <section className="ct-inspector-section ct-lines-section">
+            <div className="ct-section-heading">
+              <h2>Lines</h2>
+              <p>Fine-tune each line's font, position, letter overlap, and detached dots.</p>
+            </div>
+
+            {lineStates.length === 0 && (
+              <div className="two-col-empty">
+                Generate a design to see per-line controls.
+              </div>
+            )}
+
+            {lineStates.length > 0 && meta && lineStates.slice(0, words.length).map((ls, li) => {
+              const lineMeta = meta.lines[li];
+              if (!lineMeta) return null;
+              const fontName = fonts.find((f) => f.id === (ls.fontId || defaultFontId))?.full_name ?? "—";
+              const pairLabels = (lineMeta.glyph_chars ?? []).slice(0, -1).map(
+                (ch, i) => `${ch} → ${(lineMeta.glyph_chars ?? [])[i + 1]}`,
+              );
+              const activeGaps = ls.gapStates.filter((g) => g.enabled).length;
+
+              return (
+                <article key={li} className={`ct-card${selectedLine === li ? " ct-card--selected" : ""}`}>
+                  <button
+                    type="button"
+                    className="ct-card-header"
+                    onClick={() => patchLine(li, { expanded: !ls.expanded })}
+                    aria-expanded={ls.expanded}
+                  >
+                    <span className="ct-card-chevron">
+                      {ls.expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </span>
+                    <span className="ct-card-title">
+                      <span>Line {li + 1}</span>
+                      <strong>{lineMeta.text}</strong>
+                    </span>
+                    <span className="ct-card-meta">
+                      {fontName} · {ls.fontSizeMm}mm · {ls.alignment}
+                      {activeGaps > 0 && <span className="ct-card-gaps-badge">{activeGaps} gaps</span>}
+                    </span>
+                    <span className="ct-card-dims">{lineMeta.width_mm.toFixed(1)} x {lineMeta.height_mm.toFixed(1)} mm</span>
+                  </button>
+
+                  {ls.expanded && (
+                    <div className="ct-card-body">
+                      <div className="ct-card-controls">
+                        <label className="ct-card-field">
+                          <span>Line font</span>
+                          <select
+                            value={ls.fontId || defaultFontId}
+                            onChange={(e) => patchLine(li, { fontId: e.target.value })}
                           >
-                            {pairLabels[gi] ?? `Gap ${gi + 1}`}
-                          </button>
-                          {gs.enabled && (
+                            {fonts.map((f) => (
+                              <option key={f.id} value={f.id}>{f.full_name}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="ct-card-field ct-card-field--sm">
+                          <span>Size</span>
+                          <span className="ct-unit-input ct-unit-input--compact">
                             <input
                               type="number"
-                              min="0.1"
-                              max="10"
-                              step="0.1"
-                              value={gs.overlapMm}
-                              className="ct-gap-pill-input"
-                              onChange={(e) => setGapMm(li, gi, e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
+                              min="5"
+                              max="300"
+                              step="1"
+                              value={ls.fontSizeMm}
+                              onChange={(e) => patchLine(li, { fontSizeMm: e.target.value })}
                             />
-                          )}
-                          {lineMeta && gs.enabled && (
-                            <span className="ct-gap-pill-result">
-                              {lineMeta.gaps_after_mm[gi]?.toFixed(1)}
+                            <span>mm</span>
+                          </span>
+                        </label>
+                      </div>
+
+                      <div className="ct-subsection">
+                        <span className="ct-subsection-title">Alignment</span>
+                        <div className="ct-align-btns" role="group" aria-label={`Line ${li + 1} alignment`}>
+                          {ALIGNMENTS.map((a) => (
+                            <button
+                              key={a}
+                              type="button"
+                              className={`ct-align-btn${ls.alignment === a ? " ct-align-btn--active" : ""}`}
+                              onClick={() => patchLine(li, { alignment: a })}
+                              title={a}
+                            >
+                              {a === "left" ? "Left" : a === "center" ? "Centre" : a === "right" ? "Right" : "Manual"}
+                            </button>
+                          ))}
+                        </div>
+                        {ls.alignment === "manual" && (
+                          <label className="ct-card-field ct-card-field--sm">
+                            <span>Manual X offset</span>
+                            <span className="ct-unit-input ct-unit-input--compact">
+                              <input
+                                type="number"
+                                min="-500"
+                                max="500"
+                                step="0.5"
+                                value={ls.alignmentOffsetMm}
+                                onChange={(e) => patchLine(li, { alignmentOffsetMm: e.target.value })}
+                              />
+                              <span>mm</span>
                             </span>
+                          </label>
+                        )}
+                      </div>
+
+                      <div className="ct-position-section">
+                        <div className="ct-subsection-copy">
+                          <span className="ct-subsection-title">Move design on canvas</span>
+                          <p>Use X/Y offsets to reposition this line inside the exported SVG canvas.</p>
+                        </div>
+                        <div className="ct-position-row">
+                          <label className="ct-position-field">
+                            X offset
+                            <span className="ct-unit-input ct-unit-input--compact">
+                              <input
+                                type="number"
+                                min="-500"
+                                max="500"
+                                step="0.5"
+                                value={ls.manualXOffsetMm}
+                                className="ct-position-input"
+                                onChange={(e) => patchLine(li, { manualXOffsetMm: e.target.value })}
+                              />
+                              <span>mm</span>
+                            </span>
+                          </label>
+                          <label className="ct-position-field">
+                            Y offset
+                            <span className="ct-unit-input ct-unit-input--compact">
+                              <input
+                                type="number"
+                                min="-500"
+                                max="500"
+                                step="0.5"
+                                value={ls.manualYOffsetMm}
+                                className="ct-position-input"
+                                onChange={(e) => patchLine(li, { manualYOffsetMm: e.target.value })}
+                              />
+                              <span>mm</span>
+                            </span>
+                          </label>
+                          {(parseFloat(ls.manualXOffsetMm) !== 0 || parseFloat(ls.manualYOffsetMm) !== 0) && (
+                            <button
+                              type="button"
+                              className="ct-position-reset"
+                              onClick={() => resetPosition(li)}
+                            >
+                              Reset
+                            </button>
                           )}
                         </div>
-                      ))}
+                      </div>
+
+                      {ls.gapStates.length > 0 && (
+                        <div className="ct-gaps-section">
+                          <div className="ct-subsection-copy">
+                            <span className="ct-subsection-title">Letter overlap</span>
+                            <p>Increase overlap to bring letters closer together. Reduce it if letters become unreadable.</p>
+                          </div>
+                          <div className="ct-gap-pills">
+                            {ls.gapStates.map((gs, gi) => (
+                              <div
+                                key={gi}
+                                className={`ct-gap-pill${gs.enabled ? " ct-gap-pill--on" : " ct-gap-pill--off"}`}
+                              >
+                                <button
+                                  type="button"
+                                  className="ct-gap-pill-toggle"
+                                  onClick={() => toggleGap(li, gi)}
+                                  title={gs.enabled ? "Click to disable" : "Click to enable"}
+                                >
+                                  {pairLabels[gi] ?? `Gap ${gi + 1}`}
+                                </button>
+                                {gs.enabled && (
+                                  <>
+                                    <input
+                                      type="number"
+                                      min="0.1"
+                                      max="10"
+                                      step="0.1"
+                                      value={gs.overlapMm}
+                                      className="ct-gap-pill-input"
+                                      onChange={(e) => setGapMm(li, gi, e.target.value)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      aria-label={`Overlap for ${pairLabels[gi] ?? `gap ${gi + 1}`}`}
+                                    />
+                                    <span className="ct-gap-pill-unit">mm</span>
+                                  </>
+                                )}
+                                {lineMeta && gs.enabled && (
+                                  <span className="ct-gap-pill-result">
+                                    Actual {lineMeta.gaps_after_mm[gi]?.toFixed(1)}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {(lineMeta.floating_components?.length ?? 0) > 0 && (
+                        <FloatingControls
+                          floatingComponents={lineMeta.floating_components ?? []}
+                          offsets={ls.floatingOffsets}
+                          onChange={(glyphIndex, axis, value) => {
+                            const updated = lineStates.map((s, i) =>
+                              i !== li
+                                ? s
+                                : {
+                                    ...s,
+                                    floatingOffsets: {
+                                      ...s.floatingOffsets,
+                                      [glyphIndex]: {
+                                        ...(s.floatingOffsets[glyphIndex] ?? { xMm: "0", yMm: "0" }),
+                                        [axis === "x" ? "xMm" : "yMm"]: value,
+                                      },
+                                    },
+                                  },
+                            );
+                            setLineStates(updated);
+                            if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps);
+                          }}
+                        />
+                      )}
                     </div>
-                  </div>
-                )}
+                  )}
+                </article>
+              );
+            })}
+          </section>
+        </aside>
+      </div>
 
-                {/* Floating component controls — dots, accents */}
-                {(lineMeta.floating_components?.length ?? 0) > 0 && (
-                  <FloatingControls
-                    floatingComponents={lineMeta.floating_components ?? []}
-                    offsets={ls.floatingOffsets}
-                    onChange={(glyphIndex, axis, value) => {
-                      const updated = lineStates.map((s, i) =>
-                        i !== li ? s : {
-                          ...s,
-                          floatingOffsets: {
-                            ...s.floatingOffsets,
-                            [glyphIndex]: {
-                              ...(s.floatingOffsets[glyphIndex] ?? { xMm: "0", yMm: "0" }),
-                              [axis === "x" ? "xMm" : "yMm"]: value,
-                            },
-                          },
-                        },
-                      );
-                      setLineStates(updated);
-                      if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps);
-                    }}
-                  />
-                )}
-
-                {/* Canvas position offset controls */}
-                <div className="ct-position-section">
-                  <span className="ct-label">Canvas position offset</span>
-                  <div className="ct-position-row">
-                    <label className="ct-position-field">
-                      X
-                      <input
-                        type="number"
-                        min="-500"
-                        max="500"
-                        step="0.5"
-                        value={ls.manualXOffsetMm}
-                        className="ct-position-input"
-                        onChange={(e) => patchLine(li, { manualXOffsetMm: e.target.value })}
-                      />
-                      mm
-                    </label>
-                    <label className="ct-position-field">
-                      Y
-                      <input
-                        type="number"
-                        min="-500"
-                        max="500"
-                        step="0.5"
-                        value={ls.manualYOffsetMm}
-                        className="ct-position-input"
-                        onChange={(e) => patchLine(li, { manualYOffsetMm: e.target.value })}
-                      />
-                      mm
-                    </label>
-                    {(parseFloat(ls.manualXOffsetMm) !== 0 || parseFloat(ls.manualYOffsetMm) !== 0) && (
-                      <button
-                        type="button"
-                        className="ct-position-reset"
-                        onClick={() => resetPosition(li)}
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Vertical gap row — between this card and the next */}
-            {li < lineStates.length - 1 && (
-              <div className="ct-vgap">
-                <span className="ct-vgap-icon">↕</span>
-                <span className="ct-vgap-label">Gap {li + 1}→{li + 2}</span>
-                <input
-                  type="number"
-                  min="-200"
-                  max="200"
-                  step="0.5"
-                  value={interLineGaps[li] ?? DEFAULT_INTER_GAP}
-                  className="ct-vgap-input"
-                  onChange={(e) => setInterGap(li, e.target.value)}
-                />
-                <span className="ct-vgap-unit">mm</span>
-                <span className="ct-vgap-hint">
-                  {parseFloat(interLineGaps[li] ?? DEFAULT_INTER_GAP) < 0 ? "↑ overlap" : "↓ space"}
-                </span>
-              </div>
-            )}
-          </div>
-        );
-        })}
-        </div>{/* two-col-settings */}
-      </div>{/* two-col-main */}
-
-      <div className="footer-bar">
+      <div className="ct-export-bar">
         <div>
-          <span>SVG-first export</span>
+          <span>SVG export size</span>
           <strong>
-            {meta ? `${meta.canvas_width_mm}mm × ${meta.canvas_height_mm}mm` : "Ready"}
+            {meta ? `${meta.canvas_width_mm}mm x ${meta.canvas_height_mm}mm` : "Ready"}
           </strong>
         </div>
         <ExportControls
