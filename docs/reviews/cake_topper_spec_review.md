@@ -484,6 +484,30 @@ The local web app + backend architecture is appropriate. The backend pipeline is
 **UX suitability**  
 The UX is strong for a controlled generator workflow. It may not fully meet the broader “manual letter manipulation” concept unless that is intentionally limited to numeric gap/offset controls rather than drag-and-drop editing.
 
+---
+
+## 16. Resolution Addendum - 2026-06-01
+
+The review items about unclear dragging/positioning scope have been resolved for **line-level** movement:
+
+- The Cake Topper tab supports numeric per-line canvas X/Y offsets.
+- The SVG preview supports drag-to-move for generated lines using dashed overlay handles.
+- Drag release persists movement through backend `manual_x_offset_mm` and `manual_y_offset_mm` fields.
+- Exported SVG reflects the moved line positions.
+
+The following remains out of scope for the current phase:
+
+- Individual letter drag editing.
+- Freeform SVG path editing.
+- Boolean union / welding.
+- Structural validation and cut-readiness certification.
+
+Current source-of-truth documents:
+
+- `/docs/phases/CAKE_TOPPER_FEATURE_SPECIFICATION.md`
+- `/docs/qa/CAKE_TOPPER_QA_MATRIX.md`
+- `/docs/handoffs/canvas-line-movement-drag-bug-handoff.md`
+
 **Export reliability**  
 Export is promising but needs a stricter contract. The SVG should be documented as outline-based, mm-based, LightBurn-compatible, and independent of installed fonts. PNG should remain preview-only.
 

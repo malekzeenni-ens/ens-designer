@@ -17,8 +17,8 @@ Some filenames were retained for repository continuity after the Stage -1 archit
 | PHASE_01_WELDED_TEXT_GENERATOR_IMPLEMENTATION.md | Phase 1A - Core Text Generation | v0.1.0 | Complete |
 | PHASE_02_ADVANCED_STRUCTURAL_INTELLIGENCE_IMPLEMENTATION.md | Phase 1B - Connectivity Resolution & Validation | v0.2.0 | Complete |
 | PHASE_03_CAKE_TOPPER_GENERATOR_IMPLEMENTATION.md | Phase 1C - Production Hardening | v0.3.0 | Complete |
-| PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md | Phase X - Overlap Engine + Cake Topper Tab | v0.4.0 | Complete |
-| CAKE_TOPPER_FEATURE_SPECIFICATION.md | Cake Topper Feature Specification | v0.4.0 | Complete |
+| PHASE_X_OVERLAP_ENGINE_IMPLEMENTATION.md | Phase X - Overlap Engine + Cake Topper Tab | v0.4.0/v0.4.1 | Complete; Cake Topper manual line movement resolved |
+| CAKE_TOPPER_FEATURE_SPECIFICATION.md | Cake Topper Feature Specification | v0.4.1 | Complete; includes manual X/Y line movement and preview drag |
 | PHASE_04_DECORATIVE_LIBRARY_IMPLEMENTATION.md | Phase 02 - Cake Topper Generator | v0.5.0 | Ready After Phase X Approval |
 | PHASE_05_AI_GRAPHIC_GENERATOR_IMPLEMENTATION.md | Phase 03 - SVG Import & Repair | v0.6.0 | Ready After Phase 02 Approval |
 | PHASE_06_AI_DESIGN_STUDIO_IMPLEMENTATION.md | Phase 06 - AI Design Studio | v1.0.0 | Future Phase |
@@ -61,3 +61,16 @@ Some filenames were retained for repository continuity after the Stage -1 archit
 Do not start Phase 00, Phase 1A, or any implementation phase from this index alone.
 
 Each phase must still follow the approved planning, review, testing, documentation, handoff, and approval workflow.
+
+---
+
+# Current Cake Topper Addendum
+
+As of 2026-06-01, the delivered Cake Topper tab includes manual line repositioning:
+
+- Numeric per-line canvas X/Y offsets.
+- Preview drag-to-move overlays for generated lines.
+- Backend persisted offsets via `manual_x_offset_mm` and `manual_y_offset_mm`.
+- Resolution handoff: `/docs/handoffs/canvas-line-movement-drag-bug-handoff.md`.
+
+Formal Phase 02 remains the future phase for stake geometry, structural validation, material-aware recommendations, and production presets.

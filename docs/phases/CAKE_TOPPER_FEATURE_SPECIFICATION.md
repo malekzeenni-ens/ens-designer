@@ -4,10 +4,10 @@
 
 Feature: Cake Topper Tab
 Phase: X (delivered), Phase 2 (formal phase)
-Version: 1.0
+Version: 1.1
 Date: 2026-06-01
 Owner: Etch 'N' Shine
-Status: Implemented — awaiting formal Phase 2 documentation
+Status: Implemented — line movement drag resolved and documented
 
 ---
 
@@ -39,7 +39,8 @@ The Cake Topper tab automates this workflow:
 3. Each line gets independent font, size, overlap, and alignment controls
 4. Vertical gaps between lines are adjustable with immediate preview
 5. Floating component dots (e.g. on the letter 'i') can be repositioned
-6. Export one combined SVG ready for LightBurn
+6. Each line can be repositioned with numeric X/Y canvas offsets or by dragging its preview overlay
+7. Export one combined SVG ready for LightBurn
 
 ---
 
@@ -141,6 +142,21 @@ so that I can create asymmetric and creative compositions.
 
 ---
 
+## US-08 — Manual Line Repositioning
+
+As a laser business owner,
+I want to drag a generated line directly in the preview or type exact X/Y offsets,
+so that I can fine-tune the composition without leaving the app.
+
+**Acceptance Criteria:**
+- Each generated line exposes numeric canvas position offset controls for X and Y in mm
+- Dragging the dashed preview overlay moves the selected line visually during drag
+- Releasing the drag accumulates the movement into `manual_x_offset_mm` and `manual_y_offset_mm`
+- The regenerated SVG reflects the moved line position
+- Reset returns the line's manual canvas offsets to 0mm
+
+---
+
 # 3. Functional Requirements
 
 ## FR-CT-01
@@ -161,6 +177,7 @@ Each line is independently configurable with:
 - Font (selected from the same font catalogue as all other tabs)
 - Size in mm (the em-height of the text, default 42mm)
 - Alignment: Left / Center / Right / Manual (X offset in mm)
+- Manual canvas position offset: X/Y in mm, additive after alignment and stacking
 - Letter overlap mode and per-gap controls (identical to Overlap Engine)
 - Floating component X/Y controls (if the font has detectable floating components)
 
@@ -210,6 +227,18 @@ The system does NOT perform:
 - Bridge generation
 - Material validation
 - Structural scoring
+
+---
+
+## FR-CT-08
+
+The preview supports direct drag-to-move for generated lines.
+
+- The backend remains the source of truth for final line position.
+- The frontend converts pointer movement from pixels to mm using the rendered SVG host dimensions and backend metadata canvas dimensions.
+- Drag release adds the mm delta to the line's current manual canvas offsets.
+- The frontend immediately calls `POST /api/cake-topper` with updated `manual_x_offset_mm` and `manual_y_offset_mm`.
+- The preview overlay is selection/drag UI only; it is not included in exported SVG or PNG output.
 
 ---
 
@@ -283,6 +312,29 @@ X offset (mm): [ 12.5 ]
 
 ---
 
+## 4.5 Canvas Position Offset and Preview Drag
+
+Each line accordion includes **Canvas position offset** controls:
+
+```text
+Canvas position offset
+  X [ 0.0 ] mm   Y [ 0.0 ] mm   [Reset]
+```
+
+These offsets are additive after alignment and vertical stacking. They are intended for final composition nudging rather than replacing the alignment buttons.
+
+The SVG preview overlays one dashed draggable rectangle per generated line. Dragging a rectangle:
+
+1. Selects the line when the drag completes.
+2. Shows temporary visual movement during drag.
+3. Converts the drag distance to mm.
+4. Adds the delta to the line's manual canvas offsets.
+5. Regenerates the SVG from the backend.
+
+Implementation note: `PreviewPanel.tsx` uses native `document` pointer listeners in capture phase and defers selection state updates until pointer up so React re-renders do not detach the active drag handle mid-gesture.
+
+---
+
 # 5. Technical Architecture
 
 ## 5.1 Backend Module
@@ -338,7 +390,10 @@ canvas_width = max(line.ink_width for all lines) + 2 × CANVAS_PADDING_MM
 
 For each line:
   x_offset = _compute_x_offset(alignment, ink_width, canvas_width)
-  y_translate = y_cursor - geom.bounds.min_y
+  manual_x = cfg.manual_x_offset_mm
+  manual_y = cfg.manual_y_offset_mm
+  x_translate = x_offset - geom.bounds.min_x + manual_x
+  y_translate = y_cursor - geom.bounds.min_y + manual_y
   translated_paths = _translate_paths(paths, x_translate, y_translate, prefix=f"L{i}-")
   y_cursor += ink_height + inter_line_gap[i]
 
@@ -407,6 +462,8 @@ class CakeTopperLineConfig(BaseModel):
     overlap_custom_mm: float | None = None
     gap_configs: list[OverlapGapConfig] = []
     floating_offsets: list[FloatingComponentOffset] = []
+    manual_x_offset_mm: float = 0.0
+    manual_y_offset_mm: float = 0.0
 ```
 
 ### Response Model
@@ -434,6 +491,9 @@ class CakeTopperLineMetadata(BaseModel):
     width_mm: float
     height_mm: float
     x_offset_mm: float              # Horizontal canvas position after alignment
+    y_offset_mm: float              # Vertical canvas position after stacking
+    manual_x_offset_mm: float       # Additive manual canvas X offset
+    manual_y_offset_mm: float       # Additive manual canvas Y offset
     floating_components: list[FloatingComponentInfo]
 ```
 
@@ -463,6 +523,7 @@ Compute canvas_width from widest line
          ↓
 For each line:
   ├── _compute_x_offset(alignment)    ← L/C/R/Manual
+  ├── add manual_x_offset_mm/manual_y_offset_mm
   ├── _translate_paths(x, y)          ← Canvas position
   └── Append to combined paths list
          ↓
@@ -504,6 +565,9 @@ All pipeline runs are sequential (not parallelised). Parallelisation would reduc
 | Dot controls remain visible after dot touches stroke | Manual |
 | Alignment L/C/R/M all visible and selectable | Manual |
 | Manual (M) alignment reveals X offset input | Manual |
+| Canvas X/Y offset controls move a line and regenerate SVG | Automated + manual |
+| Preview line drag moves a selected line and persists to backend offsets | Manual |
+| Reset clears manual canvas offsets | Manual |
 | SVG imports correctly into LightBurn | Manual (LightBurn validation) |
 | Dimensions correct in LightBurn | Manual |
 | No connectivity_score or material data in response | Automated |
@@ -520,8 +584,6 @@ All pipeline runs are sequential (not parallelised). Parallelisation would reduc
 | CairoSVG requires `libcairo-2.dll` on Windows — if absent, PNG fallback is a blank transparent image | High | Install GTK3 runtime (includes libcairo-2.dll) for Windows. PNG is preview only — SVG export is unaffected. See Section 17. |
 | No auto-alignment suggestion | Low | Could suggest alignment based on word length ratios in a future phase |
 | Per-line pipeline runs sequentially | Low | Parallelise for speed in a future phase |
-| No missing glyph detection or warning | Medium | A character without a glyph in the chosen font produces a `?` placeholder path with no user warning. Planned for Improvement Phase 2A. |
-| TypeScript `CakeTopperLineConfig` type does not declare `floating_offsets` | Low | The field is correctly sent in the API payload but is absent from the TypeScript interface definition. Build currently passes. Planned fix in Improvement Phase 2A. |
 
 ---
 
@@ -549,6 +611,7 @@ The formal Phase 2 (Cake Topper Generator) will build on this foundation with:
 | Phase Index | /docs/phases/PHASE_INDEX.md |
 | Cake Topper QA Matrix | /docs/qa/CAKE_TOPPER_QA_MATRIX.md |
 | Improvement Phase 1 Handoff | /docs/handoffs/cake-topper-improvement-phase1-handoff.md |
+| Canvas Line Movement Drag Resolution | /docs/handoffs/canvas-line-movement-drag-bug-handoff.md |
 | Spec Review | /docs/reviews/cake_topper_spec_review.md |
 | Coding Agent Prompt | /docs/prompts/cake_topper_recommendations_coding_agent_prompt.md |
 
@@ -672,13 +735,13 @@ This is a local web application. No internet connection is required after initia
 
 ### Backend
 
-```bash
+```powershell
 # From the repository root
 cd backend
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+..\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload
 ```
 
-Or using the project's standard run script if one exists.
+The active local repository uses the Python virtual environment at the repository root (`.venv`), not `backend/.venv`.
 
 The backend binds to `127.0.0.1` only (not `0.0.0.0`) — accessible from the local machine only.
 
@@ -691,6 +754,14 @@ npm run dev
 ```
 
 The Vite dev server starts on `http://localhost:5173`. The frontend proxies API calls to `http://localhost:8000`.
+
+If the browser shows a blank screen with Vite `504 (Outdated Optimize Dep)` errors, restart the frontend with forced dependency re-optimisation:
+
+```powershell
+Start-Process -FilePath "cmd" -ArgumentList "/c","cd frontend && npm run dev -- --force" -WindowStyle Hidden
+```
+
+Then hard refresh Chrome with `Ctrl + Shift + R`, or enable DevTools Network `Disable cache` and refresh once.
 
 ### Required Python dependencies
 

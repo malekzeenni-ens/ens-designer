@@ -10,6 +10,8 @@ Date Approved: 2026-05-31
 Date Completed: 2026-05-31
 Release Tag: v0.4.0
 
+Post-completion Addendum: v0.4.1 documentation now records the Cake Topper tab delivered on top of Phase X, including manual line X/Y offsets and preview drag-to-move. Formal Phase 02 remains reserved for stake geometry, structural validation, and production presets.
+
 ---
 
 # 1. Executive Summary
@@ -106,6 +108,8 @@ The following capabilities must NOT be introduced into the Overlap Engine at any
 - Decorative assets
 - Batch processing
 
+Note: this exclusion applies to the Overlap Engine tab itself. The delivered application also includes a separate Cake Topper tab that reuses overlap functionality for multi-line composition; see `/docs/phases/CAKE_TOPPER_FEATURE_SPECIFICATION.md`.
+
 ---
 
 # 4. Relationship to Existing Phases
@@ -116,7 +120,7 @@ The following capabilities must NOT be introduced into the Overlap Engine at any
 | Phase 1B | Connectivity Resolution Engine | Parallel workflow — separate UI tab, separate engine |
 | Phase 1C | Production Hardening | Prerequisite — must be complete before Phase X begins |
 | Phase X | Overlap Engine | This phase |
-| Phase 2 | Cake Topper Generator | Unaffected — Cake Topper uses Connectivity Engine, not Overlap Engine |
+| Phase 2 | Cake Topper Generator | Formal future phase for stakes, validation, and presets; the current Cake Topper tab already reuses the Overlap Engine foundation for multi-line composition |
 | Phase 3+ | Future phases | Unaffected |
 
 ---

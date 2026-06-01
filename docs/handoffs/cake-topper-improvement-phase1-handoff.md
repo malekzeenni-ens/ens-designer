@@ -111,7 +111,7 @@ pytest tests/ -v
 
 All 119 existing tests passed. No new tests were added in this phase.
 
-No new tests were added in Phase 1. Cake Topper-specific automated tests are scoped to Improvement Phase 3.
+No new tests were added in Phase 1. Cake Topper-specific automated tests were scoped to later work and have since been added; see Supersession Note.
 
 ---
 
@@ -133,10 +133,10 @@ Before committing, verify:
 |------------|----------|---------------|
 | PNG preview is blank (libcairo-2.dll missing on Windows) | High | Improvement Phase 2A |
 | Backend unavailable shows generic error, not "Start the local server" message | Medium | Improvement Phase 2A |
-| Missing glyph produces no user warning | Medium | Improvement Phase 2A |
-| TypeScript `CakeTopperLineConfig` missing `floating_offsets` field | Low | Improvement Phase 2A |
+| Missing glyph produces no user warning | Medium | Completed after this handoff; see Supersession Note |
+| TypeScript `CakeTopperLineConfig` missing `floating_offsets` field | Low | Completed after this handoff; see Supersession Note |
 | Inter-line gap NaN guard missing (NaN propagates to backend) | Low | Improvement Phase 2A |
-| No Cake Topper automated tests | High | Improvement Phase 3 |
+| No Cake Topper automated tests | High | Completed after this handoff; see Supersession Note |
 | No LightBurn import formally validated on this machine | High | Manual — operator to perform |
 
 ---
@@ -161,3 +161,22 @@ Priority items:
 Risk level: Low to Medium.
 
 Before starting Phase 2A, run `pytest tests/ -v` to confirm baseline.
+
+---
+
+# 12. Supersession Note - 2026-06-01
+
+This handoff is retained as historical context for Improvement Phase 1. Several items listed above were completed in later work:
+
+- Cake Topper automated tests now exist in `tests/test_cake_topper.py`.
+- Missing glyph detection and warning propagation were added in `backend/app/cake_topper_engine.py`.
+- `CakeTopperLineConfig` in `frontend/src/types/design.ts` now includes `floating_offsets`.
+- Manual line movement fields `manual_x_offset_mm` and `manual_y_offset_mm` were added to backend models, frontend types, and Cake Topper requests.
+- Numeric canvas X/Y offset controls and preview drag-to-move were implemented.
+- The preview drag bug was resolved in commit `d038786` and documented in `/docs/handoffs/canvas-line-movement-drag-bug-handoff.md`.
+
+Current source-of-truth status for Cake Topper behavior is:
+
+- `/docs/phases/CAKE_TOPPER_FEATURE_SPECIFICATION.md`
+- `/docs/qa/CAKE_TOPPER_QA_MATRIX.md`
+- `/docs/handoffs/canvas-line-movement-drag-bug-handoff.md`

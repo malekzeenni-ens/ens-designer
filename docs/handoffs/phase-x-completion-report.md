@@ -19,7 +19,7 @@ The engine automates the manual XCS tracking-reduction workflow used daily by Et
 1. **Per-gap individual controls** — each inter-glyph gap has its own toggle and mm input, allowing selective letter-pair control rather than a single global strength.
 2. **Floating component X/Y controls** — dots on 'i', 'j', diacritical marks, and accent dots can be independently repositioned in both X and Y directions.
 
-Additionally, Phase X formed the foundation for the **Cake Topper tab**, a multi-line text composition tool built on top of the overlap algorithm with per-line font, size, alignment, and vertical gap controls.
+Additionally, Phase X formed the foundation for the **Cake Topper tab**, a multi-line text composition tool built on top of the overlap algorithm with per-line font, size, alignment, vertical gap controls, floating component controls, and manual line repositioning.
 
 Recommendation: **GO** for Phase 2 (Cake Topper Generator formal phase) planning.
 
@@ -71,9 +71,11 @@ A third top-level tab built on the Overlap Engine foundation. See the dedicated 
 Summary of Cake Topper capabilities:
 - Auto-splits input text by space into up to 4 lines
 - Per-line: font, size (mm), alignment (L/C/R/Manual offset)
+- Per-line: manual canvas X/Y position offsets
 - Per-line: full Phase X letter gap controls
 - Per-line: floating component dot X/Y controls
 - Vertical gap control between each pair of consecutive lines
+- Preview drag overlay for moving generated lines directly on the SVG preview
 - Accordion card UI — collapsed summary header, expand to edit
 - Two-column layout: preview left, accordion cards right
 - Single combined SVG + PNG output
@@ -212,7 +214,8 @@ frontend/src/App.tsx           Three-tab navigation; Overlap Engine and Cake Top
 frontend/src/types/design.ts   All Overlap and Cake Topper types
 frontend/src/services/generationApi.ts  generateOverlap, generateCakeTopper, _readError helper
 frontend/src/styles.css        Two-column layout, overlap mode, gap controls, floating controls,
-                               cake topper accordion, alignment buttons, vertical gap rows
+                               cake topper accordion, alignment buttons, vertical gap rows,
+                               preview drag overlay, canvas position controls
 ```
 
 ---
@@ -227,6 +230,8 @@ frontend/src/styles.css        Two-column layout, overlap mode, gap controls, fl
 | Alignment buttons cut off — Manual not visible | `ct-card-field--sm` limited to 110px for 4 buttons | Removed width cap, added min-width 148px |
 | Floating dot controls disappear mid-adjustment | Detection ran after offset was applied | Detection now runs before offsets are applied |
 | Cake Topper crashes on Generate | `floating_components` accessed before API response | Optional chaining `?.` added throughout |
+| Cake Topper line drag did not move lines | Selection state re-rendered during drag setup and stale overlay sizing/listeners made the active handle unreliable | Native document pointer listeners, deferred selection until pointer up, stable SVG host sizing, and handle re-query by `data-line-index` |
+| Vite blank screen after restart | Stale optimized dependency cache produced `504 (Outdated Optimize Dep)` | Restart frontend with `npm run dev -- --force`, then hard refresh browser |
 
 ---
 
@@ -238,6 +243,7 @@ frontend/src/styles.css        Two-column layout, overlap mode, gap controls, fl
 | Counter rendering depends on font winding conventions | Standard fonts correct; non-standard fonts may vary |
 | Floating component detection is bounding-box based | May miss floating components in some edge-case fonts |
 | Cake Topper SVG is a flat path assembly | No boolean union — overlapping paths at line boundaries are visible in LightBurn path view |
+| Cake Topper preview drag is a frontend composition aid | Backend `manual_x_offset_mm` / `manual_y_offset_mm` remain the source of truth for exported SVG position |
 
 ---
 

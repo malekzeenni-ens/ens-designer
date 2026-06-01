@@ -3,8 +3,8 @@
 ## Document Information
 
 Feature: Cake Topper Tab
-Phase: Improvement Phase 1
-Version: 1.0
+Phase: Phase X plus Cake Topper improvements
+Version: 1.1
 Date: 2026-06-01
 Status: Active
 
@@ -16,6 +16,7 @@ This matrix defines the test scenarios, expected outcomes, priority levels, and 
 
 Use this matrix during:
 - Regression testing after any change to `cake_topper_engine.py`, `CakeTopperPanel.tsx`, `floating_component.py`, or `models.py`.
+- Regression testing after any change to `PreviewPanel.tsx` preview overlays or drag handling.
 - Manual LightBurn validation before production use.
 - QA sign-off before any phase is marked complete.
 
@@ -42,6 +43,9 @@ Use this matrix during:
 | F-13 | Alignment — left | Set alignment to left | `x_offset_mm == CANVAS_PADDING_MM (5.0)` | P1 | Automated |
 | F-14 | Alignment — right | Set alignment to right | `x_offset_mm == canvas_width - padding - ink_width` | P1 | Automated |
 | F-15 | Alignment — manual | Set manual offset to 12.5mm | `x_offset_mm == 5.0 + 12.5 = 17.5` | P1 | Automated |
+| F-16 | Manual canvas X offset | Set line canvas X offset to 10mm | Line metadata and SVG position shift by 10mm | P0 | Automated |
+| F-17 | Manual canvas Y offset | Set line canvas Y offset to 8mm | Line metadata and SVG position shift by 8mm | P0 | Automated |
+| F-18 | Offset reset | Move a line, then reset | Manual X/Y offsets return to 0 and SVG regenerates at aligned/stacked position | P0 | Automated + Manual |
 
 ---
 
@@ -146,10 +150,25 @@ Use this matrix during:
 | R-03 | Frontend start | Start Vite dev server | UI loads at http://localhost:5173 | P0 | Manual |
 | R-04 | Offline operation | Disconnect from internet | App functions normally — no external network calls | P1 | Manual |
 | R-05 | Font directory empty | Remove all fonts | Backend starts but requests return 400 for all font IDs | P1 | Manual |
+| R-06 | Vite stale optimize cache | Browser shows `504 (Outdated Optimize Dep)` for optimized deps | Restart frontend with `npm run dev -- --force`, then hard refresh; app loads | P0 | Manual |
 
 ---
 
-## 10. LightBurn Manual Validation Checklist
+## 10. Preview Drag and Manual Positioning
+
+| ID | Test Area | Scenario | Expected Result | Priority | Method |
+|----|-----------|----------|-----------------|----------|--------|
+| D-01 | Overlay render | Generate "Happy Birthday" | One dashed overlay handle exists per generated line and covers that line's ink bounds | P0 | Manual |
+| D-02 | Select line | Click or drag a line overlay | The selected line overlay becomes visibly selected | P0 | Manual |
+| D-03 | Drag visual feedback | Drag Line 1 overlay before release | Overlay follows pointer with temporary movement | P0 | Manual |
+| D-04 | Drag persistence | Release after dragging Line 1 | Canvas position X/Y inputs update and regenerated SVG moves Line 1 | P0 | Manual |
+| D-05 | Drag accumulation | Drag the same line twice | Second drag adds to the existing manual X/Y offsets | P0 | Manual |
+| D-06 | Drag no-op threshold | Press and release without meaningful movement | No unwanted offset change or regeneration loop | P1 | Manual |
+| D-07 | Export after drag | Drag a line, download SVG | Exported SVG contains the moved line position; overlay elements are not included | P0 | Manual + SVG inspection |
+
+---
+
+## 11. LightBurn Manual Validation Checklist
 
 Run this checklist on a generated SVG **before committing to production material cuts**.
 
@@ -169,23 +188,25 @@ Run this checklist on a generated SVG **before committing to production material
 
 ---
 
-## 11. Regression Tests (Existing Suite)
+## 12. Regression Tests (Existing Suite)
 
-All 119 existing tests must pass before any change to Cake Topper code is committed.
+All automated tests must pass before any change to Cake Topper code is committed.
 
 ```
-pytest tests/ -v
+cd backend
+..\.venv\Scripts\python.exe -m pytest ../tests/ -q
 ```
 
-Cake Topper-specific automated tests are planned for Improvement Phase 3 (`tests/test_cake_topper.py`).
+Current automated Cake Topper coverage lives in `tests/test_cake_topper.py`, including manual line offset tests.
 
 ---
 
-## 12. Test Status Summary
+## 13. Test Status Summary
 
 | Phase | Status |
 |-------|--------|
-| Automated Cake Topper tests | Not yet created (Improvement Phase 3) |
+| Automated Cake Topper tests | Created and passing in `tests/test_cake_topper.py` |
 | Manual LightBurn validation | Pending — to be done before production use |
-| Existing 119-test suite | Passing as of Phase X (v0.4.0) |
+| Current automated suite | 169 passed, 2 skipped as of Cake Topper manual offset implementation |
 | CairoSVG / PNG validation | Blocked — libcairo-2.dll not installed on current machine |
+| Preview drag validation | User-confirmed working on 2026-06-01; keep D-series manual checks for regressions |
