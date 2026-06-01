@@ -869,7 +869,9 @@ button:disabled {
 
 .preview-svg-host {
   position: relative;
-  display: inline-block;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
   line-height: 0;
 }
 
@@ -886,6 +888,7 @@ button:disabled {
   position: absolute;
   inset: 0;
   cursor: default;
+  pointer-events: none;
 }
 
 /* Per-line draggable handle — invisible by default, shows on hover/select */
@@ -894,9 +897,11 @@ button:disabled {
   border: 2px dashed transparent;
   border-radius: 2px;
   cursor: grab;
+  pointer-events: auto;
   touch-action: none;
   transition: border-color 0.15s, background 0.15s;
   box-sizing: border-box;
+  will-change: transform;
 }
 
 .preview-drag-handle:hover {

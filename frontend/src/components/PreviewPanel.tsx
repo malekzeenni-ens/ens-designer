@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 interface LineBox {
   xMm: number;
@@ -27,33 +27,80 @@ export function PreviewPanel({
   onLineDrag,
 }: PreviewPanelProps) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const cleanupDragRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      cleanupDragRef.current?.();
+    };
+  }, []);
 
   function startDrag(
     e: React.PointerEvent<HTMLDivElement>,
     lineIndex: number,
   ) {
     e.preventDefault();
-    onSelectLine?.(lineIndex);
+    e.stopPropagation();
+    cleanupDragRef.current?.();
 
-    // Capture values into the closure — no React state or refs needed during drag
     const handleEl = e.currentTarget as HTMLDivElement;
+    const pointerId = e.pointerId;
     const startX = e.clientX;
     const startY = e.clientY;
+    let finished = false;
+
+    try {
+      handleEl.setPointerCapture(pointerId);
+    } catch {
+      // Document listeners below still carry the drag if capture is unavailable.
+    }
+
+    const getHandleEl = () =>
+      handleEl.isConnected
+        ? handleEl
+        : hostRef.current?.querySelector<HTMLElement>(
+            `[data-line-index="${lineIndex}"]`,
+          ) ?? null;
+
+    function cleanup() {
+      const activeHandle = getHandleEl();
+      if (activeHandle) {
+        activeHandle.style.transform = "";
+      }
+      document.removeEventListener("pointermove", onMove, true);
+      document.removeEventListener("pointerup", onUp, true);
+      document.removeEventListener("pointercancel", onUp, true);
+      cleanupDragRef.current = null;
+    }
 
     function onMove(ev: PointerEvent) {
-      handleEl.style.transform = `translate(${ev.clientX - startX}px, ${ev.clientY - startY}px)`;
+      if (ev.pointerId !== pointerId) return;
+      ev.preventDefault();
+
+      const activeHandle = getHandleEl();
+      if (!activeHandle) return;
+
+      activeHandle.style.transform = `translate3d(${ev.clientX - startX}px, ${ev.clientY - startY}px, 0)`;
     }
 
     function onUp(ev: PointerEvent) {
-      handleEl.style.transform = "";
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
+      if (ev.pointerId !== pointerId || finished) return;
+      finished = true;
+      ev.preventDefault();
+
+      cleanup();
 
       const host = hostRef.current;
-      if (!host || !canvasWidthMm || !canvasHeightMm) return;
+      onSelectLine?.(lineIndex);
+
+      if (!host || !canvasWidthMm || !canvasHeightMm) {
+        return;
+      }
+
       const rect = host.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
+      if (!rect.width || !rect.height) {
+        return;
+      }
 
       const dxMm = (ev.clientX - startX) * (canvasWidthMm / rect.width);
       const dyMm = (ev.clientY - startY) * (canvasHeightMm / rect.height);
@@ -63,9 +110,10 @@ export function PreviewPanel({
       }
     }
 
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
+    document.addEventListener("pointermove", onMove, true);
+    document.addEventListener("pointerup", onUp, true);
+    document.addEventListener("pointercancel", onUp, true);
+    cleanupDragRef.current = cleanup;
   }
 
   const showOverlay =
@@ -89,6 +137,7 @@ export function PreviewPanel({
                       width: `${(box.wMm / canvasWidthMm!) * 100}%`,
                       height: `${(box.hMm / canvasHeightMm!) * 100}%`,
                     }}
+                    data-line-index={i}
                     onPointerDown={(e) => startDrag(e, i)}
                     title={`Drag to move Line ${i + 1}`}
                   />
