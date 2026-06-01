@@ -112,18 +112,23 @@ export async function generateCakeTopper(
   lineConfigs: CakeTopperLineConfig[],
   interLineGapsMm: number[],
 ): Promise<CakeTopperResult> {
-  const r = await fetch("/api/cake-topper", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text,
-      default_font_id: defaultFontId,
-      default_font_size_mm: defaultFontSizeMm,
-      default_overlap_mode: defaultOverlapMode,
-      line_configs: lineConfigs,
-      inter_line_gaps_mm: interLineGapsMm,
-    }),
-  });
+  let r: Response;
+  try {
+    r = await fetch("/api/cake-topper", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        default_font_id: defaultFontId,
+        default_font_size_mm: defaultFontSizeMm,
+        default_overlap_mode: defaultOverlapMode,
+        line_configs: lineConfigs,
+        inter_line_gaps_mm: interLineGapsMm,
+      }),
+    });
+  } catch {
+    throw new Error("Backend is not running. Start the local server and retry.");
+  }
   if (!r.ok) return _readError(r, "Could not generate cake topper.");
   return r.json();
 }

@@ -9,6 +9,7 @@ export interface CakeTopperLineConfig {
   overlap_mode: OverlapMode;
   overlap_custom_mm?: number | null;
   gap_configs: OverlapGapConfig[];
+  floating_offsets: FloatingComponentOffset[];
 }
 
 export interface CakeTopperLineMetadata {
@@ -27,6 +28,7 @@ export interface CakeTopperResult {
   png_base64: string;
   svg_filename: string;
   png_filename: string;
+  warnings: string[];
   metadata: {
     words: string[];
     lines: CakeTopperLineMetadata[];

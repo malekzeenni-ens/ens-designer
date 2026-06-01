@@ -36,7 +36,7 @@ from .models import (
     PathCommand,
 )
 from .outline_extractor import FONT_SIZE_MM, extract_outlines
-from .png_exporter import export_png
+from .png_exporter import export_png, render_paths_png
 from .svg_exporter import export_svg
 from .text_shaper import shape_text
 from .unicode_normalisation import normalise_text
@@ -135,7 +135,11 @@ class CakeTopperService:
         # 5. Assemble combined SVG
         all_paths = [p for group in translated_path_groups for p in group]
         svg = _assemble_svg(all_paths, canvas_width, canvas_height)
-        png_bytes = _render_png(svg)
+        png_bytes = _render_png(svg, all_paths, canvas_width, canvas_height)
+
+        all_warnings: list[str] = []
+        for _, meta in line_results:
+            all_warnings.extend(meta.get("warnings", []))
 
         base_name = _safe_filename("_".join(words))
         return CakeTopperResponse(
@@ -143,6 +147,7 @@ class CakeTopperService:
             png_base64=base64.b64encode(png_bytes).decode("ascii"),
             svg_filename=f"{base_name}.svg",
             png_filename=f"{base_name}.png",
+            warnings=all_warnings,
             metadata=CakeTopperMetadata(
                 words=words,
                 lines=line_metadata,
@@ -186,6 +191,21 @@ class CakeTopperService:
 
         glyph_chars = _extract_chars(normalised, len(geometry.glyphs))
 
+        # Detect missing glyphs: .notdef means the font has no glyph for that character.
+        notdef_chars = sorted({
+            glyph_chars[i]
+            for i, g in enumerate(geometry.glyphs)
+            if g.glyph_name == ".notdef" and i < len(glyph_chars) and glyph_chars[i].strip()
+        })
+        line_warnings: list[str] = []
+        if notdef_chars:
+            chars_display = ", ".join(repr(c) for c in notdef_chars)
+            line_warnings.append(
+                f"Line {line_index + 1} (\"{word}\"): character(s) {chars_display} "
+                f"not found in the selected font. The output may have missing letters."
+            )
+            logger.warning("Missing glyphs on line %d (%r): %s", line_index + 1, word, notdef_chars)
+
         # Detect BEFORE applying offsets — dot moving toward the stroke must not
         # cause it to drop out of detection and hide the controls.
         floating_info = detect_floating_components(geometry.glyphs, shifted_paths, glyph_chars)
@@ -208,6 +228,7 @@ class CakeTopperService:
             "gaps_before_mm": [round(g, 3) for g in gaps_before],
             "gaps_after_mm": [round(g, 3) for g in gaps_after],
             "floating_components": floating_components,
+            "warnings": line_warnings,
         }
         return geometry, meta
 
@@ -344,18 +365,13 @@ def _cmd_str(cmd: PathCommand) -> str:
     return "Z"
 
 
-def _render_png(svg: str) -> bytes:
+def _render_png(svg: str, paths: list[GeometryPath], width_mm: float, height_mm: float) -> bytes:
     try:
         import cairosvg
         return cairosvg.svg2png(bytestring=svg.encode("utf-8"), background_color="transparent")
-    except Exception:
-        # Minimal Pillow fallback for environments without Cairo.
-        from io import BytesIO
-        from PIL import Image
-        img = Image.new("RGBA", (800, 400), (255, 255, 255, 0))
-        buf = BytesIO()
-        img.save(buf, format="PNG")
-        return buf.getvalue()
+    except (ImportError, OSError):
+        # Cairo native library not available — fall back to Pillow polygon renderer.
+        return render_paths_png(paths, width_mm, height_mm)
 
 
 def _safe_filename(text: str) -> str:

@@ -14,8 +14,27 @@ def export_png(svg: str, geometry: CanonicalGeometry) -> bytes:
         import cairosvg
 
         return cairosvg.svg2png(bytestring=svg.encode("utf-8"), background_color="transparent")
-    except OSError:
+    except (ImportError, OSError):
         return _export_png_with_pillow(geometry)
+
+
+def render_paths_png(paths: list[GeometryPath], width_mm: float, height_mm: float) -> bytes:
+    """Render a flat list of GeometryPath objects to PNG using Pillow.
+
+    Used as the Cairo fallback for engines that do not use CanonicalGeometry
+    (e.g. the Cake Topper engine). PNG is preview-only; SVG is the production output.
+    """
+    width = max(1, int(round(width_mm * PNG_SCALE)))
+    height = max(1, int(round(height_mm * PNG_SCALE)))
+    image = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(image)
+    for path in paths:
+        points = _flatten_path(path)
+        if len(points) >= 3:
+            draw.polygon([(x * PNG_SCALE, y * PNG_SCALE) for x, y in points], fill=(0, 0, 0, 255))
+    output = BytesIO()
+    image.save(output, format="PNG")
+    return output.getvalue()
 
 
 def _export_png_with_pillow(geometry: CanonicalGeometry) -> bytes:

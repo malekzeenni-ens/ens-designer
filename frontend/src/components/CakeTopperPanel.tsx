@@ -112,7 +112,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   async function callApi(states: LineState[], gaps: string[]) {
     const n = words.length;
     const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
-    const gapValues = gaps.slice(0, n - 1).map((g) => parseFloat(g) ?? 3);
+    const gapValues = gaps.slice(0, n - 1).map((g) => { const v = parseFloat(g); return isNaN(v) ? 3 : v; });
     setLoading(true);
     setError(null);
     try {
@@ -285,6 +285,15 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       {error && (
         <div className="ct-error" role="alert">
           <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {result?.warnings && result.warnings.length > 0 && (
+        <div className="ct-warnings" role="alert">
+          <strong>Warning{result.warnings.length > 1 ? "s" : ""}:</strong>
+          <ul className="ct-warnings-list">
+            {result.warnings.map((w, i) => <li key={i}>{w}</li>)}
+          </ul>
         </div>
       )}
 

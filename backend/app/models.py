@@ -190,6 +190,7 @@ class CakeTopperResponse(BaseModel):
     png_base64: str
     svg_filename: str
     png_filename: str
+    warnings: list[str] = Field(default_factory=list)
     metadata: CakeTopperMetadata
 
 
