@@ -289,9 +289,16 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   return (
     <div className="ct-panel">
       <header className="ct-app-header">
-        <div>
-          <p>Etch N Shine</p>
-          <h1>Cake Topper Designer</h1>
+        <div className="ct-brand-lockup">
+          <img
+            className="ct-brand-logo"
+            src="/brand/etch-n-shine-logo.png"
+            alt="Etch N Shine"
+          />
+          <div>
+            <p>Etch N Shine</p>
+            <h1>Cake Topper Designer</h1>
+          </div>
         </div>
         <div className="ct-header-actions">
           <span>{meta ? "Ready to export" : "Create a design to export"}</span>
