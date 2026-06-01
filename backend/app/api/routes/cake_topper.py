@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Request
 
 from ...models import CakeTopperRequest, CakeTopperResponse
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/cake-topper", tags=["cake-topper"])
 
 
@@ -12,4 +15,5 @@ def generate_cake_topper(payload: CakeTopperRequest, request: Request) -> CakeTo
     try:
         return request.app.state.cake_topper_service.generate(payload)
     except ValueError as exc:
+        logger.warning("Cake topper generation failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -67,9 +67,11 @@ class CakeTopperService:
 
     def generate(self, request: CakeTopperRequest) -> CakeTopperResponse:
         # 1. Split text into words (up to MAX_LINES)
-        words = request.text.strip().split()[:MAX_LINES]
-        if not words:
+        all_words = request.text.strip().split()
+        if not all_words:
             raise ValueError("Text must contain at least one word.")
+        words = all_words[:MAX_LINES]
+        dropped_words = all_words[MAX_LINES:]
 
         n = len(words)
         line_configs = list(request.line_configs)
@@ -138,6 +140,12 @@ class CakeTopperService:
         png_bytes = _render_png(svg, all_paths, canvas_width, canvas_height)
 
         all_warnings: list[str] = []
+        if dropped_words:
+            all_warnings.append(
+                f"Input has {len(all_words)} words but the maximum is {MAX_LINES}. "
+                f"Dropped: {', '.join(repr(w) for w in dropped_words)}."
+            )
+            logger.warning("Text truncated: dropped %d word(s): %s", len(dropped_words), dropped_words)
         for _, meta in line_results:
             all_warnings.extend(meta.get("warnings", []))
 
