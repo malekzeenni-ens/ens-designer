@@ -29,7 +29,7 @@ Fonts are scored out of 100 using practical cake-topper criteria:
 
 The current implementation uses manual overrides for known production-relevant fonts and heuristic fallback classification for the remaining loaded fonts. It does not perform live vector stroke-width simulation or material strength analysis.
 
-## Top 10 Cake Topper Fonts
+## Top 20 Cake Topper Fonts
 
 | Rank | Font Name | Type | Score | Best Use | Why It Works | Risk Notes |
 | ---: | --- | --- | ---: | --- | --- | --- |
@@ -43,11 +43,6 @@ The current implementation uses manual overrides for known production-relevant f
 | 8 | Sunlight Script Bold | Script | 88 | Names, wedding toppers, birthday names | Bolder script gives elegance with usable stroke weight | Swashes and dots need review |
 | 9 | Roboto Condensed Bold | Sans-serif | 87 | Supporting text, long phrases, modern toppers | Fits long wording while keeping strokes substantial | Pair with a decorative main font |
 | 10 | Balgon Bold Bold | Display | 86 | Bold names, birthday toppers, number-led designs | Strong display weight without being plain | Check unusual joins after aggressive overlap |
-
-## Next Best 10 Fonts
-
-| Rank | Font Name | Type | Score | Best Use | Why It Works | Risk Notes |
-| ---: | --- | --- | ---: | --- | --- | --- |
 | 11 | Britannic Bold | Sans-serif | 85 | Names, short phrases, bold birthdays | Wide, heavy forms are readable and resilient | Style may not suit delicate themes |
 | 12 | Century Gothic Bold | Sans-serif | 84 | Modern minimal, supporting text, baby shower | Clean round geometry keeps wording calm | Large counters need checking when reduced |
 | 13 | Arial Black | Sans-serif | 83 | Numbers, bold supporting text, very small words | Very heavy strokes survive cutting | Plain look |
@@ -59,12 +54,37 @@ The current implementation uses manual overrides for known production-relevant f
 | 19 | Roboto Black | Sans-serif | 77 | Numbers, supporting text, modern toppers | Plain, heavy, and predictable | Best when another font carries personality |
 | 20 | Bodoni MT Bold | Serif | 76 | Luxury acrylic, formal names, anniversary | Elegant contrast gives a premium look | Thin contrast strokes and serifs are more fragile |
 
+## Next Best 20 Fonts
+
+| Rank | Font Name | Type | Score | Best Use | Why It Works | Risk Notes |
+| ---: | --- | --- | ---: | --- | --- | --- |
+| 21 | League Spartan ExtraBold | Sans-serif | 75 | Bold names, modern birthdays, supporting phrases | Heavy geometric shapes give strong acrylic-safe strokes | Avoid lighter weights |
+| 22 | Oswald Bold | Sans-serif | 74 | Tall names, numbers, long supporting text | Condensed bold letterforms fit longer wording | Avoid ExtraLight and Light |
+| 23 | Pacifico | Script | 73 | Friendly names, birthday toppers, casual celebrations | Rounded connected script has usable body | Inspect joins, dots, and entry strokes |
+| 24 | Peanut Butter | Display | 72 | Playful names, children's birthdays, chunky casual toppers | Bold rounded display shapes are friendly and practical | Preview unusual letter shapes and counters |
+| 25 | Josefin Sans Bold | Sans-serif | 71 | Modern names, baby shower, supporting text | Elegant geometry stays readable in Bold | Avoid thin and light weights |
+| 26 | Lora Bold | Serif | 70 | Formal names, anniversary toppers, luxury supporting text | Refined serif look with useful weight | Inspect serif details and counters |
+| 27 | Cairo Bold | Sans-serif | 69 | Supporting text, modern phrases, multilingual-friendly layouts | Open counters and sturdy strokes | Avoid very small sizes in lighter weights |
+| 28 | League Spartan Bold | Sans-serif | 68 | Supporting phrases, modern names, numbers | Bold geometry cuts cleanly | Use heavier weights for small words |
+| 29 | Oswald SemiBold | Sans-serif | 67 | Long phrases, modern supporting text, tall layouts | Readable condensed forms with more breathing room | Use Bold for smaller cuts |
+| 30 | Josefin Sans SemiBold | Sans-serif | 66 | Supporting phrases, modern minimal toppers, baby shower | Elegant proportions remain usable at topper scale | Avoid thin substitutions |
+| 31 | Lora SemiBold | Serif | 65 | Formal supporting text, anniversary, wedding dates | Premium feel with enough substance for moderate sizes | Prefer Bold for small wording |
+| 32 | Freestyle Script | Script | 64 | Large names, casual birthday toppers | Familiar casual script can work when kept large | Thin strokes and detached details need checks |
+| 33 | Buttercup Script | Script | 63 | Names, friendly toppers, soft celebrations | Decorative script suits personalised toppers | Review loops, thin terminals, detached marks |
+| 34 | Lucida Calligraphy Italic | Script | 62 | Formal names, wedding toppers | Elegant calligraphic styling when enlarged | Fine details are fragile |
+| 35 | Bickham Script Pro Semibold | Script | 61 | Wedding names, luxury toppers | Semibold weight is more realistic than lighter calligraphy | Fine details need inspection |
+| 36 | Sophia | Script | 60 | Names, birthday toppers, soft personalised designs | Friendly script pairs well with block supporting text | Inspect dots and thin tails |
+| 37 | Rellista Script | Script | 59 | Names, wedding toppers, elegant birthdays | Decorative script character for larger names | Swashes and thin joins need review |
+| 38 | bromello | Script | 58 | Names, casual wedding toppers, birthday scripts | Connected styling works for enlarged personalisation | Inspect thin joins and detached details |
+| 39 | Cairo Black | Sans-serif | 57 | Small phrases, numbers, strong supporting text | Black weight gives excellent stroke strength | Plain as a main decorative font |
+| 40 | Raleway Black | Sans-serif | 56 | Modern names, supporting phrases, bold numbers | Clean look with stronger cut weight | Avoid Thin, Light, and ExtraLight |
+
 ## Font Categories
 
 The UI classifies fonts into these categories:
 
-- Top 10
-- Next Best
+- Top 20
+- Next Best 20
 - Script
 - Serif
 - Sans
@@ -125,14 +145,14 @@ The Designer tab now:
 - Shows recommended font groups first in the base font selector.
 - Adds font search and category filtering.
 - Keeps every loaded font available through All Fonts A-Z.
-- Shows recommendation labels such as Top 10, Next Best, Script, Sans, and Use With Caution.
+- Shows recommendation labels such as Top 20, Next Best 20, Script, Sans, and Use With Caution.
 - Uses the same recommendation-first ordering in per-line selectors.
 
 The Font Advisor tab shows:
 
 - The scoring model.
-- Top 10 fonts.
-- Next Best 10 fonts.
+- Top 20 fonts.
+- Next Best 20 fonts.
 - Category previews.
 - Pairing recommendations.
 - Use-with-caution and not-recommended lists.

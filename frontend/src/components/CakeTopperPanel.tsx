@@ -66,8 +66,8 @@ const DEFAULT_STAKE_LENGTH = 50;
 const DEFAULT_STAKE_OVERLAP = 2;
 const FONT_FILTERS: { value: FontFilterCategory; label: string }[] = [
   { value: "all", label: "All fonts" },
-  { value: "top_10", label: "Top 10" },
-  { value: "next_best_10", label: "Next Best" },
+  { value: "top_10", label: "Top 20" },
+  { value: "next_best_10", label: "Next Best 20" },
   { value: "script", label: "Script" },
   { value: "serif", label: "Serif" },
   { value: "sans_serif", label: "Sans" },
@@ -158,8 +158,8 @@ function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory) {
   }
 
   if (category === "all") {
-    take("Top 10 Cake Topper Fonts", (font) => getFontClassification(font).category === "top_10");
-    take("Next Best 10 Fonts", (font) => getFontClassification(font).category === "next_best_10");
+    take("Top 20 Cake Topper Fonts", (font) => getFontClassification(font).category === "top_10");
+    take("Next Best 20 Fonts", (font) => getFontClassification(font).category === "next_best_10");
     take("All Fonts A-Z", () => true, true);
     return groups;
   }

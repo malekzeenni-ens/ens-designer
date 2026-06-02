@@ -151,8 +151,8 @@ export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
         </div>
       </section>
 
-      <FontTable title="Top 10 Cake Topper Fonts" fonts={topFonts} />
-      <FontTable title="Next Best 10 Fonts" fonts={nextFonts} />
+      <FontTable title="Top 20 Cake Topper Fonts" fonts={topFonts} />
+      <FontTable title="Next Best 20 Fonts" fonts={nextFonts} />
 
       <section className="font-advisor-grid">
         <CategoryPreview title="Best Script Fonts" category="script" fonts={fonts} />
