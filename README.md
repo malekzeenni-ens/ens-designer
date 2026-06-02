@@ -69,6 +69,31 @@ banner uses the same dark action styling while showing the SVG export size. The
 Designer tab also includes a passive cutting note with detected-line chips below
 the preview.
 
+## Font Adviser
+
+Production-aware font guidance for cake topper design. Accessible via the **Font Adviser** tab.
+
+```text
+Dark navy banner (logo + stats: loaded fonts / manual rules / top picks)
+    ↓
+Scoring Model accordion  (5 scoring criteria in boxes)
+    ↓
+Font Rankings accordion  (Top 20 | Next Best 20 — side by side)
+    ↓
+Font Pairings accordion
+    ↓
+Font Categories accordion  (4 columns: Script / Serif / Sans-serif / Supporting Text)
+    ↓
+Use With Caution & Not Recommended accordion  (2 columns, colour-coded)
+    ↓
+Production Notes accordion
+```
+
+Rankings combine manual overrides (44 rules) with heuristic fallback classification.
+Ultra-heavy weight fonts (Black, Heavy, Ultra, Thick, Fat, Poster) are automatically
+scored higher than regular bold fonts due to their superior structural safety for 3mm acrylic.
+Fonts with no manual entry are still displayed and scored by the heuristic.
+
 ---
 
 # Legacy Workflows

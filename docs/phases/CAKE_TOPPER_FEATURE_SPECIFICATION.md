@@ -808,41 +808,51 @@ Errors are displayed in a `<div class="ct-error">` block in the right-side contr
 
 This is a local web application. No internet connection is required after initial dependency installation.
 
-### Backend
+### Backend and Frontend (background — no terminal windows)
+
+Both servers must always be started as hidden background processes. Run this block from the repo root:
 
 ```powershell
-# From the repository root
-cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload
+$root = "C:\Users\malek\Dropbox\_Etch_n_Shine\AI-Custom-Apps\EnS Designer"
+New-Item -ItemType Directory -Force "$root\logs" | Out-Null
+
+# Backend — module path is app.main:app (NOT main:app)
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\backend'; ..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 *> '$root\logs\backend.log'"
+
+# Frontend
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\frontend'; npm.cmd run dev *> '$root\logs\frontend.log'"
 ```
 
-The active local repository uses the Python virtual environment at the repository root (`.venv`), not `backend/.venv`.
+Verify startup (wait ~5 seconds):
+
+```powershell
+Get-Content logs\backend.log -Tail 5   # expect: Application startup complete.
+Get-Content logs\frontend.log -Tail 5  # expect: VITE vX.x.x  ready in Xms
+```
+
+Stop both servers:
+
+```powershell
+Stop-Process -Name "python","node" -Force -ErrorAction SilentlyContinue
+```
+
+> **Critical:** The uvicorn module path is `app.main:app` — NOT `main:app`. `main.py` lives at `backend/app/main.py`. Using `main:app` causes "Error loading ASGI app".
 
 The backend binds to `127.0.0.1` only (not `0.0.0.0`) — accessible from the local machine only.
 
-### Frontend
+### Vite cache
 
-```bash
-# From the repository root
-cd frontend
-npm run dev
-```
+Vite stores optimized dependencies at `C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer`
+(outside Dropbox). This avoids Windows/Dropbox file-locking (`EBUSY`) errors that previously
+caused React chunks to return `504 (Outdated Optimize Dep)`.
 
-The Vite dev server starts on `http://localhost:5173`. The frontend proxies API calls to `http://localhost:8000`.
-
-Vite stores optimized dependencies in `.vite-cache/frontend`, outside
-`frontend/node_modules`. This avoids Windows/Dropbox file-locking during
-dependency re-optimisation, which can otherwise leave React chunks returning
-`504 (Outdated Optimize Dep)`.
-
-If the browser still shows a blank screen with Vite `504 (Outdated Optimize Dep)` errors, clear the external cache and restart the frontend with forced dependency re-optimisation:
+If Vite still shows EBUSY or 504 errors, delete the cache folder and restart the frontend:
 
 ```powershell
-Remove-Item -Recurse -Force ..\.vite-cache\frontend -ErrorAction SilentlyContinue
-Start-Process -FilePath "cmd" -ArgumentList "/c","cd frontend && npm run dev -- --force" -WindowStyle Hidden
+Remove-Item -Recurse -Force "C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer" -ErrorAction SilentlyContinue
 ```
 
-Then hard refresh Chrome with `Ctrl + Shift + R`, or enable DevTools Network `Disable cache` and refresh once.
+Then hard-refresh the browser with `Ctrl+Shift+R`.
 
 ### Required Python dependencies
 
