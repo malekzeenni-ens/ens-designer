@@ -123,7 +123,7 @@ export interface FontInfo {
   family: string;
   full_name: string;
   style: string;
-  source: "project" | "system" | "external";
+  source: "project" | "system";
 }
 
 export interface MaterialProfile {

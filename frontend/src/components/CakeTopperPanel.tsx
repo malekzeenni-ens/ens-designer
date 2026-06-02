@@ -6,6 +6,14 @@ import { ExportControls } from "./ExportControls";
 import { FloatingControls, toFloatingOffsets } from "./FloatingControls";
 import type { FloatingOffsetMap } from "./FloatingControls";
 import { PreviewPanel } from "./PreviewPanel";
+import {
+  FONT_CATEGORY_LABELS,
+  fontMatchesCategory,
+  getFontClassification,
+  getFontOptionLabel,
+  sortFontsForCakeTopper,
+} from "../config/cakeTopperFontRecommendations";
+import type { CakeTopperFontCategory } from "../config/cakeTopperFontRecommendations";
 import { generateCakeTopper } from "../services/generationApi";
 import type {
   AlignmentMode,
@@ -35,6 +43,7 @@ type GapState = { enabled: boolean; overlapMm: string };
 type InspectorSectionId = "create" | "detected" | "overlap" | "layout" | "stakes" | "lines";
 type StakeCount = 0 | 1 | 2;
 type StakeOffsetState = { xMm: string; yMm: string };
+type FontFilterCategory = CakeTopperFontCategory | "all";
 type LineState = {
   fontId: string;
   fontSizeMm: string;
@@ -55,6 +64,16 @@ const DEFAULT_INTER_GAP = "3";
 const DEFAULT_STAKE_WIDTH = 3;
 const DEFAULT_STAKE_LENGTH = 50;
 const DEFAULT_STAKE_OVERLAP = 2;
+const FONT_FILTERS: { value: FontFilterCategory; label: string }[] = [
+  { value: "all", label: "All fonts" },
+  { value: "top_10", label: "Top 10" },
+  { value: "next_best_10", label: "Next Best" },
+  { value: "script", label: "Script" },
+  { value: "serif", label: "Serif" },
+  { value: "sans_serif", label: "Sans" },
+  { value: "supporting_text", label: "Supporting text" },
+  { value: "use_with_caution", label: "Caution" },
+];
 
 const DEFAULT_OPEN_SECTIONS: Record<InspectorSectionId, boolean> = {
   create: true,
@@ -123,9 +142,48 @@ function InspectorAccordion({
   );
 }
 
+function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory) {
+  const sorted = sortFontsForCakeTopper(fonts);
+  const seen = new Set<string>();
+  const groups: { label: string; fonts: FontInfo[] }[] = [];
+
+  function take(label: string, predicate: (font: FontInfo) => boolean, alphabetical = false) {
+    const groupFonts = sorted
+      .filter((font) => !seen.has(font.id) && predicate(font))
+      .sort((a, b) => (alphabetical ? a.full_name.localeCompare(b.full_name) : 0));
+    if (groupFonts.length > 0) {
+      groupFonts.forEach((font) => seen.add(font.id));
+      groups.push({ label, fonts: groupFonts });
+    }
+  }
+
+  if (category === "all") {
+    take("Top 10 Cake Topper Fonts", (font) => getFontClassification(font).category === "top_10");
+    take("Next Best 10 Fonts", (font) => getFontClassification(font).category === "next_best_10");
+    take("All Fonts A-Z", () => true, true);
+    return groups;
+  }
+
+  take(FONT_CATEGORY_LABELS[category], (font) => fontMatchesCategory(font, category));
+  return groups;
+}
+
+function renderFontGroups(groups: { label: string; fonts: FontInfo[] }[]) {
+  return groups.map((group) => (
+    <optgroup key={group.label} label={group.label}>
+      {group.fonts.map((font) => (
+        <option key={font.id} value={font.id}>
+          {getFontOptionLabel(font)}
+        </option>
+      ))}
+    </optgroup>
+  ));
+}
+
 export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [text, setText] = useState("Happy Birthday");
   const [fontSearch, setFontSearch] = useState("");
+  const [fontCategory, setFontCategory] = useState<FontFilterCategory>("all");
   const [defaultFontId, setDefaultFontId] = useState(fonts[0]?.id ?? "");
   const [defaultSize, setDefaultSize] = useState(DEFAULT_SIZE);
   const [defaultOverlap, setDefaultOverlap] = useState<OverlapMode>(DEFAULT_OVERLAP);
@@ -148,11 +206,21 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
 
   const filteredFonts = useMemo(() => {
     const q = fontSearch.trim().toLowerCase();
-    if (!q) return fonts;
-    return fonts.filter((f) =>
-      `${f.full_name} ${f.family} ${f.style}`.toLowerCase().includes(q),
-    );
-  }, [fonts, fontSearch]);
+    return sortFontsForCakeTopper(fonts).filter((f) => {
+      const searchMatches = !q || `${f.full_name} ${f.family} ${f.style}`.toLowerCase().includes(q);
+      return searchMatches && fontMatchesCategory(f, fontCategory);
+    });
+  }, [fonts, fontCategory, fontSearch]);
+
+  const fontGroups = useMemo(
+    () => makeFontGroups(filteredFonts, fontCategory),
+    [filteredFonts, fontCategory],
+  );
+
+  const allFontGroups = useMemo(
+    () => makeFontGroups(fonts, "all"),
+    [fonts],
+  );
 
   useEffect(() => {
     if (filteredFonts.length > 0 && !filteredFonts.some((f) => f.id === defaultFontId)) {
@@ -353,6 +421,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   function resetDesigner() {
     setText("Happy Birthday");
     setFontSearch("");
+    setFontCategory("all");
     setDefaultFontId(fonts[0]?.id ?? "");
     setDefaultSize(DEFAULT_SIZE);
     setDefaultOverlap(DEFAULT_OVERLAP);
@@ -491,15 +560,22 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                   aria-label="Search fonts"
                 />
                 <select
+                  value={fontCategory}
+                  onChange={(e) => setFontCategory(e.target.value as FontFilterCategory)}
+                  aria-label="Filter fonts by recommendation category"
+                >
+                  {FONT_FILTERS.map((filter) => (
+                    <option key={filter.value} value={filter.value}>
+                      {filter.label}
+                    </option>
+                  ))}
+                </select>
+                <select
                   value={defaultFontId}
                   onChange={(e) => setDefaultFontId(e.target.value)}
                   aria-label="Base font"
                 >
-                  {filteredFonts.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.full_name}
-                    </option>
-                  ))}
+                  {renderFontGroups(fontGroups)}
                 </select>
               </div>
             </div>
@@ -758,9 +834,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                             value={ls.fontId || defaultFontId}
                             onChange={(e) => patchLine(li, { fontId: e.target.value })}
                           >
-                            {fonts.map((f) => (
-                              <option key={f.id} value={f.id}>{f.full_name}</option>
-                            ))}
+                            {renderFontGroups(allFontGroups)}
                           </select>
                         </label>
                         <label className="ct-card-field ct-card-field--sm">

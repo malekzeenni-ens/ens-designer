@@ -76,8 +76,7 @@ Phase 1A outputs individual letter geometry without any connectivity processing.
 - Name input
 - Font selection with search and duplicate hiding
 - Recursive font discovery from:
-  - `/fonts` repository directory
-  - `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts` (Etch 'N' Shine operational library)
+  - `/fonts` repository directory (Etch N Shine production font library)
   - Windows system fonts
 - Font preview in selector
 - Unicode NFC normalisation
@@ -474,9 +473,8 @@ HarfBuzz returns a `cluster` index for each shaped glyph that maps back to the o
 
 Font discovery runs at application startup and on demand. The discovery process scans three sources in priority order:
 
-1. `/fonts` — repository-local fonts committed with the project
-2. `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts` — Etch 'N' Shine operational font library (machine-specific path)
-3. Windows system fonts — `C:\Windows\Fonts`
+1. `/fonts` — repository-local Etch N Shine production fonts committed with the project
+2. Windows system fonts — `C:\Windows\Fonts`
 
 Discovery rules:
 - Scan recursively for `.ttf` and `.otf` files
@@ -484,7 +482,7 @@ Discovery rules:
 - Remove duplicates by normalised `{family_name} {style}` key — keep the first discovered instance
 - Return a sorted, deduplicated font catalogue
 
-Font paths are held in memory at runtime. No fonts are committed to the repository except fixtures placed in `/fonts` for testing.
+Font paths are held in memory at runtime. Etch N Shine production fonts are committed under `/fonts`.
 
 ## 8.2 Font Loading
 
@@ -875,7 +873,7 @@ These are Phase 1B and later scope items.
 | R-002 | Cairo DLLs unavailable on Windows causing CairoSVG failure | High | High | PNG export unavailable | Implement Pillow fallback; log clearly; revisit in Phase 1C |
 | R-003 | Decorative fonts produce outline edge cases (self-intersections, open paths) | Medium | Medium | Invalid or malformed SVG output | Add outline validation in outline extractor; log and skip malformed paths |
 | R-004 | Font missing a required glyph for user input | Medium | High | Partial or empty SVG output | Detect missing glyphs; show user-visible warning |
-| R-005 | Dropbox font path is machine-specific | Low | High | New contributors cannot discover Etch 'N' Shine font library | Document the path; keep `/fonts` as the portable project source |
+| R-005 | Font library portability | Low | High | New contributors need the repo-local font library | Keep `/fonts` as the portable project source and restart backend after changes |
 | R-006 | FontTools pen model produces unexpected path command types for some CFF fonts | Medium | Low | Path conversion fails silently | Validate command types; log unrecognised commands |
 | R-007 | Scope creep — implementing Phase 1B features in Phase 1A | High | Medium | Over-engineered Phase 1A; delayed delivery | Strictly enforce scope checklist in acceptance testing |
 | R-008 | SVG dimensions incorrect causing LightBurn scaling errors | High | Low | Unusable production output | Validate mm units in SVG output tests; confirm in manual LightBurn test |
@@ -1107,7 +1105,7 @@ The backend is configured through environment variables or a local config file (
 |---|---|---|
 | `HOST` | `127.0.0.1` | Backend listen address |
 | `PORT` | `8000` | Backend listen port |
-| `FONT_PATHS` | `/fonts` | Additional font search paths (comma-separated) |
+| `FONT_PATHS` | `/fonts` | Historical note: active backend now uses repo-local `/fonts` plus Windows system fonts |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
 
 ## 18.2 Frontend Configuration

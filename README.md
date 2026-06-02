@@ -136,17 +136,16 @@ npm.cmd run build
 
 # Font Sources
 
-The backend discovers fonts from three locations at startup:
+The backend discovers fonts from the repository-local font library first, then Windows system fonts:
 
 | Source | Path |
 |---|---|
-| Project fonts | `/fonts` in this repository |
-| Etch 'N' Shine font library | `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts` |
+| Etch N Shine project fonts | `/fonts` in this repository |
 | Windows system fonts | `C:\Windows\Fonts` |
 
 Supported formats: `.ttf` and `.otf`. Duplicates are hidden by font full name and style.
 
-Restart the backend after adding or removing fonts.
+The repository `fonts/` directory is the source of truth for Etch N Shine production fonts. Restart the backend after adding or removing fonts.
 
 ---
 
@@ -230,7 +229,7 @@ Per-gap overrides can be sent via `gap_configs` in the request body — each ent
 backend/          Python backend — API, engines, models
 frontend/         React + TypeScript frontend
 tests/            Pytest test suite
-fonts/            Project fonts (committed fixtures)
+fonts/            Repo-local Etch N Shine production font library
 docs/
   adr/            Architecture Decision Records
   architecture/   Architecture design documents

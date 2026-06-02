@@ -36,7 +36,7 @@ Connectivity resolution, material validation, and production hardening are handl
 - Font selection
 - Font search
 - Duplicate font hiding
-- Recursive font discovery from repository, Etch 'N' Shine Dropbox font library, and Windows system fonts
+- Recursive font discovery from the repository `fonts/` directory and Windows system fonts
 - Font preview
 - Unicode normalisation
 - HarfBuzz text shaping

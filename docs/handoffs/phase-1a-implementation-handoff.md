@@ -14,7 +14,7 @@ The current project state is ready for Phase 1A review and conditional approval 
 
 - Text input implemented.
 - Font selection implemented.
-- Local font discovery implemented from repository fonts, Etch 'N' Shine Dropbox font library, and Windows system fonts.
+- Local font discovery implemented from repository fonts and Windows system fonts.
 - Unicode normalisation implemented.
 - HarfBuzz shaping implemented.
 - Font outline extraction implemented.
@@ -39,7 +39,7 @@ The current project state is ready for Phase 1A review and conditional approval 
 - Font selector.
 - Font search.
 - Duplicate font hiding.
-- Recursive `.ttf` and `.otf` discovery from the Etch 'N' Shine Dropbox font library.
+- Recursive `.ttf` and `.otf` discovery from the repo-local Etch N Shine `fonts/` library.
 - Generate button.
 - SVG preview.
 - Download SVG.
@@ -133,7 +133,7 @@ Hide duplicate fonts by normalised full font name and style.
 
 Reason:
 
-The Etch 'N' Shine Dropbox font library contains duplicate font files that make the selector harder to use.
+The Etch N Shine repo-local `fonts/` library can contain duplicate font files that make the selector harder to use.
 
 Alternative:
 
@@ -141,7 +141,7 @@ Showing every font file was rejected because it creates noise without adding des
 
 Decision:
 
-Add `C:\Users\malek\Dropbox\_Etch_n_Shine\Fonts` as an external recursive font source.
+Use the repository `fonts/` directory as the recursive Etch N Shine production font source.
 
 Reason:
 
@@ -149,7 +149,7 @@ Etch 'N' Shine keeps a larger operational font library outside the repository.
 
 Alternative:
 
-Copying all fonts into `/fonts` was rejected because it would bloat the repository and duplicate the business font library.
+The production font library is now copied into `/fonts` so the application no longer depends on a machine-specific Dropbox path.
 
 Decision:
 
@@ -276,7 +276,7 @@ Passed.
 
 - Decorative fonts may expose outline edge cases.
 - Some fonts may lack glyphs for user input.
-- The external Dropbox font path is machine-specific and may not exist for future contributors.
+- Machine-specific font paths have been replaced by repo-local `fonts/`.
 - PNG rendering may differ from SVG for complex fonts when CairoSVG is unavailable.
 - Letter-level geometry is expected in Phase 1A until Phase 1B connectivity resolution.
 

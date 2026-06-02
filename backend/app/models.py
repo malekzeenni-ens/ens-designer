@@ -10,7 +10,7 @@ class FontInfo(BaseModel):
     family: str
     full_name: str
     style: str
-    source: Literal["project", "system", "external"]
+    source: Literal["project", "system"]
 
 
 class BridgeOverride(BaseModel):
