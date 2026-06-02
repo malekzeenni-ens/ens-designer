@@ -1358,6 +1358,14 @@ h2 {
   font-weight: 800;
 }
 
+.fa-table-label--warning {
+  color: #7a4010;
+}
+
+.fa-table-label--danger {
+  color: #922b21;
+}
+
 .fa-table-label {
   margin: 0 0 8px;
   color: var(--ens-navy);

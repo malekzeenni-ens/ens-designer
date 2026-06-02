@@ -244,46 +244,49 @@ export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
         </div>
       </Accordion>
 
-      {/* Caution / Not recommended */}
-      <div className="font-advisor-grid">
-        <Accordion
-          title={FONT_CATEGORY_LABELS.use_with_caution}
-          badge={getFontsByCategory(fonts, "use_with_caution").length}
-          defaultOpen={false}
-          className="fa-accordion--warning"
-        >
-          <div className="font-caution-list">
-            {cautionFonts.map((font) => {
-              const classification = getFontClassification(font);
-              return (
-                <article key={font.id}>
-                  <strong>{font.full_name}</strong>
-                  <span>{classification.riskNotes}</span>
-                </article>
-              );
-            })}
+      {/* Caution / Not recommended — one accordion, 2 columns */}
+      <Accordion
+        title="Use With Caution & Not Recommended"
+        badge={getFontsByCategory(fonts, "use_with_caution").length + getFontsByCategory(fonts, "not_recommended").length}
+        defaultOpen={false}
+      >
+        <div className="font-advisor-grid">
+          <div>
+            <p className="fa-table-label fa-table-label--warning">
+              {FONT_CATEGORY_LABELS.use_with_caution}
+              <span>{getFontsByCategory(fonts, "use_with_caution").length}</span>
+            </p>
+            <div className="font-caution-list">
+              {cautionFonts.map((font) => {
+                const classification = getFontClassification(font);
+                return (
+                  <article key={font.id}>
+                    <strong>{font.full_name}</strong>
+                    <span>{classification.riskNotes}</span>
+                  </article>
+                );
+              })}
+            </div>
           </div>
-        </Accordion>
-
-        <Accordion
-          title={FONT_CATEGORY_LABELS.not_recommended}
-          badge={getFontsByCategory(fonts, "not_recommended").length}
-          defaultOpen={false}
-          className="fa-accordion--danger"
-        >
-          <div className="font-caution-list">
-            {notRecommendedFonts.map((font) => {
-              const classification = getFontClassification(font);
-              return (
-                <article key={font.id}>
-                  <strong>{font.full_name}</strong>
-                  <span>{classification.riskNotes}</span>
-                </article>
-              );
-            })}
+          <div>
+            <p className="fa-table-label fa-table-label--danger">
+              {FONT_CATEGORY_LABELS.not_recommended}
+              <span>{getFontsByCategory(fonts, "not_recommended").length}</span>
+            </p>
+            <div className="font-caution-list">
+              {notRecommendedFonts.map((font) => {
+                const classification = getFontClassification(font);
+                return (
+                  <article key={font.id}>
+                    <strong>{font.full_name}</strong>
+                    <span>{classification.riskNotes}</span>
+                  </article>
+                );
+              })}
+            </div>
           </div>
-        </Accordion>
-      </div>
+        </div>
+      </Accordion>
 
       {/* Production notes */}
       <Accordion title="Production Notes" defaultOpen={true}>

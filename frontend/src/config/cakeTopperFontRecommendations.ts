@@ -829,7 +829,10 @@ export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassif
   const isSans = /\b(sans|arial|roboto|raleway|quicksand|calibri|segoe|verdana|tahoma|century gothic|franklin|bahnschrift|corbel|candara)\b/.test(name);
   const isDecorative = /\b(monogram|ornament|shadow|outline|swash|floral|tattoo|graffiti|distress|sketch|inner|extrude)\b/.test(name);
   const isThin = /\b(thin|light|hairline|line)\b/.test(name);
-  const isBold = /\b(bold|black|heavy|extra bold|extrabold|poster)\b/.test(name);
+  // Ultra-heavy weights (Black, Heavy, Ultra, Thick, etc.) are structurally superior for
+  // laser cutting — uniform thick strokes leave virtually no fragile cut points.
+  const isUltraHeavy = /\b(black|heavy|ultra|thick|fat|poster|jumbo|chubby)\b/.test(name);
+  const isBold = /\b(bold|extrabold|extra bold|semibold|semi bold|demi)\b/.test(name) || isUltraHeavy;
 
   if (isSymbol) {
     return {
@@ -848,11 +851,11 @@ export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassif
   if (isDecorative || isThin) {
     return {
       fontName: font.full_name,
-      score: isBold ? 58 : 45,
+      score: isUltraHeavy ? 62 : isBold ? 55 : 42,
       category: "use_with_caution",
       type: isScript ? "script" : isSerif ? "serif" : isSans ? "sans-serif" : "decorative",
       bestUse: ["Large decorative accents", "Manual review designs"],
-      riskLevel: isBold ? "medium" : "high",
+      riskLevel: isUltraHeavy ? "medium" : isBold ? "medium" : "high",
       whyItWorks: "It may have decorative value in the right design.",
       riskNotes: "Decorative, thin, outline, shadow, swash, or monogram details can create fragile cuts.",
       notes: "Use only after preview and LightBurn inspection.",
@@ -862,12 +865,14 @@ export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassif
   if (isScript) {
     return {
       fontName: font.full_name,
-      score: isBold ? 72 : 64,
+      score: isUltraHeavy ? 74 : isBold ? 68 : 62,
       category: "script",
       type: "script",
       bestUse: ["Names", "Wedding toppers", "Personalised designs"],
-      riskLevel: isBold ? "medium" : "medium",
-      whyItWorks: "Script faces work well for names when joins are visible and sized generously.",
+      riskLevel: isUltraHeavy ? "low" : "medium",
+      whyItWorks: isUltraHeavy
+        ? "Heavy-weight script gives personality while keeping stroke mass well above fragile cut thresholds."
+        : "Script faces work well for names when joins are visible and sized generously.",
       riskNotes: "Detached dots, fine entry strokes, and swashes need manual checking.",
       notes: "Use as a main name font with a sturdy supporting font.",
     };
@@ -876,13 +881,17 @@ export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassif
   if (isSerif) {
     return {
       fontName: font.full_name,
-      score: isBold ? 74 : 62,
+      score: isUltraHeavy ? 76 : isBold ? 70 : 58,
       category: "serif",
       type: "serif",
       bestUse: ["Formal toppers", "Luxury acrylic", "Anniversary text"],
-      riskLevel: isBold ? "medium" : "medium",
-      whyItWorks: "Serifs can add premium character when stroke weight is sufficient.",
-      riskNotes: "Thin serifs and high-contrast strokes can be fragile at small sizes.",
+      riskLevel: isUltraHeavy ? "low" : "medium",
+      whyItWorks: isUltraHeavy
+        ? "Ultra-heavy serif weight eliminates fragile hairlines — strong character with excellent cut integrity."
+        : "Serifs can add premium character when stroke weight is sufficient.",
+      riskNotes: isUltraHeavy
+        ? "Check that large counters don't become enclosed holes at small sizes."
+        : "Thin serifs and high-contrast strokes can be fragile at small sizes.",
       notes: "Prefer bold weights and avoid tiny text.",
     };
   }
@@ -890,13 +899,21 @@ export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassif
   if (isSans || isBold) {
     return {
       fontName: font.full_name,
-      score: isBold ? 76 : 68,
-      category: isBold ? "supporting_text" : "sans_serif",
+      score: isUltraHeavy ? 79 : isBold ? 72 : 65,
+      category: isUltraHeavy ? "sans_serif" : isBold ? "supporting_text" : "sans_serif",
       type: "sans-serif",
-      bestUse: ["Supporting text", "Modern toppers", "Readable phrases"],
+      bestUse: isUltraHeavy
+        ? ["Bold names", "Birthday toppers", "Short statement wording"]
+        : ["Supporting text", "Modern toppers", "Readable phrases"],
       riskLevel: "low",
-      whyItWorks: "Clean sans-serif forms tend to be readable and structurally predictable.",
-      riskNotes: isBold ? "Low risk, but verify counters after heavy overlap." : "Use larger sizes for regular weights.",
+      whyItWorks: isUltraHeavy
+        ? "Ultra-heavy strokes give maximum structural safety — one of the most forgiving font weight classes for 3mm acrylic."
+        : "Clean sans-serif forms tend to be readable and structurally predictable.",
+      riskNotes: isUltraHeavy
+        ? "Excellent structural safety — verify wide letterforms leave enough spacing in multi-word layouts."
+        : isBold
+        ? "Low risk, but verify counters after heavy overlap."
+        : "Use larger sizes for regular weights.",
       notes: "A practical choice for phrases and secondary lines.",
     };
   }
