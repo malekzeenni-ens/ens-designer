@@ -150,7 +150,7 @@ Use this matrix during:
 | R-03 | Frontend start | Start Vite dev server | UI loads at http://localhost:5173 | P0 | Manual |
 | R-04 | Offline operation | Disconnect from internet | App functions normally — no external network calls | P1 | Manual |
 | R-05 | Font directory empty | Remove all fonts | Backend starts but requests return 400 for all font IDs | P1 | Manual |
-| R-06 | Vite stale optimize cache | Browser shows `504 (Outdated Optimize Dep)` for optimized deps | Restart frontend with `npm run dev -- --force`, then hard refresh; app loads | P0 | Manual |
+| R-06 | Vite stale optimize cache | Browser shows `504 (Outdated Optimize Dep)` for optimized deps | Vite uses `.vite-cache/frontend`; clear that cache, restart with `npm run dev -- --force`, then hard refresh; app loads | P0 | Manual |
 
 ---
 

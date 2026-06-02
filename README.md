@@ -138,6 +138,10 @@ npm.cmd install
 npm.cmd run dev
 ```
 
+Vite stores its optimized dependency cache in `.vite-cache/frontend` instead of
+`frontend/node_modules/.vite`. This avoids Windows/Dropbox file-locking issues
+that can otherwise cause `504 (Outdated Optimize Dep)` errors for React chunks.
+
 ## Open in browser
 
 ```

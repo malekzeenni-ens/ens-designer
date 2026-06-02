@@ -830,9 +830,15 @@ npm run dev
 
 The Vite dev server starts on `http://localhost:5173`. The frontend proxies API calls to `http://localhost:8000`.
 
-If the browser shows a blank screen with Vite `504 (Outdated Optimize Dep)` errors, restart the frontend with forced dependency re-optimisation:
+Vite stores optimized dependencies in `.vite-cache/frontend`, outside
+`frontend/node_modules`. This avoids Windows/Dropbox file-locking during
+dependency re-optimisation, which can otherwise leave React chunks returning
+`504 (Outdated Optimize Dep)`.
+
+If the browser still shows a blank screen with Vite `504 (Outdated Optimize Dep)` errors, clear the external cache and restart the frontend with forced dependency re-optimisation:
 
 ```powershell
+Remove-Item -Recurse -Force ..\.vite-cache\frontend -ErrorAction SilentlyContinue
 Start-Process -FilePath "cmd" -ArgumentList "/c","cd frontend && npm run dev -- --force" -WindowStyle Hidden
 ```
 
