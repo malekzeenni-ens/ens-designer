@@ -88,7 +88,7 @@ function FontTable({ fonts }: { fonts: FontInfo[] }) {
   );
 }
 
-function CategoryPreview({
+function CategorySection({
   title,
   category,
   fonts,
@@ -99,7 +99,10 @@ function CategoryPreview({
 }) {
   const all = getFontsByCategory(fonts, category);
   return (
-    <Accordion title={title} badge={all.length} defaultOpen={false}>
+    <div className="fa-category-col">
+      <p className="fa-category-label">
+        {title} <span>{all.length}</span>
+      </p>
       <div className="font-pill-list">
         {all.slice(0, 12).map((font) => {
           const classification = getFontClassification(font);
@@ -110,7 +113,7 @@ function CategoryPreview({
           );
         })}
       </div>
-    </Accordion>
+    </div>
   );
 }
 
@@ -231,13 +234,15 @@ export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
         </div>
       </Accordion>
 
-      {/* Category previews */}
-      <div className="font-advisor-grid">
-        <CategoryPreview title="Best Script Fonts" category="script" fonts={fonts} />
-        <CategoryPreview title="Best Serif Fonts" category="serif" fonts={fonts} />
-        <CategoryPreview title="Best Sans-serif Fonts" category="sans_serif" fonts={fonts} />
-        <CategoryPreview title="Supporting Text Fonts" category="supporting_text" fonts={fonts} />
-      </div>
+      {/* Category previews — 4 columns in one accordion */}
+      <Accordion title="Font Categories" defaultOpen={true}>
+        <div className="fa-4col-grid">
+          <CategorySection title="Best Script Fonts" category="script" fonts={fonts} />
+          <CategorySection title="Best Serif Fonts" category="serif" fonts={fonts} />
+          <CategorySection title="Best Sans-serif Fonts" category="sans_serif" fonts={fonts} />
+          <CategorySection title="Supporting Text Fonts" category="supporting_text" fonts={fonts} />
+        </div>
+      </Accordion>
 
       {/* Caution / Not recommended */}
       <div className="font-advisor-grid">

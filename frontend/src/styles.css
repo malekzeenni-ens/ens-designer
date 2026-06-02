@@ -1328,6 +1328,36 @@ h2 {
 }
 
 /* Production note inside accordion */
+.fa-4col-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.fa-category-col {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.fa-category-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--ens-navy);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fa-category-label span {
+  color: var(--ens-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
 .fa-table-label {
   margin: 0 0 8px;
   color: var(--ens-navy);
@@ -1407,7 +1437,8 @@ h2 {
 
   .font-advisor-grid,
   .font-score-cards,
-  .fa-header-stats {
+  .fa-header-stats,
+  .fa-4col-grid {
     grid-template-columns: 1fr;
   }
 
