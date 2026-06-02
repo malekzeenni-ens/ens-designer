@@ -1328,6 +1328,15 @@ h2 {
 }
 
 /* Production note inside accordion */
+.fa-table-label {
+  margin: 0 0 8px;
+  color: var(--ens-navy);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .fa-production-note {
   display: flex;
   gap: 12px;

@@ -185,16 +185,19 @@ export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
         </div>
       </Accordion>
 
-      {/* Font ranking tables — side by side */}
-      <div className="font-advisor-grid">
-        <Accordion title="Top 20 Cake Topper Fonts" badge={topFonts.length} defaultOpen={true}>
-          <FontTable fonts={topFonts} />
-        </Accordion>
-
-        <Accordion title="Next Best 20 Fonts" badge={nextFonts.length} defaultOpen={false}>
-          <FontTable fonts={nextFonts} />
-        </Accordion>
-      </div>
+      {/* Font ranking tables — both inside one accordion, side by side */}
+      <Accordion title="Font Rankings" badge={topFonts.length + nextFonts.length} defaultOpen={true}>
+        <div className="font-advisor-grid">
+          <div>
+            <p className="fa-table-label">Top 20 Cake Topper Fonts</p>
+            <FontTable fonts={topFonts} />
+          </div>
+          <div>
+            <p className="fa-table-label">Next Best 20 Fonts</p>
+            <FontTable fonts={nextFonts} />
+          </div>
+        </div>
+      </Accordion>
 
       {/* Font pairings */}
       <Accordion
