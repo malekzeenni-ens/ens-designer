@@ -282,25 +282,27 @@ The preview supports direct drag-to-move for generated cake stakes.
 
 Current UI mode: Cake Topper-only. The older Text Generator and Overlap Engine workflows remain in the repository for possible future reactivation, but their tabs are not shown in the app shell.
 
+```text
++------------------------------------------------------------------------+
+| Brand header      SVG export size      Reset  Download SVG  Download PNG |
++------------------------------+-----------------------------------------+
+| SVG Preview                  | v Create design                         |
+| Final cut size chip          |   Text, font search/filter, base font   |
+|                              |   Base size + Generate                  |
+| Cutting note                 |   Letter overlap: Light Auto Medium Strong |
+| Detected-line chips          |   Stakes: 0 / 1 / 2                     |
+|                              | v Layout                                |
+|                              |   Spacing between generated lines       |
+|                              | v Lines                                 |
+|                              |   Per-line font, position, overlap      |
++------------------------------+-----------------------------------------+
+| SVG export size                                Download SVG  Download PNG |
++------------------------------------------------------------------------+
 ```
-┌────────────────────────────────────────────────────────────┐
-│ [Text input]  [Font search] [Font ▾]  [Size mm]  [Generate]│  ← full width
-├────────────────────────────────────────────────────────────┤
-│ [Line 1: Happy] [Line 2: Birthday]                         │  ← word chips
-├────────────────────────────────────────────────────────────┤
-│ Letter overlap: [Light 0.5] [Auto 1] [Medium 1.5] [Strong] │  ← global mode
-├──────────────────────────┬─────────────────────────────────┤
-│                          │ ▼ Line 1 — Happy  |  Font · 42mm│
-│      SVG Preview         │   Font: [▾]  Size: []  Align: [] │
-│      (sticky)            │   Letter gaps: H→a ✓  a→p ✓     │
-│                          │   ↕ Gap 1→2  [ -3.0 ] mm        │
-│                          │ ▶ Line 2 — Birthday  (collapsed) │
-│                          │   ↕ Gap 2→3  [ +5.0 ] mm        │
-│                          │ ▶ Line 3 — Sarah  (collapsed)   │
-├──────────────────────────┴─────────────────────────────────┤
-│ [filename]          [Download SVG]  [Download PNG]          │  ← full width
-└────────────────────────────────────────────────────────────┘
-```
+
+The header and footer export areas both show the same SVG export size summary
+and use the same download button styling. The header additionally includes the
+reset action.
 
 ## 4.2 Line Accordion Card
 
@@ -792,7 +794,7 @@ Pydantic validation errors (e.g., `font_size_mm` out of range, `overlap_mm` inva
 
 ### Frontend error display
 
-Errors are displayed in a `<div class="ct-error">` block between the overlap shortcut row and the canvas. The message is extracted from the API response and shown verbatim for 400 errors, or as a formatted field-level summary for 422 errors.
+Errors are displayed in a `<div class="ct-error">` block in the right-side control stack after the Create design section. The message is extracted from the API response and shown verbatim for 400 errors, or as a formatted field-level summary for 422 errors.
 
 ### Currently unhandled (planned for Improvement Phase 2A)
 
@@ -883,7 +885,7 @@ Fonts are loaded from the project font directory by `backend/app/font_loader.py`
 
 ### Export and download
 
-SVG and PNG downloads use browser-based blob download initiated by the `ExportControls` component. Files are not written to disk by the backend; they are streamed via the API response and downloaded by the browser.
+SVG and PNG downloads use browser-based blob download initiated by the `ExportControls` component. Files are not written to disk by the backend; they are streamed via the API response and downloaded by the browser. The header and footer export areas both show the SVG export size summary and use the same download button styling.
 
 ---
 

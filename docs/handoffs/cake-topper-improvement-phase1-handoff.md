@@ -69,7 +69,7 @@ This is documented in Section 17 of the updated feature specification and the QA
 
 | Change | Impact |
 |--------|--------|
-| Info banner added to Cake Topper UI | Visual only — a one-line notice now appears above the accordion cards informing the operator that visual overlap does not equal boolean union and LightBurn verification is required before cutting |
+| Passive cutting note added to Cake Topper UI | Visual only — the note appears below the preview, informs the operator that visual overlap does not equal boolean union, includes detected-line chips, and keeps LightBurn verification visible before cutting |
 | Documentation reworded | No code impact. "Laser-ready SVG without any manual vector editing" in US-01 replaced with "LightBurn-compatible composition SVG requiring operator validation before cutting" |
 
 ---
@@ -120,8 +120,8 @@ No new tests were added in Phase 1. Cake Topper-specific automated tests were sc
 Before committing, verify:
 
 1. The frontend builds without TypeScript errors: `npx tsc --noEmit` → exit 0.
-2. The info banner renders correctly in the Cake Topper tab — visible above the accordion cards, styled as a calm informational notice.
-3. The banner does not appear in the Overlap Engine tab or Text Generator tab.
+2. The cutting note renders correctly in the Cake Topper tab — visible below the preview, styled as calm passive information, with detected-line chips.
+3. The note does not appear in the Overlap Engine tab or Text Generator tab.
 4. All existing generation behaviour is unchanged — generate "Happy Birthday" and confirm the preview renders normally.
 5. The QA matrix document reads correctly and all links to referenced sections in the spec resolve.
 

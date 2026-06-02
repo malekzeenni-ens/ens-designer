@@ -142,11 +142,13 @@ Manual overrides take priority over heuristic classification. UI ordering respec
 
 The Designer tab now:
 
+- Uses matching header and footer export areas with the same SVG export size summary and download button styling.
 - Shows recommended font groups first in the base font selector.
 - Adds font search and category filtering.
 - Keeps every loaded font available through All Fonts A-Z.
 - Shows recommendation labels such as Top 20, Next Best 20, Script, Sans, and Use With Caution.
 - Uses the same recommendation-first ordering in per-line selectors.
+- Keeps Cake Topper default overlap shortcuts to Light, Auto, Medium, and Strong; precise edits still happen in the generated per-line gap controls.
 
 The Font Advisor tab shows:
 

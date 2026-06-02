@@ -41,7 +41,36 @@ The application:
 
 ---
 
-# Two Workflows
+# Current Workflow
+
+## Cake Topper Designer
+
+For laser-cut cake topper wording with multi-line composition, repo-local fonts,
+default letter overlap, draggable stakes, and SVG/PNG export.
+
+```text
+Top export banner: SVG export size  +  Reset / Download SVG / Download PNG
+    ↓
+Enter topper text  →  Search/filter fonts  →  Choose base font and size
+    ↓
+Choose default letter overlap  (Light / Auto / Medium / Strong)
+    ↓
+Choose stakes  (0 / 1 / 2)
+    ↓
+Generate design
+    ↓
+Layout controls  →  Per-line font, position, overlap, and floating-dot controls
+    ↓
+Bottom export banner: SVG export size  +  Download SVG / Download PNG
+```
+
+The top and bottom export areas use the same SVG export size summary and shared
+download button styling. The Designer tab also includes a passive cutting note
+with detected-line chips below the preview.
+
+---
+
+# Legacy Workflows
 
 ## Text Generator (Connectivity Engine)
 

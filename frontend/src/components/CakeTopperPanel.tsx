@@ -34,7 +34,6 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
   { value: "auto", label: "Auto", mm: 1.0 },
   { value: "medium", label: "Medium", mm: 1.5 },
   { value: "strong", label: "Strong", mm: 2.5 },
-  { value: "custom", label: "Custom", mm: null },
 ];
 
 const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
@@ -435,6 +434,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   }
 
   const meta = result?.metadata;
+  const exportSizeText = meta ? `${meta.canvas_width_mm}mm x ${meta.canvas_height_mm}mm` : "Ready";
 
   return (
     <div className="ct-panel">
@@ -451,7 +451,10 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           </div>
         </div>
         <div className="ct-header-actions">
-          <span>{meta ? "Ready to export" : "Create a design to export"}</span>
+          <div className="ct-export-summary">
+            <span>SVG export size</span>
+            <strong>{exportSizeText}</strong>
+          </div>
           <button
             type="button"
             className="ct-reset-action"
@@ -998,11 +1001,9 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       </div>
 
       <div className="ct-export-bar">
-        <div>
+        <div className="ct-export-summary">
           <span>SVG export size</span>
-          <strong>
-            {meta ? `${meta.canvas_width_mm}mm x ${meta.canvas_height_mm}mm` : "Ready"}
-          </strong>
+          <strong>{exportSizeText}</strong>
         </div>
         <ExportControls
           svg={result?.svg ?? null}
