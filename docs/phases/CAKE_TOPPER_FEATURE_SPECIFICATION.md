@@ -284,12 +284,12 @@ Current UI mode: Cake Topper-only. The older Text Generator and Overlap Engine w
 
 ```text
 +------------------------------------------------------------------------+
-| Brand header      SVG export size      Reset  Download SVG  Download PNG |
+| Brand header      Export status        Reset  Download SVG  Download PNG |
 +------------------------------+-----------------------------------------+
 | SVG Preview                  | v Create design                         |
 | Final cut size chip          |   Text, font search/filter, base font   |
 |                              |   Base size + Generate                  |
-| Cutting note                 |   Letter overlap: Light Auto Medium Strong |
+| Cutting note                 |   Letter overlap: Light Auto Medium Strong Custom |
 | Detected-line chips          |   Stakes: 0 / 1 / 2                     |
 |                              | v Layout                                |
 |                              |   Spacing between generated lines       |
@@ -300,9 +300,9 @@ Current UI mode: Cake Topper-only. The older Text Generator and Overlap Engine w
 +------------------------------------------------------------------------+
 ```
 
-The header and footer export areas both show the same SVG export size summary
-and use the same download button styling. The header additionally includes the
-reset action.
+The top header keeps the dark branded status/action design. The bottom export
+bar shows the SVG export size and uses the same dark action treatment for its
+download controls.
 
 ## 4.2 Line Accordion Card
 
@@ -891,7 +891,7 @@ Fonts are loaded from the project font directory by `backend/app/font_loader.py`
 
 ### Export and download
 
-SVG and PNG downloads use browser-based blob download initiated by the `ExportControls` component. Files are not written to disk by the backend; they are streamed via the API response and downloaded by the browser. The header and footer export areas both show the SVG export size summary and use the same download button styling.
+SVG and PNG downloads use browser-based blob download initiated by the `ExportControls` component. Files are not written to disk by the backend; they are streamed via the API response and downloaded by the browser. The top header keeps the export status action area, while the bottom export bar shows the SVG export size and uses the same dark action treatment for its download controls.
 
 ---
 

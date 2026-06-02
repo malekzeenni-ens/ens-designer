@@ -49,11 +49,11 @@ For laser-cut cake topper wording with multi-line composition, repo-local fonts,
 default letter overlap, draggable stakes, and SVG/PNG export.
 
 ```text
-Top export banner: SVG export size  +  Reset / Download SVG / Download PNG
+Top banner: export status  +  Reset / Download SVG / Download PNG
     ↓
 Enter topper text  →  Search/filter fonts  →  Choose base font and size
     ↓
-Choose default letter overlap  (Light / Auto / Medium / Strong)
+Choose default letter overlap  (Light / Auto / Medium / Strong / Custom)
     ↓
 Choose stakes  (0 / 1 / 2)
     ↓
@@ -64,9 +64,10 @@ Layout controls  →  Per-line font, position, overlap, and floating-dot control
 Bottom export banner: SVG export size  +  Download SVG / Download PNG
 ```
 
-The top and bottom export areas use the same SVG export size summary and shared
-download button styling. The Designer tab also includes a passive cutting note
-with detected-line chips below the preview.
+The top banner keeps the dark branded status/action design. The bottom export
+banner uses the same dark action styling while showing the SVG export size. The
+Designer tab also includes a passive cutting note with detected-line chips below
+the preview.
 
 ---
 

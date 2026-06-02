@@ -34,6 +34,7 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
   { value: "auto", label: "Auto", mm: 1.0 },
   { value: "medium", label: "Medium", mm: 1.5 },
   { value: "strong", label: "Strong", mm: 2.5 },
+  { value: "custom", label: "Custom", mm: null },
 ];
 
 const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
@@ -451,10 +452,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           </div>
         </div>
         <div className="ct-header-actions">
-          <div className="ct-export-summary">
-            <span>SVG export size</span>
-            <strong>{exportSizeText}</strong>
-          </div>
+          <span>{meta ? "Ready to export" : "Create a design to export"}</span>
           <button
             type="button"
             className="ct-reset-action"
