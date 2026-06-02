@@ -40,7 +40,7 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
 const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
 
 type GapState = { enabled: boolean; overlapMm: string };
-type InspectorSectionId = "create" | "detected" | "overlap" | "layout" | "stakes" | "lines";
+type InspectorSectionId = "create" | "layout" | "lines";
 type StakeCount = 0 | 1 | 2;
 type StakeOffsetState = { xMm: string; yMm: string };
 type FontFilterCategory = CakeTopperFontCategory | "all";
@@ -77,10 +77,7 @@ const FONT_FILTERS: { value: FontFilterCategory; label: string }[] = [
 
 const DEFAULT_OPEN_SECTIONS: Record<InspectorSectionId, boolean> = {
   create: true,
-  detected: true,
-  overlap: true,
   layout: true,
-  stakes: true,
   lines: true,
 };
 
@@ -515,11 +512,27 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           </div>
 
           <div className="ct-cutting-note" role="note">
-            <strong>Cutting note</strong>
-            <span>
-              This designer visually overlaps letters for composition. It does not permanently weld or
-              boolean-union the paths. Always open the SVG in LightBurn and verify before cutting.
-            </span>
+            <div className="ct-note-item">
+              <strong>Cutting note</strong>
+              <span>
+                This designer visually overlaps letters for composition. It does not permanently weld or
+                boolean-union the paths. Always open the SVG in LightBurn and verify before cutting.
+              </span>
+            </div>
+            <div className="ct-note-item">
+              <strong>Detected lines</strong>
+              {words.length > 0 ? (
+                <span className="ct-note-chips">
+                  {words.map((w, i) => (
+                    <span key={i} className={`ct-chip${selectedLine === i ? " ct-chip--active" : ""}`}>
+                      Line {i + 1}: {w}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span>Type at least one word to create a line.</span>
+              )}
+            </div>
           </div>
         </section>
 
@@ -606,47 +619,99 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                 {loading ? "Generating..." : "Generate design"}
               </button>
             </div>
-          </InspectorAccordion>
 
-          <InspectorAccordion
-            id="detected"
-            title="Detected lines"
-            description="Text splits into up to four editable lines."
-            open={openSections.detected}
-            onToggle={toggleInspectorSection}
-          >
-            {words.length > 0 ? (
-              <div className="ct-chips">
-                {words.map((w, i) => (
-                  <span key={i} className={`ct-chip${selectedLine === i ? " ct-chip--active" : ""}`}>
-                    Line {i + 1} · {w}
-                  </span>
+            <div className="ct-create-subsection">
+              <span className="ct-subsection-title">Default letter overlap</span>
+              <div className="ct-overlap-btns" role="group" aria-label="Default letter overlap">
+                {OVERLAP_MODES.map((m) => (
+                  <button
+                    key={m.value}
+                    type="button"
+                    className={`ct-overlap-btn${defaultOverlap === m.value ? " ct-overlap-btn--active" : ""}`}
+                    onClick={() => applyGlobalOverlap(m.value)}
+                  >
+                    <span>{m.label}</span>
+                    {m.mm != null && <small>{m.mm.toFixed(1)}mm</small>}
+                  </button>
                 ))}
               </div>
-            ) : (
-              <p className="ct-muted">Type at least one word to create a line.</p>
-            )}
-          </InspectorAccordion>
+            </div>
 
-          <InspectorAccordion
-            id="overlap"
-            title="Default letter overlap"
-            description="Applies a default overlap between neighbouring letters to help create a connected cut shape."
-            open={openSections.overlap}
-            onToggle={toggleInspectorSection}
-          >
-            <div className="ct-overlap-btns" role="group" aria-label="Default letter overlap">
-              {OVERLAP_MODES.map((m) => (
-                <button
-                  key={m.value}
-                  type="button"
-                  className={`ct-overlap-btn${defaultOverlap === m.value ? " ct-overlap-btn--active" : ""}`}
-                  onClick={() => applyGlobalOverlap(m.value)}
-                >
-                  <span>{m.label}</span>
-                  {m.mm != null && <small>{m.mm.toFixed(1)}mm</small>}
-                </button>
-              ))}
+            <div className="ct-create-subsection">
+              <span className="ct-subsection-title">Stakes</span>
+              <div className="ct-stake-count-btns" role="group" aria-label="Stake count">
+                {([0, 1, 2] as StakeCount[]).map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    className={`ct-stake-btn${stakeCount === count ? " ct-stake-btn--active" : ""}`}
+                    onClick={() => handleStakeCountChange(count)}
+                  >
+                    {count} {count === 1 ? "stake" : "stakes"}
+                  </button>
+                ))}
+              </div>
+              <div className="ct-stake-summary">
+                <span>Width {DEFAULT_STAKE_WIDTH}mm</span>
+                <span>Length {DEFAULT_STAKE_LENGTH}mm</span>
+                <span>Top overlap {DEFAULT_STAKE_OVERLAP}mm</span>
+              </div>
+              {stakeCount > 0 && (
+                <div className="ct-stake-offset-list">
+                  {Array.from({ length: stakeCount }, (_, index) => {
+                    const offset = stakeOffsets[index] ?? { xMm: "0", yMm: "0" };
+                    return (
+                      <div key={index} className="ct-stake-offset-row">
+                        <span>Stake {index + 1}</span>
+                        <span className="ct-unit-input ct-unit-input--compact">
+                          <input
+                            type="number"
+                            min="-500"
+                            max="500"
+                            step="0.5"
+                            value={offset.xMm}
+                            aria-label={`Stake ${index + 1} X offset`}
+                            onChange={(e) => {
+                              const nextOffsets = Array.from({ length: stakeCount }, (_, i) => (
+                                i === index
+                                  ? { ...(stakeOffsets[i] ?? { xMm: "0", yMm: "0" }), xMm: e.target.value }
+                                  : stakeOffsets[i] ?? { xMm: "0", yMm: "0" }
+                              ));
+                              setStakeOffsets(nextOffsets);
+                              if (!isNaN(parseFloat(e.target.value))) {
+                                callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+                              }
+                            }}
+                          />
+                          <span>X</span>
+                        </span>
+                        <span className="ct-unit-input ct-unit-input--compact">
+                          <input
+                            type="number"
+                            min="-500"
+                            max="500"
+                            step="0.5"
+                            value={offset.yMm}
+                            aria-label={`Stake ${index + 1} Y offset`}
+                            onChange={(e) => {
+                              const nextOffsets = Array.from({ length: stakeCount }, (_, i) => (
+                                i === index
+                                  ? { ...(stakeOffsets[i] ?? { xMm: "0", yMm: "0" }), yMm: e.target.value }
+                                  : stakeOffsets[i] ?? { xMm: "0", yMm: "0" }
+                              ));
+                              setStakeOffsets(nextOffsets);
+                              if (!isNaN(parseFloat(e.target.value))) {
+                                callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+                              }
+                            }}
+                          />
+                          <span>Y</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </InspectorAccordion>
 
@@ -695,88 +760,6 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
               </div>
             ) : (
               <p className="ct-muted">Generate two or more lines to adjust line spacing.</p>
-            )}
-          </InspectorAccordion>
-
-          <InspectorAccordion
-            id="stakes"
-            title="Stakes"
-            description="Add draggable 3mm x 50mm cake stakes with flat tops and rounded points."
-            open={openSections.stakes}
-            onToggle={toggleInspectorSection}
-          >
-            <div className="ct-stake-count-btns" role="group" aria-label="Stake count">
-              {([0, 1, 2] as StakeCount[]).map((count) => (
-                <button
-                  key={count}
-                  type="button"
-                  className={`ct-stake-btn${stakeCount === count ? " ct-stake-btn--active" : ""}`}
-                  onClick={() => handleStakeCountChange(count)}
-                >
-                  {count} {count === 1 ? "stake" : "stakes"}
-                </button>
-              ))}
-            </div>
-            <div className="ct-stake-summary">
-              <span>Width {DEFAULT_STAKE_WIDTH}mm</span>
-              <span>Length {DEFAULT_STAKE_LENGTH}mm</span>
-              <span>Top overlap {DEFAULT_STAKE_OVERLAP}mm</span>
-            </div>
-            {stakeCount > 0 && (
-              <div className="ct-stake-offset-list">
-                {Array.from({ length: stakeCount }, (_, index) => {
-                  const offset = stakeOffsets[index] ?? { xMm: "0", yMm: "0" };
-                  return (
-                    <div key={index} className="ct-stake-offset-row">
-                      <span>Stake {index + 1}</span>
-                      <span className="ct-unit-input ct-unit-input--compact">
-                        <input
-                          type="number"
-                          min="-500"
-                          max="500"
-                          step="0.5"
-                          value={offset.xMm}
-                          aria-label={`Stake ${index + 1} X offset`}
-                          onChange={(e) => {
-                            const nextOffsets = Array.from({ length: stakeCount }, (_, i) => (
-                              i === index
-                                ? { ...(stakeOffsets[i] ?? { xMm: "0", yMm: "0" }), xMm: e.target.value }
-                                : stakeOffsets[i] ?? { xMm: "0", yMm: "0" }
-                            ));
-                            setStakeOffsets(nextOffsets);
-                            if (!isNaN(parseFloat(e.target.value))) {
-                              callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
-                            }
-                          }}
-                        />
-                        <span>X</span>
-                      </span>
-                      <span className="ct-unit-input ct-unit-input--compact">
-                        <input
-                          type="number"
-                          min="-500"
-                          max="500"
-                          step="0.5"
-                          value={offset.yMm}
-                          aria-label={`Stake ${index + 1} Y offset`}
-                          onChange={(e) => {
-                            const nextOffsets = Array.from({ length: stakeCount }, (_, i) => (
-                              i === index
-                                ? { ...(stakeOffsets[i] ?? { xMm: "0", yMm: "0" }), yMm: e.target.value }
-                                : stakeOffsets[i] ?? { xMm: "0", yMm: "0" }
-                            ));
-                            setStakeOffsets(nextOffsets);
-                            if (!isNaN(parseFloat(e.target.value))) {
-                              callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
-                            }
-                          }}
-                        />
-                        <span>Y</span>
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
             )}
           </InspectorAccordion>
 
