@@ -1474,3 +1474,185 @@ h2 {
     min-height: 360px;
   }
 }
+
+/* ============================================================
+   Fonts tab
+   ============================================================ */
+
+.fonts-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.fonts-upload-card,
+.fonts-library-card {
+  border: 1px solid var(--ens-line);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 12px 30px rgba(7, 19, 30, 0.07);
+  padding: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.fonts-upload-heading {
+  margin: 0;
+  color: var(--ens-navy);
+  font-size: 0.94rem;
+  font-weight: 850;
+}
+
+.fonts-upload-sub {
+  margin: 0;
+  color: var(--ens-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.fonts-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 140px;
+  padding: 28px 20px;
+  border: 2px dashed var(--ens-line);
+  border-radius: 10px;
+  background: #fdfaf5;
+  color: var(--ens-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+
+.fonts-drop-zone:hover,
+.fonts-drop-zone--active {
+  border-color: var(--ens-blue);
+  background: #f0f6ff;
+  color: var(--ens-blue);
+}
+
+.fonts-drop-zone p {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 850;
+  color: var(--ens-navy);
+}
+
+.fonts-drop-zone span {
+  font-size: 0.8rem;
+  color: var(--ens-muted);
+}
+
+.fonts-drop-zone svg {
+  color: var(--ens-blue);
+  opacity: 0.7;
+}
+
+.fonts-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+/* Status banners */
+.fonts-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.fonts-status--uploading {
+  background: #f0f6ff;
+  border: 1px solid rgba(76, 100, 124, 0.3);
+  color: var(--ens-blue);
+}
+
+.fonts-status--success {
+  background: #f0faf4;
+  border: 1px solid rgba(39, 143, 85, 0.35);
+  color: #1a6b3c;
+}
+
+.fonts-status--duplicate {
+  background: #fff8eb;
+  border: 1px solid rgba(200, 121, 65, 0.4);
+  color: #7a4010;
+}
+
+.fonts-status--error {
+  background: #fff4f2;
+  border: 1px solid rgba(192, 57, 43, 0.35);
+  color: #922b21;
+}
+
+.fonts-status svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.fonts-spinner {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(76, 100, 124, 0.25);
+  border-top-color: var(--ens-blue);
+  border-radius: 50%;
+  animation: fonts-spin 0.7s linear infinite;
+  margin-top: 2px;
+}
+
+@keyframes fonts-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.fonts-empty {
+  margin: 0;
+  padding: 20px 0;
+  color: var(--ens-muted);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+/* Risk level badges */
+.fonts-risk {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.fonts-risk--low {
+  background: #f0faf4;
+  color: #1a6b3c;
+}
+
+.fonts-risk--medium {
+  background: #fff8eb;
+  color: #7a4010;
+}
+
+.fonts-risk--high {
+  background: #fff4f2;
+  color: #922b21;
+}
+
+/* Font Adviser — empty note */
+.fa-empty-note {
+  margin: 0;
+  color: var(--ens-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+}

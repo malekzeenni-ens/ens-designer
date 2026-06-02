@@ -15,6 +15,7 @@ import type { FontInfo } from "../types/design";
 
 interface FontAdvisorPanelProps {
   fonts: FontInfo[];
+  uploadedFonts: FontInfo[];
 }
 
 function Accordion({
@@ -117,7 +118,7 @@ function CategorySection({
   );
 }
 
-export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
+export function FontAdvisorPanel({ fonts, uploadedFonts }: FontAdvisorPanelProps) {
   const topFonts = getRankedFonts(fonts, "top_10");
   const nextFonts = getRankedFonts(fonts, "next_best_10");
   const cautionFonts = getFontsByCategory(fonts, "use_with_caution").slice(0, 16);
@@ -286,6 +287,63 @@ export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
             </div>
           </div>
         </div>
+      </Accordion>
+
+      {/* Manually uploaded fonts */}
+      <Accordion
+        title="Manually Uploaded Fonts"
+        badge={uploadedFonts.length || undefined}
+        defaultOpen={uploadedFonts.length > 0}
+      >
+        {uploadedFonts.length === 0 ? (
+          <p className="fa-empty-note">
+            No fonts uploaded yet. Use the <strong>Fonts</strong> tab to upload a .ttf or .otf file.
+          </p>
+        ) : (
+          <>
+            <p className="fa-empty-note">
+              These fonts were added via the Fonts tab. They appear in the Designer and category
+              sections automatically. Add a manual override in{" "}
+              <code>cakeTopperFontRecommendations.ts</code> to promote a font into the Top 20 after
+              test-cutting it.
+            </p>
+            <div className="font-table-wrap">
+              <table className="font-table">
+                <thead>
+                  <tr>
+                    <th>Font Name</th>
+                    <th>Type</th>
+                    <th>Score</th>
+                    <th>Category</th>
+                    <th>Risk</th>
+                    <th>Why It Works</th>
+                    <th>Risk Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {uploadedFonts.map((font) => {
+                    const c = getFontClassification(font);
+                    return (
+                      <tr key={font.id}>
+                        <td>{font.full_name}</td>
+                        <td>{FONT_TYPE_LABELS[c.type]}</td>
+                        <td>{c.score}</td>
+                        <td>{c.category.replace(/_/g, " ")}</td>
+                        <td>
+                          <span className={`fonts-risk fonts-risk--${c.riskLevel}`}>
+                            {c.riskLevel}
+                          </span>
+                        </td>
+                        <td>{c.whyItWorks}</td>
+                        <td>{c.riskNotes}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </Accordion>
 
       {/* Production notes */}

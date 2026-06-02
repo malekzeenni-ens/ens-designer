@@ -5,6 +5,7 @@ import type {
   CakeTopperStakeConfig,
   FloatingComponentOffset,
   FontInfo,
+  FontUploadResponse,
   GenerateResponse,
   MaterialProfile,
   OverlapGapConfig,
@@ -45,6 +46,20 @@ async function _readError(response: Response, fallback: string): Promise<never> 
 export async function fetchFonts(): Promise<FontInfo[]> {
   const r = await fetch("/api/fonts");
   if (!r.ok) throw new Error("Could not load fonts. Is the backend running?");
+  return r.json();
+}
+
+export async function fetchUploadedFonts(): Promise<FontInfo[]> {
+  const r = await fetch("/api/fonts/uploaded");
+  if (!r.ok) throw new Error("Could not load uploaded fonts.");
+  return r.json();
+}
+
+export async function uploadFont(file: File): Promise<FontUploadResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  const r = await fetch("/api/fonts/upload", { method: "POST", body: form });
+  if (!r.ok) return _readError(r, "Upload failed — please try again.");
   return r.json();
 }
 

@@ -126,6 +126,13 @@ export interface FontInfo {
   source: "project" | "system";
 }
 
+export interface FontUploadResponse {
+  success: boolean;
+  message: string;
+  font: FontInfo | null;
+  is_duplicate: boolean;
+}
+
 export interface MaterialProfile {
   material_id: string;
   material_name: string;

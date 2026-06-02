@@ -1,22 +1,32 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { CakeTopperPanel } from "./components/CakeTopperPanel";
 import { FontAdvisorPanel } from "./components/FontAdvisorPanel";
-import { fetchFonts } from "./services/generationApi";
+import { FontsPanel } from "./components/FontsPanel";
+import { fetchFonts, fetchUploadedFonts } from "./services/generationApi";
 import type { FontInfo } from "./types/design";
 
-type WorkspaceTab = "designer" | "advisor";
+type WorkspaceTab = "designer" | "advisor" | "fonts";
 
 export function App() {
   const [fonts, setFonts] = useState<FontInfo[]>([]);
+  const [uploadedFonts, setUploadedFonts] = useState<FontInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("designer");
 
-  useEffect(() => {
-    fetchFonts()
-      .then(setFonts)
-      .catch((caught: Error) => setError(caught.message));
+  const reloadFonts = useCallback(async () => {
+    try {
+      const [all, uploaded] = await Promise.all([fetchFonts(), fetchUploadedFonts()]);
+      setFonts(all);
+      setUploadedFonts(uploaded);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "Could not load fonts.");
+    }
   }, []);
+
+  useEffect(() => {
+    reloadFonts();
+  }, [reloadFonts]);
 
   return (
     <main className="app-shell">
@@ -40,11 +50,20 @@ export function App() {
               >
                 Font Advisor
               </button>
+              <button
+                type="button"
+                className={activeTab === "fonts" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
+                onClick={() => setActiveTab("fonts")}
+              >
+                Fonts
+              </button>
             </nav>
-            {activeTab === "designer" ? (
-              <CakeTopperPanel fonts={fonts} />
-            ) : (
-              <FontAdvisorPanel fonts={fonts} />
+            {activeTab === "designer" && <CakeTopperPanel fonts={fonts} />}
+            {activeTab === "advisor" && (
+              <FontAdvisorPanel fonts={fonts} uploadedFonts={uploadedFonts} />
+            )}
+            {activeTab === "fonts" && (
+              <FontsPanel uploadedFonts={uploadedFonts} onUploadComplete={reloadFonts} />
             )}
           </>
         )}

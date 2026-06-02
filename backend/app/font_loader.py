@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from fontTools.ttLib import TTFont
 from .models import FontInfo
 
 FONT_EXTENSIONS = {".ttf", ".otf"}
+UPLOAD_MANIFEST = ".uploaded_manifest.json"
 
 
 @dataclass(frozen=True)
@@ -56,6 +58,41 @@ class FontCatalog:
 
         self._records = dict(sorted(records.items(), key=lambda item: item[1].info.full_name.lower()))
         return self._records
+
+    def add_font(self, path: Path) -> FontRecord | None:
+        """Hot-add a font to the live catalog without restarting.
+
+        Returns the new FontRecord on success, or None if the font is a duplicate
+        (matched by full_name + style) or cannot be read.
+        """
+        records = self._scan()
+        record = self._read_font("project", path)
+        if record is None:
+            return None
+        if _font_key(record.info) in {_font_key(r.info) for r in records.values()}:
+            return None  # duplicate
+        records[record.info.id] = record
+        self._records = dict(sorted(records.items(), key=lambda item: item[1].info.full_name.lower()))
+        return record
+
+    def get_uploaded_font_ids(self) -> list[str]:
+        """Return font IDs recorded in the upload manifest."""
+        manifest_path = self.project_root / "fonts" / UPLOAD_MANIFEST
+        if not manifest_path.exists():
+            return []
+        try:
+            data = json.loads(manifest_path.read_text(encoding="utf-8"))
+            return data.get("uploaded", [])
+        except Exception:
+            return []
+
+    def record_upload(self, font_id: str) -> None:
+        """Persist a font ID to the upload manifest."""
+        manifest_path = self.project_root / "fonts" / UPLOAD_MANIFEST
+        ids = self.get_uploaded_font_ids()
+        if font_id not in ids:
+            ids.append(font_id)
+        manifest_path.write_text(json.dumps({"uploaded": ids}, indent=2), encoding="utf-8")
 
     def _font_directories(self) -> list[tuple[str, Path]]:
         directories: list[tuple[str, Path]] = [("project", self.project_root / "fonts")]

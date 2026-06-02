@@ -13,6 +13,13 @@ class FontInfo(BaseModel):
     source: Literal["project", "system"]
 
 
+class FontUploadResponse(BaseModel):
+    success: bool
+    message: str
+    font: FontInfo | None = None
+    is_duplicate: bool = False
+
+
 class BridgeOverride(BaseModel):
     pair_index: int = Field(ge=0, description="Zero-based index of the inter-glyph gap to override.")
     action: Literal["add", "remove", "set_width"]
