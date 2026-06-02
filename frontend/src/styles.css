@@ -1239,6 +1239,116 @@ h2 {
   line-height: 1.5;
 }
 
+/* Font Adviser — accordion */
+.fa-accordion {
+  border: 1px solid var(--ens-line);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 12px 30px rgba(7, 19, 30, 0.07);
+  overflow: hidden;
+}
+
+.fa-accordion--warning {
+  border-color: rgba(200, 121, 65, 0.45);
+}
+
+.fa-accordion--danger {
+  border-color: rgba(192, 57, 43, 0.45);
+}
+
+.fa-accordion-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.fa-accordion-trigger:hover {
+  background: rgba(221, 191, 147, 0.1);
+}
+
+.fa-accordion-title {
+  flex: 1 1 auto;
+  color: var(--ens-navy);
+  font-size: 0.94rem;
+  font-weight: 850;
+}
+
+.fa-accordion-badge {
+  flex: 0 0 auto;
+  color: var(--ens-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.fa-accordion-trigger svg {
+  flex: 0 0 auto;
+  color: var(--ens-muted);
+}
+
+.fa-accordion-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+/* Stats inside dark header */
+.fa-header-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.fa-header-stats span {
+  display: grid;
+  gap: 3px;
+  min-height: 60px;
+  align-content: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(221, 191, 147, 0.42);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(244, 229, 203, 0.7);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.fa-header-stats strong {
+  color: var(--ens-gold);
+  font-size: 1.3rem;
+}
+
+/* Production note inside accordion */
+.fa-production-note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff8eb;
+}
+
+.fa-production-note svg {
+  flex: 0 0 auto;
+  color: #7a4010;
+}
+
+.fa-production-note p {
+  margin: 0;
+  color: var(--ens-warm-olive);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 1060px) {
   .ct-workspace {
     grid-template-columns: 1fr;
@@ -1286,9 +1396,9 @@ h2 {
     grid-template-columns: 1fr;
   }
 
-  .font-advisor-hero,
   .font-advisor-grid,
-  .font-score-cards {
+  .font-score-cards,
+  .fa-header-stats {
     grid-template-columns: 1fr;
   }
 
