@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  cacheDir: "../.vite-cache/frontend",
+  cacheDir: "C:/Users/malek/AppData/Local/Temp/vite-cache/ens-designer",
   plugins: [react()],
   server: {
     port: 5173,

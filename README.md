@@ -139,9 +139,13 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-Vite stores its optimized dependency cache in `.vite-cache/frontend` instead of
-`frontend/node_modules/.vite`. This avoids Windows/Dropbox file-locking issues
+Vite stores its optimized dependency cache in `C:/Users/malek/AppData/Local/Temp/vite-cache/ens-designer`
+(outside the Dropbox directory). This avoids Windows/Dropbox file-locking (`EBUSY`) issues
 that can otherwise cause `504 (Outdated Optimize Dep)` errors for React chunks.
+The path is set via `cacheDir` in `frontend/vite.config.ts`.
+
+> **Note for agents:** If the Vite cache causes lock errors, delete the cache folder at
+> `C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer` and restart the frontend.
 
 ## Open in browser
 

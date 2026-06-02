@@ -91,6 +91,31 @@ Optimise for maintainability.
 
 ---
 
+# Local Development Server Commands
+
+Use these exact commands to start the application locally. Do not guess or vary the module paths.
+
+## Backend
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+The module path is `app.main:app` — NOT `main:app`. The `main.py` file lives inside `backend/app/`, not directly in `backend/`.
+
+## Frontend
+
+```powershell
+cd frontend
+npm.cmd run dev
+```
+
+Vite cache is stored at `C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer` (outside Dropbox).
+If Vite shows `EBUSY` or `504 Outdated Optimize Dep` errors, delete that folder and restart.
+
+---
+
 # Mandatory Development Workflow
 
 For every phase:

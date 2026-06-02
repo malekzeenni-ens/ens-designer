@@ -140,15 +140,18 @@ frontend/
 ```text
 backend/
 │
-├── api/
-├── services/
-├── engines/
-├── models/
-├── validators/
-├── exports/
-├── tests/
-└── utils/
+├── app/                  ← all Python source lives here
+│   ├── main.py           ← FastAPI application entry point
+│   ├── models.py
+│   ├── api/
+│   ├── *_engine.py
+│   └── ...
+└── requirements.txt
 ```
+
+> **Important:** `main.py` is at `backend/app/main.py`. The correct uvicorn command is:
+> `python -m uvicorn app.main:app --reload` (run from the `backend/` directory).
+> Using `main:app` instead of `app.main:app` will cause an "Error loading ASGI app" failure.
 
 ---
 
