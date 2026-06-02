@@ -124,27 +124,51 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 ```
 
-## Start the backend
+## Start the servers (background — no terminal windows)
+
+Both servers must always be started as hidden background processes. Run this block from the repo root:
 
 ```powershell
-cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+$root = "C:\Users\malek\Dropbox\_Etch_n_Shine\AI-Custom-Apps\EnS Designer"
+New-Item -ItemType Directory -Force "$root\logs" | Out-Null
+
+# Backend
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\backend'; ..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 *> '$root\logs\backend.log'"
+
+# Frontend
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\frontend'; npm.cmd run dev *> '$root\logs\frontend.log'"
 ```
 
-## Install and start the frontend
+Logs are written to `logs\backend.log` and `logs\frontend.log`. Check them to verify startup:
+
+```powershell
+Get-Content logs\backend.log -Tail 10
+Get-Content logs\frontend.log -Tail 10
+```
+
+Expected output when healthy:
+- Backend: `INFO: Application startup complete.`
+- Frontend: `VITE v8.x.x  ready in Xms`
+
+## Stop the servers
+
+```powershell
+Stop-Process -Name "python","node" -Force -ErrorAction SilentlyContinue
+```
+
+## Install frontend dependencies (first time only)
 
 ```powershell
 cd frontend
 npm.cmd install
-npm.cmd run dev
 ```
 
-Vite stores its optimized dependency cache in `C:/Users/malek/AppData/Local/Temp/vite-cache/ens-designer`
-(outside the Dropbox directory). This avoids Windows/Dropbox file-locking (`EBUSY`) issues
-that can otherwise cause `504 (Outdated Optimize Dep)` errors for React chunks.
-The path is set via `cacheDir` in `frontend/vite.config.ts`.
+## Vite cache
 
-> **Note for agents:** If the Vite cache causes lock errors, delete the cache folder at
+Vite stores its optimized dependency cache at `C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer`
+(outside Dropbox). This prevents Windows/Dropbox file-locking (`EBUSY`) errors.
+
+> **If Vite shows `EBUSY` or `504 Outdated Optimize Dep`:** delete
 > `C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer` and restart the frontend.
 
 ## Open in browser
