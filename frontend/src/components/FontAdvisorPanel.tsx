@@ -185,21 +185,15 @@ export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
         </div>
       </Accordion>
 
-      {/* Font ranking tables */}
-      <Accordion title="Top 20 Cake Topper Fonts" badge={topFonts.length} defaultOpen={true}>
-        <FontTable fonts={topFonts} />
-      </Accordion>
-
-      <Accordion title="Next Best 20 Fonts" badge={nextFonts.length} defaultOpen={false}>
-        <FontTable fonts={nextFonts} />
-      </Accordion>
-
-      {/* Category previews */}
+      {/* Font ranking tables — side by side */}
       <div className="font-advisor-grid">
-        <CategoryPreview title="Best Script Fonts" category="script" fonts={fonts} />
-        <CategoryPreview title="Best Serif Fonts" category="serif" fonts={fonts} />
-        <CategoryPreview title="Best Sans-serif Fonts" category="sans_serif" fonts={fonts} />
-        <CategoryPreview title="Supporting Text Fonts" category="supporting_text" fonts={fonts} />
+        <Accordion title="Top 20 Cake Topper Fonts" badge={topFonts.length} defaultOpen={true}>
+          <FontTable fonts={topFonts} />
+        </Accordion>
+
+        <Accordion title="Next Best 20 Fonts" badge={nextFonts.length} defaultOpen={false}>
+          <FontTable fonts={nextFonts} />
+        </Accordion>
       </div>
 
       {/* Font pairings */}
@@ -233,6 +227,14 @@ export function FontAdvisorPanel({ fonts }: FontAdvisorPanelProps) {
           </table>
         </div>
       </Accordion>
+
+      {/* Category previews */}
+      <div className="font-advisor-grid">
+        <CategoryPreview title="Best Script Fonts" category="script" fonts={fonts} />
+        <CategoryPreview title="Best Serif Fonts" category="serif" fonts={fonts} />
+        <CategoryPreview title="Best Sans-serif Fonts" category="sans_serif" fonts={fonts} />
+        <CategoryPreview title="Supporting Text Fonts" category="supporting_text" fonts={fonts} />
+      </div>
 
       {/* Caution / Not recommended */}
       <div className="font-advisor-grid">
