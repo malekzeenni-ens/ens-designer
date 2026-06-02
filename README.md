@@ -53,7 +53,7 @@ Top banner: export status  +  Reset / Download SVG / Download PNG
     ↓
 Enter topper text  →  Search/filter fonts  →  Choose base font and size
     ↓
-Choose default letter overlap  (Light / Auto / Medium / Strong / Custom)
+Choose default letter overlap  (Light / Auto / Medium / Strong)
     ↓
 Choose stakes  (0 / 1 / 2)
     ↓

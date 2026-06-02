@@ -148,7 +148,7 @@ The Designer tab now:
 - Keeps every loaded font available through All Fonts A-Z.
 - Shows recommendation labels such as Top 20, Next Best 20, Script, Sans, and Use With Caution.
 - Uses the same recommendation-first ordering in per-line selectors.
-- Keeps Cake Topper default overlap shortcuts to Light, Auto, Medium, Strong, and Custom; precise edits still happen in the generated per-line gap controls.
+- Keeps Cake Topper default overlap shortcuts to Light, Auto, Medium, and Strong; precise edits still happen in the generated per-line gap controls.
 
 The Font Advisor tab shows:
 

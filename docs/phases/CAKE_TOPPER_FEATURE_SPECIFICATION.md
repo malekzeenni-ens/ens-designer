@@ -289,7 +289,7 @@ Current UI mode: Cake Topper-only. The older Text Generator and Overlap Engine w
 | SVG Preview                  | v Create design                         |
 | Final cut size chip          |   Text, font search/filter, base font   |
 |                              |   Base size + Generate                  |
-| Cutting note                 |   Letter overlap: Light Auto Medium Strong Custom |
+| Cutting note                 |   Letter overlap: Light Auto Medium Strong |
 | Detected-line chips          |   Stakes: 0 / 1 / 2                     |
 |                              | v Layout                                |
 |                              |   Spacing between generated lines       |
