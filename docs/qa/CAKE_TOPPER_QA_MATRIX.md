@@ -215,3 +215,23 @@ Current automated Cake Topper coverage lives in `tests/test_cake_topper.py`, inc
 | Current automated suite | 169 passed, 2 skipped as of Cake Topper manual offset implementation |
 | CairoSVG / PNG validation | Blocked — libcairo-2.dll not installed on current machine |
 | Preview drag validation | User-confirmed working on 2026-06-01; keep D-series manual checks for regressions |
+| Per-line colour / combined outline | User-confirmed working in browser on 2026-06-07; see §14 (CO-series) |
+
+---
+
+## 14. Per-Line Colour and Combined Outline (Offset)
+
+Added 2026-06-07 alongside the per-line colour palette and combined outline/offset feature (see `docs/phases/CAKE_TOPPER_FEATURE_SPECIFICATION.md` §19 for the full spec).
+
+| ID | Test Area | Scenario | Expected Result | Priority | Method |
+|----|-----------|----------|-----------------|----------|--------|
+| CO-01 | Per-line colour assignment | Set Line 1 to Red, Line 2 to Blue | `metadata.lines[0].color == "#FF0000"`, `metadata.lines[1].color == "#0000FF"`; SVG contains matching `fill="#RRGGBB"` for each line's paths | P0 | Automated + Manual |
+| CO-02 | Default colour | Generate without changing colour | Each line defaults to `#000000` (black) | P1 | Automated |
+| CO-03 | Colour palette completeness | Open the colour swatch picker on a line | All 10 palette colours are present and selectable: Black, Red, Blue, Green, Yellow, Pink, Gold, Silver, Purple, Lilac | P1 | Manual |
+| CO-04 | Outline disabled by default | Generate without enabling the outline | `metadata.outline == null`; no `OUTLINE-` paths in SVG | P0 | Automated |
+| CO-05 | Outline enabled — silhouette generated | Enable outline, set width 5mm, colour Gold | `metadata.outline == { width_mm: 5.0, color: "#FFD700" }`; SVG contains `OUTLINE-…` paths with `fill="#FFD700"` | P0 | Automated + Manual |
+| CO-06 | Outline render order | Enable outline | `OUTLINE-…` paths appear before all `L*-…`/`S*-…` paths in the SVG markup (rendered behind text and stakes) | P0 | Automated |
+| CO-07 | Outline scope — text lines only | Enable outline with stakes also enabled | Outline silhouette unions only the text-line geometry; stake position/geometry is unchanged from the no-outline case | P1 | Manual |
+| CO-08 | Outline width control | Change outline width from 3mm to 10mm | Silhouette grows proportionally; canvas dimensions expand (and re-base) to avoid clipping | P1 | Manual |
+| CO-09 | Outline colour control | Change outline colour via the swatch picker | Regenerated SVG/PNG reflects the new `fill` colour on `OUTLINE-…` paths | P1 | Manual |
+| CO-10 | Toggle outline off | Disable a previously-enabled outline | `metadata.outline` returns to `null`; `OUTLINE-…` paths removed from SVG; canvas re-fits to the smaller bounds | P0 | Automated |

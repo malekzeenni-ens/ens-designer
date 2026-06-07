@@ -833,6 +833,48 @@ h2 {
   color: var(--ens-navy);
 }
 
+.ct-color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.ct-color-swatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 2px solid var(--ens-line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ct-color-swatch:hover {
+  transform: scale(1.08);
+}
+
+.ct-color-swatch--active {
+  border-color: var(--ens-navy);
+  box-shadow: 0 0 0 2px rgba(15, 35, 64, 0.18);
+}
+
+.ct-outline-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ens-navy);
+  font-size: 0.84rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.ct-outline-toggle input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--ens-navy);
+  cursor: pointer;
+}
+
 .ct-gap-pills {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));

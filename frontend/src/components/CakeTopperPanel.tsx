@@ -15,6 +15,7 @@ import {
 } from "../config/cakeTopperFontRecommendations";
 import type { CakeTopperFontCategory } from "../config/cakeTopperFontRecommendations";
 import { generateCakeTopper } from "../services/generationApi";
+import type { CakeTopperOutlineRequest } from "../services/generationApi";
 import type {
   AlignmentMode,
   CakeTopperLineConfig,
@@ -38,6 +39,21 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
 
 const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
 
+export const COLOR_PALETTE: { name: string; hex: string }[] = [
+  { name: "Black", hex: "#000000" },
+  { name: "Red", hex: "#FF0000" },
+  { name: "Blue", hex: "#0000FF" },
+  { name: "Green", hex: "#008000" },
+  { name: "Yellow", hex: "#FFFF00" },
+  { name: "Pink", hex: "#FF69B4" },
+  { name: "Gold", hex: "#FFD700" },
+  { name: "Silver", hex: "#C0C0C0" },
+  { name: "Purple", hex: "#800080" },
+  { name: "Lilac", hex: "#C8A2C8" },
+];
+const DEFAULT_COLOR = COLOR_PALETTE[0].hex;
+const DEFAULT_OUTLINE_WIDTH_MM = "3";
+
 type GapState = { enabled: boolean; overlapMm: string };
 type InspectorSectionId = "create" | "layout" | "lines";
 type StakeCount = 0 | 1 | 2;
@@ -54,6 +70,7 @@ type LineState = {
   floatingOffsets: FloatingOffsetMap;
   manualXOffsetMm: string;
   manualYOffsetMm: string;
+  color: string;
   expanded: boolean;
 };
 
@@ -102,6 +119,7 @@ function initLine(fontId: string, overlapMm: string, numGaps: number): LineState
     floatingOffsets: {},
     manualXOffsetMm: "0",
     manualYOffsetMm: "0",
+    color: DEFAULT_COLOR,
     expanded: true,
   };
 }
@@ -192,6 +210,9 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [stakeCount, setStakeCount] = useState<StakeCount>(0);
   const [stakeOffsets, setStakeOffsets] = useState<StakeOffsetState[]>([]);
   const [selectedStake, setSelectedStake] = useState<number | null>(null);
+  const [outlineEnabled, setOutlineEnabled] = useState(false);
+  const [outlineWidthMm, setOutlineWidthMm] = useState(DEFAULT_OUTLINE_WIDTH_MM);
+  const [outlineColor, setOutlineColor] = useState(DEFAULT_COLOR);
   const [openSections, setOpenSections] =
     useState<Record<InspectorSectionId, boolean>>(DEFAULT_OPEN_SECTIONS);
 
@@ -240,6 +261,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       floating_offsets: toFloatingOffsets(s.floatingOffsets),
       manual_x_offset_mm: parseFloat(s.manualXOffsetMm) || 0,
       manual_y_offset_mm: parseFloat(s.manualYOffsetMm) || 0,
+      color: s.color || DEFAULT_COLOR,
     }));
   }
 
@@ -262,6 +284,11 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     gaps: string[],
     count: StakeCount = stakeCount,
     offsets: StakeOffsetState[] = stakeOffsets,
+    outline: CakeTopperOutlineRequest = {
+      enabled: outlineEnabled,
+      widthMm: parseFloat(outlineWidthMm) || 3,
+      color: outlineColor,
+    },
   ) {
     const n = words.length;
     const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
@@ -280,6 +307,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         configs,
         gapValues,
         buildStakeConfig(count, offsets),
+        outline,
       );
       setResult(r);
       if (states.length === 0) {
@@ -398,6 +426,35 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     setSelectedLine(null);
     setSelectedStake(stakeIndex);
     callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+  }
+
+  function toggleOutline(enabled: boolean) {
+    setOutlineEnabled(enabled);
+    callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, {
+      enabled,
+      widthMm: parseFloat(outlineWidthMm) || 3,
+      color: outlineColor,
+    });
+  }
+
+  function setOutlineWidth(value: string) {
+    setOutlineWidthMm(value);
+    if (!isNaN(parseFloat(value))) {
+      callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, {
+        enabled: outlineEnabled,
+        widthMm: parseFloat(value) || 3,
+        color: outlineColor,
+      });
+    }
+  }
+
+  function setOutlineColorAndRegenerate(hex: string) {
+    setOutlineColor(hex);
+    callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, {
+      enabled: outlineEnabled,
+      widthMm: parseFloat(outlineWidthMm) || 3,
+      color: hex,
+    });
   }
 
   function selectLine(lineIndex: number) {
@@ -761,6 +818,56 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
             ) : (
               <p className="ct-muted">Generate two or more lines to adjust line spacing.</p>
             )}
+
+            <div className="ct-position-section">
+              <div className="ct-subsection-copy">
+                <span className="ct-subsection-title">Combined outline / offset</span>
+                <p>
+                  Union all lines into a single silhouette and grow it outward by a fixed width —
+                  useful as a backing plate or as an offset cut path for your laser.
+                </p>
+              </div>
+              <label className="ct-outline-toggle">
+                <input
+                  type="checkbox"
+                  checked={outlineEnabled}
+                  onChange={(e) => toggleOutline(e.target.checked)}
+                />
+                <span>Enable combined outline</span>
+              </label>
+              {outlineEnabled && (
+                <>
+                  <label className="ct-card-field ct-card-field--sm">
+                    <span>Outline width</span>
+                    <span className="ct-unit-input ct-unit-input--compact">
+                      <input
+                        type="number"
+                        min="0.5"
+                        max="50"
+                        step="0.5"
+                        value={outlineWidthMm}
+                        onChange={(e) => setOutlineWidth(e.target.value)}
+                      />
+                      <span>mm</span>
+                    </span>
+                  </label>
+                  <div className="ct-color-swatches" role="group" aria-label="Outline colour">
+                    {COLOR_PALETTE.map((c) => (
+                      <button
+                        key={c.hex}
+                        type="button"
+                        className={`ct-color-swatch${outlineColor === c.hex ? " ct-color-swatch--active" : ""}`}
+                        style={{ backgroundColor: c.hex }}
+                        title={c.name}
+                        aria-label={c.name}
+                        aria-pressed={outlineColor === c.hex}
+                        onClick={() => setOutlineColorAndRegenerate(c.hex)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </InspectorAccordion>
 
           <InspectorAccordion
@@ -867,6 +974,24 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                             </span>
                           </label>
                         )}
+                      </div>
+
+                      <div className="ct-subsection">
+                        <span className="ct-subsection-title">Colour</span>
+                        <div className="ct-color-swatches" role="group" aria-label={`Line ${li + 1} colour`}>
+                          {COLOR_PALETTE.map((c) => (
+                            <button
+                              key={c.hex}
+                              type="button"
+                              className={`ct-color-swatch${ls.color === c.hex ? " ct-color-swatch--active" : ""}`}
+                              style={{ backgroundColor: c.hex }}
+                              title={c.name}
+                              aria-label={c.name}
+                              aria-pressed={ls.color === c.hex}
+                              onClick={() => patchLine(li, { color: c.hex })}
+                            />
+                          ))}
+                        </div>
                       </div>
 
                       <div className="ct-position-section">

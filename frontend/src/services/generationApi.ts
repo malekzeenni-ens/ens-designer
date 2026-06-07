@@ -120,6 +120,12 @@ export async function generateOverlap(
   return r.json();
 }
 
+export interface CakeTopperOutlineRequest {
+  enabled: boolean;
+  widthMm: number;
+  color: string;
+}
+
 export async function generateCakeTopper(
   text: string,
   defaultFontId: string,
@@ -128,6 +134,7 @@ export async function generateCakeTopper(
   lineConfigs: CakeTopperLineConfig[],
   interLineGapsMm: number[],
   stakeConfig?: CakeTopperStakeConfig,
+  outline?: CakeTopperOutlineRequest,
 ): Promise<CakeTopperResult> {
   let r: Response;
   try {
@@ -142,6 +149,9 @@ export async function generateCakeTopper(
         line_configs: lineConfigs,
         inter_line_gaps_mm: interLineGapsMm,
         stake_config: stakeConfig,
+        outline_enabled: outline?.enabled ?? false,
+        outline_width_mm: outline?.widthMm ?? 3.0,
+        outline_color: outline?.color ?? "#000000",
       }),
     });
   } catch {

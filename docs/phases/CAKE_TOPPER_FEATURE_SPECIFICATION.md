@@ -737,13 +737,14 @@ The SVG produced by the Cake Topper engine must satisfy the following invariants
 | Contains editable font references | No — output is independent of installed fonts |
 | Fill rule | `fill-rule="nonzero"` on every path element |
 | Stroke | `stroke="none"` on every path element |
-| Fill colour | `fill="#000000"` (solid black) |
+| Fill colour | Per-line `fill="#RRGGBB"` (default `#000000`/black; selectable from a fixed palette — see §19) |
 | Background rectangle | Not present |
 | Path ID prefixing | Line 0 paths: `L0-…`, Line 1 paths: `L1-…`, etc. (avoids ID conflicts) |
 | Stake path ID prefixing | Stake paths: `S0-stake`, `S1-stake` |
+| Outline path ID prefixing | Combined outline paths (when enabled): `OUTLINE-…` (inserted first, rendered behind all lines/stakes — see §19) |
 | Canvas padding | 5mm padding on all sides (`CANVAS_PADDING_MM = 5.0`) |
 | Minimum canvas width | `max(line ink widths) + 10mm` |
-| Boolean union performed | No |
+| Boolean union performed | Only for the optional combined outline (see §19) — line/stake paths are not unioned |
 | Structural validation performed | No |
 
 ### PNG export note
@@ -935,6 +936,58 @@ The `_extract_chars()` function pads or truncates the character list with `?` if
 ### Font licensing
 
 The font catalogue contains fonts made available for the Etch 'N' Shine production workflow. Font licensing is the responsibility of the operator. Do not add fonts to the catalogue that are not licensed for commercial production use.
+
+---
+
+# 19. Per-Line Colour and Combined Outline (Offset)
+
+**Added:** 2026-06-07 · **Commit:** _recorded in a follow-up documentation commit immediately after the feature commit lands on `main` — see `git log --grep="per-line colour"` for the exact hash_
+
+These two controls were delivered together as a single change set (per-line fill colour assignment, plus an optional combined silhouette/outline shape) and are documented here as one feature.
+
+## 19.1 Per-line colour
+
+Each generated line (word) can be assigned a fill colour from a fixed palette, independent of every other line. This is intended primarily to support **LightBurn layer assignment by colour** — operators can map each colour to a different cut/engrave layer after import.
+
+- **Palette:** Black (default), Red, Blue, Green, Yellow, Pink, Gold, Silver, Purple, Lilac — fixed hex values defined in `COLOR_PALETTE` (`frontend/src/components/CakeTopperPanel.tsx`).
+- **Request field:** `CakeTopperLineConfig.color` — `str`, hex pattern `^#[0-9A-Fa-f]{6}$`, default `#000000`.
+- **Response field:** `CakeTopperLineMetadata.color` echoes the resolved colour for that line.
+- **Rendering:** Each line's paths are grouped with their colour and rendered with `fill="<hex>"` in the SVG (and the Pillow PNG fallback via `_hex_to_rgba`). No other export invariants change — `stroke="none"` and `fill-rule="nonzero"` still apply per path.
+- **UI:** A "Colour" subsection with circular swatch buttons appears in each line's accordion card (Lines section). Selecting a swatch regenerates the design immediately.
+
+## 19.2 Combined outline / offset
+
+An optional global shape that unions **all text-line geometry** (stakes excluded) into a single silhouette and grows it outward by an operator-chosen distance — conceptually equivalent to the "Offset" feature in xTool Studio / LightBurn, producing a filled backing-plate / silhouette shape behind the design.
+
+- **Scope:** Text lines only. Stakes are placed relative to the original (un-grown) line geometry and are unaffected by the outline; the outline does not affect stake position.
+- **Geometry:** `shapely.ops.unary_union()` combines each closed line path (converted via `path_to_shapely`), then `Polygon.buffer(width_mm, join_style="round")` grows the union outward. The result is converted back to `GeometryPath` objects via `shapely_to_paths()` with ID prefix `OUTLINE-`.
+- **Render order:** The outline path group is inserted at index 0 of the path-group list so it renders **behind** every line and stake (SVG/PNG z-order follows list order).
+- **Request fields:**
+  - `outline_enabled: bool` (default `false`)
+  - `outline_width_mm: float` — growth distance in mm, `0 < width ≤ 50`, default `3.0`
+  - `outline_color: str` — hex colour, default `#000000`
+- **Response field:** `CakeTopperMetadata.outline` — `CakeTopperOutlineMetadata { width_mm, color }` or `null` when disabled or when no closed line geometry exists to union.
+- **Canvas fitting:** `_fit_canvas_to_paths` runs after the outline is generated, so the canvas grows (and re-bases its origin if necessary) to fit the larger silhouette without clipping.
+- **UI:** A "Combined outline / offset" subsection lives in the **Layout** accordion — an enable checkbox, a width (mm) input, and the same colour-swatch picker used for lines. Toggling, resizing, or recolouring regenerates the design immediately.
+
+## 19.3 Files touched
+
+| File | Change |
+|---|---|
+| `backend/app/models.py` | `HEX_COLOR_PATTERN`; `color` on `CakeTopperLineConfig`/`CakeTopperLineMetadata`; `outline_enabled`/`outline_width_mm`/`outline_color` on `CakeTopperRequest`; new `CakeTopperOutlineMetadata`; `outline` on `CakeTopperMetadata` |
+| `backend/app/cake_topper_engine.py` | Per-group colour plumbing (`list[tuple[list[GeometryPath], str]]`); new `_generate_outline()`; outline insertion ordered after stake placement using a captured line-only path snapshot |
+| `backend/app/png_exporter.py` | `render_paths_png` accepts colour groups; new `_hex_to_rgba()` helper |
+| `frontend/src/types/design.ts` | `color` fields; `CakeTopperOutlineMetadata`; `outline` on result metadata |
+| `frontend/src/services/generationApi.ts` | `CakeTopperOutlineRequest`; `generateCakeTopper` accepts an optional `outline` argument |
+| `frontend/src/components/CakeTopperPanel.tsx` | `COLOR_PALETTE`; per-line colour swatch UI; outline toggle/width/colour controls and state |
+| `frontend/src/styles.css` | `.ct-color-swatches`, `.ct-color-swatch`, `.ct-color-swatch--active`, `.ct-outline-toggle` |
+
+## 19.4 Verification
+
+- Backend test suite: 58 passed, no regressions (`pytest tests/test_cake_topper.py -q`)
+- Frontend type-check: `npx tsc -b` — clean, zero errors
+- Live API verification against the running backend confirmed per-line `fill=` colours, outline metadata, outline z-order (renders behind lines), and correct null/omission when the outline is disabled
+- Manually verified in the browser by the operator — confirmed working as expected
 
 ---
 

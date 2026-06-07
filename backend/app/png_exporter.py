@@ -18,8 +18,12 @@ def export_png(svg: str, geometry: CanonicalGeometry) -> bytes:
         return _export_png_with_pillow(geometry)
 
 
-def render_paths_png(paths: list[GeometryPath], width_mm: float, height_mm: float) -> bytes:
-    """Render a flat list of GeometryPath objects to PNG using Pillow.
+def render_paths_png(
+    groups: list[tuple[list[GeometryPath], str]],
+    width_mm: float,
+    height_mm: float,
+) -> bytes:
+    """Render colored groups of GeometryPath objects to PNG using Pillow.
 
     Used as the Cairo fallback for engines that do not use CanonicalGeometry
     (e.g. the Cake Topper engine). PNG is preview-only; SVG is the production output.
@@ -28,13 +32,25 @@ def render_paths_png(paths: list[GeometryPath], width_mm: float, height_mm: floa
     height = max(1, int(round(height_mm * PNG_SCALE)))
     image = Image.new("RGBA", (width, height), (255, 255, 255, 0))
     draw = ImageDraw.Draw(image)
-    for path in paths:
-        points = _flatten_path(path)
-        if len(points) >= 3:
-            draw.polygon([(x * PNG_SCALE, y * PNG_SCALE) for x, y in points], fill=(0, 0, 0, 255))
+    for paths, color in groups:
+        rgba = _hex_to_rgba(color)
+        for path in paths:
+            points = _flatten_path(path)
+            if len(points) >= 3:
+                draw.polygon([(x * PNG_SCALE, y * PNG_SCALE) for x, y in points], fill=rgba)
     output = BytesIO()
     image.save(output, format="PNG")
     return output.getvalue()
+
+
+def _hex_to_rgba(color: str) -> tuple[int, int, int, int]:
+    value = color.lstrip("#")
+    if len(value) == 6:
+        try:
+            return (int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16), 255)
+        except ValueError:
+            pass
+    return (0, 0, 0, 255)
 
 
 def _export_png_with_pillow(geometry: CanonicalGeometry) -> bytes:

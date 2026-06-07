@@ -12,6 +12,7 @@ export interface CakeTopperLineConfig {
   floating_offsets: FloatingComponentOffset[];
   manual_x_offset_mm: number;
   manual_y_offset_mm: number;
+  color: string;
 }
 
 export interface CakeTopperStakeOffset {
@@ -50,6 +51,12 @@ export interface CakeTopperLineMetadata {
   manual_x_offset_mm: number;
   manual_y_offset_mm: number;
   floating_components: FloatingComponentInfo[];
+  color: string;
+}
+
+export interface CakeTopperOutlineMetadata {
+  width_mm: number;
+  color: string;
 }
 
 export interface CakeTopperResult {
@@ -65,6 +72,7 @@ export interface CakeTopperResult {
     inter_line_gaps_mm: number[];
     canvas_width_mm: number;
     canvas_height_mm: number;
+    outline: CakeTopperOutlineMetadata | null;
   };
 }
 

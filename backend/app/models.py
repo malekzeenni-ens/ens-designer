@@ -4,6 +4,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+HEX_COLOR_PATTERN = r"^#[0-9A-Fa-f]{6}$"
+
 
 class FontInfo(BaseModel):
     id: str
@@ -163,6 +165,7 @@ class CakeTopperLineConfig(BaseModel):
     floating_offsets: list[FloatingComponentOffset] = Field(default_factory=list)
     manual_x_offset_mm: float = 0.0
     manual_y_offset_mm: float = 0.0
+    color: str = Field(default="#000000", pattern=HEX_COLOR_PATTERN)
 
 
 class CakeTopperRequest(BaseModel):
@@ -174,6 +177,9 @@ class CakeTopperRequest(BaseModel):
     line_configs: list[CakeTopperLineConfig] = Field(default_factory=list)
     inter_line_gaps_mm: list[float] = Field(default_factory=list)
     stake_config: "CakeTopperStakeConfig" = Field(default_factory=lambda: CakeTopperStakeConfig())
+    outline_enabled: bool = False
+    outline_width_mm: float = Field(default=3.0, gt=0, le=50.0)
+    outline_color: str = Field(default="#000000", pattern=HEX_COLOR_PATTERN)
 
 
 class CakeTopperLineMetadata(BaseModel):
@@ -188,6 +194,7 @@ class CakeTopperLineMetadata(BaseModel):
     manual_x_offset_mm: float = 0.0
     manual_y_offset_mm: float = 0.0
     floating_components: list[FloatingComponentInfo] = Field(default_factory=list)
+    color: str = "#000000"
 
 
 class CakeTopperStakeOffset(BaseModel):
@@ -214,6 +221,11 @@ class CakeTopperStakeMetadata(BaseModel):
     manual_y_offset_mm: float = 0.0
 
 
+class CakeTopperOutlineMetadata(BaseModel):
+    width_mm: float
+    color: str
+
+
 class CakeTopperMetadata(BaseModel):
     words: list[str]
     lines: list[CakeTopperLineMetadata]
@@ -221,6 +233,7 @@ class CakeTopperMetadata(BaseModel):
     inter_line_gaps_mm: list[float]
     canvas_width_mm: float
     canvas_height_mm: float
+    outline: Optional[CakeTopperOutlineMetadata] = None
 
 
 class CakeTopperResponse(BaseModel):

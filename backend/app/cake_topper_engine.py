@@ -19,6 +19,8 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+from shapely.ops import unary_union
+
 from .canonical_geometry import build_geometry, recalculate_geometry_bounds
 from .floating_component import apply_floating_offsets, detect_floating_components
 from .font_loader import FontCatalog
@@ -26,6 +28,7 @@ from .models import (
     CakeTopperLineConfig,
     CakeTopperLineMetadata,
     CakeTopperMetadata,
+    CakeTopperOutlineMetadata,
     CakeTopperRequest,
     CakeTopperResponse,
     CakeTopperStakeMetadata,
@@ -44,9 +47,12 @@ from .overlap_helpers import (
     _shift_paths,
 )
 from .png_exporter import export_png, render_paths_png
+from .shapely_converter import path_to_shapely, shapely_to_paths
 from .svg_exporter import export_svg
 from .text_shaper import shape_text
 from .unicode_normalisation import normalise_text
+
+DEFAULT_PATH_COLOR = "#000000"
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +110,7 @@ class CakeTopperService:
 
         # 4. Stack lines, compute offsets
         y_cursor = CANVAS_PADDING_MM
-        translated_path_groups: list[list[GeometryPath]] = []
+        translated_path_groups: list[tuple[list[GeometryPath], str]] = []
         line_metadata: list[CakeTopperLineMetadata] = []
 
         for i, ((geom, meta), cfg) in enumerate(zip(line_results, line_configs)):
@@ -122,7 +128,7 @@ class CakeTopperService:
             x_translate = x_offset - geom.bounds.min_x + manual_x
             y_translate = y_cursor - geom.bounds.min_y + manual_y
             translated = _translate_paths(geom.paths, x_translate, y_translate, prefix=f"L{i}-")
-            translated_path_groups.append(translated)
+            translated_path_groups.append((translated, cfg.color))
 
             line_metadata.append(CakeTopperLineMetadata(
                 text=words[i],
@@ -136,6 +142,7 @@ class CakeTopperService:
                 manual_x_offset_mm=round(manual_x, 3),
                 manual_y_offset_mm=round(manual_y, 3),
                 floating_components=meta.get("floating_components", []),
+                color=cfg.color,
             ))
 
             y_cursor += ink_height
@@ -144,12 +151,25 @@ class CakeTopperService:
 
         canvas_height = y_cursor + CANVAS_PADDING_MM
 
-        stake_paths, stake_metadata = _build_stakes(
-            request,
-            [p for group in translated_path_groups for p in group],
-        )
+        # Capture line-only paths before stakes/outline are appended — both
+        # stake placement and outline scope are defined relative to the text
+        # lines alone, not to each other.
+        line_only_paths = [p for group, _ in translated_path_groups for p in group]
+
+        stake_paths, stake_metadata = _build_stakes(request, line_only_paths)
         if stake_paths:
-            translated_path_groups.append(stake_paths)
+            translated_path_groups.append((stake_paths, DEFAULT_PATH_COLOR))
+
+        outline_metadata: CakeTopperOutlineMetadata | None = None
+        if request.outline_enabled:
+            outline_paths = _generate_outline(line_only_paths, request.outline_width_mm)
+            if outline_paths:
+                # Inserted at the front so it renders behind the lines/stakes.
+                translated_path_groups.insert(0, (outline_paths, request.outline_color))
+                outline_metadata = CakeTopperOutlineMetadata(
+                    width_mm=round(request.outline_width_mm, 3),
+                    color=request.outline_color,
+                )
 
         translated_path_groups, line_metadata, stake_metadata, canvas_width, canvas_height = _fit_canvas_to_paths(
             translated_path_groups,
@@ -160,9 +180,8 @@ class CakeTopperService:
         )
 
         # 5. Assemble combined SVG
-        all_paths = [p for group in translated_path_groups for p in group]
-        svg = _assemble_svg(all_paths, canvas_width, canvas_height)
-        png_bytes = _render_png(svg, all_paths, canvas_width, canvas_height)
+        svg = _assemble_svg(translated_path_groups, canvas_width, canvas_height)
+        png_bytes = _render_png(svg, translated_path_groups, canvas_width, canvas_height)
 
         all_warnings: list[str] = []
         if dropped_words:
@@ -188,6 +207,7 @@ class CakeTopperService:
                 inter_line_gaps_mm=[round(g, 3) for g in inter_gaps[:n - 1]],
                 canvas_width_mm=round(canvas_width, 3),
                 canvas_height_mm=round(canvas_height, 3),
+                outline=outline_metadata,
             ),
         )
 
@@ -384,23 +404,23 @@ def _create_stake_path(path_id: str, x: float, y: float, width: float, length: f
 
 
 def _fit_canvas_to_paths(
-    path_groups: list[list[GeometryPath]],
+    path_groups: list[tuple[list[GeometryPath], str]],
     line_metadata: list[CakeTopperLineMetadata],
     stake_metadata: list[CakeTopperStakeMetadata],
     width: float,
     height: float,
 ) -> tuple[
-    list[list[GeometryPath]],
+    list[tuple[list[GeometryPath], str]],
     list[CakeTopperLineMetadata],
     list[CakeTopperStakeMetadata],
     float,
     float,
 ]:
     """Grow and, when needed, rebase the canvas so dragged lines are not clipped."""
-    all_paths = [p for group in path_groups for p in group]
+    all_paths = [p for group, _ in path_groups for p in group]
     bounds = _paths_bounds(all_paths)
     if bounds is None:
-        return path_groups, line_metadata, width, height
+        return path_groups, line_metadata, stake_metadata, width, height
 
     min_x, min_y, max_x, max_y = bounds
     canvas_min_x = min(0.0, min_x - CANVAS_PADDING_MM)
@@ -415,8 +435,8 @@ def _fit_canvas_to_paths(
 
     if shift_x or shift_y:
         path_groups = [
-            _translate_paths(group, shift_x, shift_y)
-            for group in path_groups
+            (_translate_paths(group, shift_x, shift_y), color)
+            for group, color in path_groups
         ]
         line_metadata = [
             meta.model_copy(update={
@@ -453,7 +473,7 @@ def _paths_bounds(paths: list[GeometryPath]) -> tuple[float, float, float, float
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def _assemble_svg(paths: list[GeometryPath], width: float, height: float) -> str:
+def _assemble_svg(groups: list[tuple[list[GeometryPath], str]], width: float, height: float) -> str:
     import svgwrite
     drawing = svgwrite.Drawing(
         size=(f"{round(width, 3)}mm", f"{round(height, 3)}mm"),
@@ -462,15 +482,16 @@ def _assemble_svg(paths: list[GeometryPath], width: float, height: float) -> str
     drawing.viewbox(0, 0, round(width, 3), round(height, 3))
     drawing.attribs["xmlns"] = "http://www.w3.org/2000/svg"
     drawing.attribs["version"] = "1.1"
-    for path in paths:
-        d = " ".join(_cmd_str(c) for c in path.commands)
-        drawing.add(drawing.path(
-            d=d,
-            id=path.path_id,
-            fill="#000000",
-            stroke="none",
-            fill_rule="nonzero",
-        ))
+    for paths, color in groups:
+        for path in paths:
+            d = " ".join(_cmd_str(c) for c in path.commands)
+            drawing.add(drawing.path(
+                d=d,
+                id=path.path_id,
+                fill=color,
+                stroke="none",
+                fill_rule="nonzero",
+            ))
     return drawing.tostring()
 
 
@@ -486,10 +507,39 @@ def _cmd_str(cmd: PathCommand) -> str:
     return "Z"
 
 
-def _render_png(svg: str, paths: list[GeometryPath], width_mm: float, height_mm: float) -> bytes:
+def _render_png(
+    svg: str,
+    groups: list[tuple[list[GeometryPath], str]],
+    width_mm: float,
+    height_mm: float,
+) -> bytes:
     try:
         import cairosvg
         return cairosvg.svg2png(bytestring=svg.encode("utf-8"), background_color="transparent")
     except (ImportError, OSError):
         # Cairo native library not available — fall back to Pillow polygon renderer.
-        return render_paths_png(paths, width_mm, height_mm)
+        return render_paths_png(groups, width_mm, height_mm)
+
+
+def _generate_outline(paths: list[GeometryPath], width_mm: float) -> list[GeometryPath]:
+    """Union all closed line paths into one silhouette, then grow it outward by width_mm."""
+    polygons = []
+    for path in paths:
+        if not path.closed:
+            continue
+        poly = path_to_shapely(path)
+        if poly is not None and not poly.is_empty and poly.area > 0:
+            polygons.append(poly)
+    if not polygons:
+        return []
+
+    try:
+        combined = unary_union(polygons)
+        grown = combined.buffer(width_mm, join_style="round")
+    except Exception:
+        logger.warning("Outline generation failed; skipping combined outline.")
+        return []
+    if grown.is_empty:
+        return []
+
+    return shapely_to_paths(grown, "OUTLINE")
