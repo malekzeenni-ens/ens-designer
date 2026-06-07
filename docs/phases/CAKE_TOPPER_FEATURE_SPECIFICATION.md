@@ -941,7 +941,7 @@ The font catalogue contains fonts made available for the Etch 'N' Shine producti
 
 # 19. Per-Line Colour and Combined Outline (Offset)
 
-**Added:** 2026-06-07 · **Commit:** _recorded in a follow-up documentation commit immediately after the feature commit lands on `main` — see `git log --grep="per-line colour"` for the exact hash_
+**Added:** 2026-06-07 11:27 +0100 · **Commit:** [`3ecb65d`](https://github.com/malekzeenni-ens/ens-designer/commit/3ecb65daf361018a508f60137f8c56c664db9389) — `feat: add per-line colour palette and combined outline/offset to cake topper`
 
 These two controls were delivered together as a single change set (per-line fill colour assignment, plus an optional combined silhouette/outline shape) and are documented here as one feature.
 
