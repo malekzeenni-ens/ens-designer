@@ -1205,4 +1205,31 @@ The error `<div>` is now laid out with flexbox and includes a `×` dismiss butto
 
 ---
 
+# 24. Incremental Update Loading Indicator (2026-06-09 19:45 GMT+1)
+
+## 24.1 Problem
+
+After fixing canvas preservation on font errors (§23), incremental updates (font changes, size changes, gap adjustments) no longer blanked the canvas while the API call ran. Although the actual API round-trip time was unchanged, the user perceived the app as slower because there was no immediate visual feedback when a change was made — the old design simply stayed on screen with no indication that a new render was in progress.
+
+## 24.2 Fix
+
+Two visual indicators added for the duration of any background API call when a canvas already exists (`loading && result`):
+
+**1. Preview card dims**
+The `.ct-preview-card` gains the `ct-preview-card--updating` class, reducing opacity to 55% and disabling pointer events. This immediately signals that the canvas is stale.
+
+**2. Pulsing "Updating…" chip**
+A gold pill chip with a 1 s pulse animation appears in the preview heading (`aria-live="polite"`). It disappears as soon as the new result arrives or an error is shown.
+
+Neither indicator applies during a fresh "Generate design" invocation (where `result` is null and the canvas is already blank).
+
+## 24.3 Files changed
+
+| File | Change |
+|---|---|
+| `frontend/src/components/CakeTopperPanel.tsx` | Added `ct-preview-card--updating` class and `ct-updating-chip` span conditionally rendered when `loading && result` |
+| `frontend/src/styles.css` | Added `.ct-preview-card--updating` (opacity + pointer-events), `.ct-updating-chip` (pill style + pulse animation), `@keyframes ct-pulse` |
+
+---
+
 # End of Document
