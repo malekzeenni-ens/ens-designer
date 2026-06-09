@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { ExportControls } from "./ExportControls";
 import { FloatingControls, toFloatingOffsets } from "./FloatingControls";
+import { GlyphBrowserDrawer } from "./GlyphBrowserDrawer";
 import type { FloatingOffsetMap } from "./FloatingControls";
 import { PreviewPanel } from "./PreviewPanel";
 import {
@@ -213,6 +214,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   const [outlineEnabled, setOutlineEnabled] = useState(false);
   const [outlineWidthMm, setOutlineWidthMm] = useState(DEFAULT_OUTLINE_WIDTH_MM);
   const [outlineColor, setOutlineColor] = useState(DEFAULT_COLOR);
+  const [glyphBrowserLineIndex, setGlyphBrowserLineIndex] = useState<number | null>(null);
   const [openSections, setOpenSections] =
     useState<Record<InspectorSectionId, boolean>>(DEFAULT_OPEN_SECTIONS);
 
@@ -290,8 +292,10 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       color: outlineColor,
     },
     preserveCanvas = true,
+    textOverride?: string,
   ) {
-    const n = words.length;
+    const activeText = textOverride ?? text;
+    const n = activeText.trim().split(/\s+/).filter(Boolean).slice(0, 4).length;
     const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
     const gapValues = gaps.slice(0, n - 1).map((g) => {
       const v = parseFloat(g);
@@ -301,7 +305,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     setError(null);
     try {
       const r = await generateCakeTopper(
-        text,
+        activeText,
         defaultFontId,
         parseFloat(defaultSize) || 42,
         defaultOverlap,
@@ -489,6 +493,15 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     setStakeOffsets([]);
     setSelectedStake(null);
     setOpenSections(DEFAULT_OPEN_SECTIONS);
+  }
+
+  function applyGlyphBrowserText(lineIndex: number, newLineText: string) {
+    const currentWords = text.trim().split(/\s+/).filter(Boolean);
+    if (lineIndex >= currentWords.length) return;
+    currentWords[lineIndex] = newLineText;
+    const newFullText = currentWords.join(" ");
+    setText(newFullText);
+    callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, undefined, true, newFullText);
   }
 
   const meta = result?.metadata;
@@ -930,15 +943,25 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                   {ls.expanded && (
                     <div className="ct-card-body">
                       <div className="ct-card-controls">
-                        <label className="ct-card-field">
+                        <div className="ct-card-field">
                           <span>Line font</span>
-                          <select
-                            value={ls.fontId || defaultFontId}
-                            onChange={(e) => patchLine(li, { fontId: e.target.value })}
-                          >
-                            {renderFontGroups(allFontGroups)}
-                          </select>
-                        </label>
+                          <div className="ct-font-select-row">
+                            <select
+                              value={ls.fontId || defaultFontId}
+                              onChange={(e) => patchLine(li, { fontId: e.target.value })}
+                            >
+                              {renderFontGroups(allFontGroups)}
+                            </select>
+                            <button
+                              type="button"
+                              className="ct-browse-btn"
+                              onClick={() => setGlyphBrowserLineIndex(li)}
+                              title="Browse special characters for this font"
+                            >
+                              Browse
+                            </button>
+                          </div>
+                        </div>
                         <label className="ct-card-field ct-card-field--sm">
                           <span>Size</span>
                           <span className="ct-unit-input ct-unit-input--compact">
@@ -1146,6 +1169,22 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           pngFilename={result?.png_filename ?? "cake-topper.png"}
         />
       </div>
+
+      {glyphBrowserLineIndex !== null && (
+        <GlyphBrowserDrawer
+          lineIndex={glyphBrowserLineIndex}
+          lineName={words[glyphBrowserLineIndex] ?? ""}
+          fontId={lineStates[glyphBrowserLineIndex]?.fontId || defaultFontId}
+          fontName={
+            fonts.find(
+              (f) => f.id === (lineStates[glyphBrowserLineIndex]?.fontId || defaultFontId),
+            )?.full_name ?? ""
+          }
+          currentLineText={words[glyphBrowserLineIndex] ?? ""}
+          onApply={applyGlyphBrowserText}
+          onClose={() => setGlyphBrowserLineIndex(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1232,4 +1232,55 @@ Neither indicator applies during a fresh "Generate design" invocation (where `re
 
 ---
 
+# 25. Glyph Browser Drawer (2026-06-09 21:15 GMT+1)
+
+## 25.1 Feature
+
+A Glyph Browser drawer that exposes every character in the selected font — including Private Use Area (PUA) ligatures, alternates, and ornaments that are only visible in Windows Character Map — directly within the Cake Topper designer. Each line card gains a **Browse** button next to the font selector. Clicking it opens a right-side drawer panel without interrupting the rest of the design.
+
+## 25.2 How it works
+
+### Opening
+Clicking **Browse** on a line card opens the drawer for that specific line. The drawer shows the currently selected font for that line and pre-fills the compose area with the line's current text.
+
+### Font preview rendering
+The drawer fetches the font binary from a new backend endpoint (`GET /api/fonts/{font_id}/file`) and loads it into the browser using the Web Font Loading API (`new FontFace(...)`). Once loaded, every glyph cell and the compose input render in the actual font — including PUA characters that would otherwise appear as empty boxes.
+
+### Character list
+`GET /api/fonts/{font_id}/characters` returns every codepoint in the font's `cmap` (sorted, control chars excluded) with:
+- `char` — the Unicode character string
+- `glyph_name` — internal font glyph name (e.g. `"aa"`, `"heart.orn"`)
+- `category` — auto-detected: `uppercase`, `lowercase`, `digits`, `punctuation`, `ligature`, `alternate`, `ornament`, `special`, `other_letter`, `other`
+- `label` — display label (glyph name base for PUA; char itself for standard Unicode)
+
+PUA categorisation uses the glyph name: letter-pair names (`aa`, `ar`, `ct`, etc.) → `ligature`; names containing `orn`, `heart`, etc. → `ornament`; `swsh`, `alt`, `ss0`–`ss3` → `alternate`; others → `special`.
+
+### Filtering
+Category tabs show only the categories present in the font, with character counts. A search box filters by label or glyph name.
+
+### Composing text
+Clicking a glyph appends the character to the **Line text** input at the top of the drawer. The input is also directly editable. A **Reset** button reverts to the original line text. **Apply to Line N** replaces that word in the full design text and immediately re-renders — the canvas stays intact throughout (uses `preserveCanvas = true`).
+
+## 25.3 Architecture
+
+### Backend — new endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/fonts/{font_id}/file` | Serve raw font binary (TTF/OTF) for browser-side font loading |
+| `GET /api/fonts/{font_id}/characters` | Return categorised character list from font cmap |
+
+### Frontend — new/changed files
+
+| File | Change |
+|---|---|
+| `frontend/src/components/GlyphBrowserDrawer.tsx` | New component — drawer, compose area, category tabs, glyph grid, font preview loading |
+| `frontend/src/components/CakeTopperPanel.tsx` | Added `glyphBrowserLineIndex` state; Browse button in each line card; `applyGlyphBrowserText` function; `textOverride` parameter in `callApi` so text update fires immediately without waiting for React state flush |
+| `frontend/src/types/design.ts` | Added `CharacterInfo` and `FontCharacterMap` interfaces |
+| `frontend/src/services/generationApi.ts` | Added `fetchFontCharacters(fontId)` API function |
+| `frontend/src/styles.css` | Added full drawer stylesheet (~180 lines): overlay, backdrop, panel, compose bar, category tabs, glyph grid, footer, Browse button |
+| `backend/app/api/routes/fonts.py` | Added `get_font_file`, `get_font_characters`, `_categorise_codepoint`, `_glyph_label` |
+
+---
+
 # End of Document

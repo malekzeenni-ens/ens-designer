@@ -136,6 +136,20 @@ export interface FontInfo {
   source: "project" | "system";
 }
 
+export interface CharacterInfo {
+  codepoint: number;
+  char: string;
+  glyph_name: string;
+  category: string;
+  label: string;
+}
+
+export interface FontCharacterMap {
+  font_id: string;
+  font_name: string;
+  characters: CharacterInfo[];
+}
+
 export interface FontUploadResponse {
   success: boolean;
   message: string;

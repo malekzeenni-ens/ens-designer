@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+import unicodedata
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 from fontTools.ttLib import TTFont
 
 from ...models import FontUploadResponse
@@ -112,6 +114,95 @@ async def upload_font(request: Request, file: UploadFile):
         font=record.info,
         message=f'"{record.info.full_name}" uploaded successfully. It is now available in the Designer and Font Adviser.',
     )
+
+
+@router.get("/{font_id}/file")
+def get_font_file(font_id: str, request: Request):
+    """Serve the raw font binary so the browser can load it for glyph preview."""
+    catalog = request.app.state.font_catalog
+    try:
+        font_path = catalog.get_font_path(font_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Font not found.")
+    suffix = font_path.suffix.lower()
+    media_type = "font/ttf" if suffix == ".ttf" else "font/otf"
+    return FileResponse(path=str(font_path), media_type=media_type)
+
+
+@router.get("/{font_id}/characters")
+def get_font_characters(font_id: str, request: Request):
+    """Return every codepoint in the font's cmap with category and display label."""
+    catalog = request.app.state.font_catalog
+    try:
+        font_path = catalog.get_font_path(font_id)
+        font_info = catalog.get_font_info(font_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Font not found.")
+    try:
+        font = TTFont(font_path, lazy=True)
+        cmap = font.getBestCmap() or {}
+        characters = []
+        for codepoint in sorted(cmap.keys()):
+            if codepoint < 32:
+                continue
+            glyph_name = cmap[codepoint]
+            char = chr(codepoint)
+            category = _categorise_codepoint(codepoint, glyph_name)
+            label = _glyph_label(glyph_name, char, codepoint)
+            characters.append({
+                "codepoint": codepoint,
+                "char": char,
+                "glyph_name": glyph_name,
+                "category": category,
+                "label": label,
+            })
+        font.close()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not read font characters: {exc}")
+    return {"font_id": font_id, "font_name": font_info.full_name, "characters": characters}
+
+
+def _categorise_codepoint(codepoint: int, glyph_name: str) -> str:
+    # Private Use Area — infer category from glyph name
+    if 0xE000 <= codepoint <= 0xF8FF:
+        base = glyph_name.split(".")[0].lower()
+        if any(x in glyph_name.lower() for x in ("liga", "dlig", "hlig")):
+            return "ligature"
+        if any(x in base for x in ("orn", "heart", "star", "flower", "arrow", "bullet", "deco")):
+            return "ornament"
+        if any(x in glyph_name.lower() for x in ("swsh", "swash", "ss0", "ss1", "ss2", "ss3", "alt")):
+            return "alternate"
+        # Letter-pair names like "aa", "ar", "ct" are ligatures
+        if len(base) >= 2 and base.isalpha():
+            return "ligature"
+        return "special"
+    # Standard Unicode
+    try:
+        cat = unicodedata.category(chr(codepoint))
+        char_name = unicodedata.name(chr(codepoint), "").lower()
+    except (ValueError, TypeError):
+        return "other"
+    if cat == "Lu":
+        return "uppercase"
+    if cat == "Ll":
+        return "lowercase"
+    if cat == "Nd":
+        return "digits"
+    if "ligature" in char_name:
+        return "ligature"
+    if cat in ("Po", "Ps", "Pe", "Pi", "Pf", "Pd", "Pc"):
+        return "punctuation"
+    if cat in ("So", "Sm", "Sc", "Sk"):
+        return "ornament"
+    if cat in ("Lo", "Lt", "Lm"):
+        return "other_letter"
+    return "other"
+
+
+def _glyph_label(glyph_name: str, char: str, codepoint: int) -> str:
+    if 0xE000 <= codepoint <= 0xF8FF:
+        return glyph_name.split(".")[0]
+    return char
 
 
 def _sanitise_filename(name: str) -> str:

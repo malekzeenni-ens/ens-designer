@@ -3,7 +3,9 @@ import type {
   CakeTopperLineConfig,
   CakeTopperResult,
   CakeTopperStakeConfig,
+  CharacterInfo,
   FloatingComponentOffset,
+  FontCharacterMap,
   FontInfo,
   FontUploadResponse,
   GenerateResponse,
@@ -13,6 +15,8 @@ import type {
   OverlapResult,
   Preset,
 } from "../types/design";
+
+export type { CharacterInfo, FontCharacterMap };
 
 // ---------------------------------------------------------------------------
 // Shared error helper — converts any FastAPI error body into a readable string
@@ -42,6 +46,12 @@ async function _readError(response: Response, fallback: string): Promise<never> 
 // ---------------------------------------------------------------------------
 // API functions
 // ---------------------------------------------------------------------------
+
+export async function fetchFontCharacters(fontId: string): Promise<FontCharacterMap> {
+  const r = await fetch(`/api/fonts/${fontId}/characters`);
+  if (!r.ok) return _readError(r, "Could not load font characters.");
+  return r.json();
+}
 
 export async function fetchFonts(): Promise<FontInfo[]> {
   const r = await fetch("/api/fonts");
