@@ -530,12 +530,15 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
 
       <div className="ct-workspace">
         <section className="ct-preview-column" aria-label="Preview and export">
-          <div className="ct-preview-card">
+          <div className={`ct-preview-card${loading && result ? " ct-preview-card--updating" : ""}`}>
             <div className="ct-section-heading ct-preview-heading">
               <div>
                 <h2>Preview</h2>
                 <p>SVG export preview</p>
               </div>
+              {loading && result && (
+                <span className="ct-updating-chip" aria-live="polite">Updating…</span>
+              )}
               <div className="ct-size-chip">
                 <span>Final cut size</span>
                 <strong>
