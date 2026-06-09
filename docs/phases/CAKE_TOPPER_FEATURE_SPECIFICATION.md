@@ -1316,4 +1316,28 @@ This comment is **invisible when the SVG is opened in a browser or LightBurn** �
 
 ---
 
+# 27. Glyph Browser Portal + On-Screen Design Recipe (2026-06-10 00:20 GMT+1)
+
+## 27.1 Problem
+
+After §26, the modal CSS was correct but the drawer could still render in the wrong place depending on where it sits in the component tree relative to the rest of the page (any future ancestor with `transform`/`filter`/`contain` would silently break `position: fixed`). Separately, the SVG recipe comment from §22 — while present in the export — was invisible inside the app itself; users had no way to confirm what font/size/colour was used per line without opening the downloaded file in a text editor.
+
+## 27.2 Fix 1 — Render the Glyph Browser via a React portal
+
+`GlyphBrowserDrawer` now renders through `createPortal(..., document.body)` instead of inline in `CakeTopperPanel`'s tree. This guarantees the modal's `position: fixed` overlay is always positioned relative to the viewport, completely independent of any styling on its logical parent components.
+
+## 27.3 Fix 2 — On-screen "Design recipe" table
+
+A new **Design recipe** card is rendered directly below the export bar whenever a result exists. It lists, per line: line number, text, font name, font size (mm), and colour (with a swatch). This is the same information embedded as a comment in the exported SVG (§22), now visible at a glance in the app without opening any file.
+
+## 27.4 Files changed
+
+| File | Change |
+|---|---|
+| `frontend/src/components/GlyphBrowserDrawer.tsx` | Wrapped returned JSX in `createPortal(..., document.body)`; added `react-dom` import |
+| `frontend/src/components/CakeTopperPanel.tsx` | Added "Design recipe" table below the export bar, rendered from `result.metadata.lines` |
+| `frontend/src/styles.css` | Added `.ct-recipe`, `.ct-recipe-title`, `.ct-recipe-hint`, `.ct-recipe-table`, `.ct-recipe-swatch` |
+
+---
+
 # End of Document

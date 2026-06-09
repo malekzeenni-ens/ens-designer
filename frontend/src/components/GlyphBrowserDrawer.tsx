@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { fetchFontCharacters } from "../services/generationApi";
 import type { CharacterInfo } from "../types/design";
 
@@ -123,7 +124,7 @@ export function GlyphBrowserDrawer({
     ? { fontFamily: `"${fontFamily}", serif` }
     : undefined;
 
-  return (
+  return createPortal(
     <div className="ct-glyph-overlay">
       <div
         className="ct-glyph-backdrop"
@@ -268,6 +269,7 @@ export function GlyphBrowserDrawer({
           </span>
         </footer>
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }

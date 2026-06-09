@@ -1050,6 +1050,62 @@ h2 {
   color: var(--ens-gold);
 }
 
+.ct-recipe {
+  border: 1px solid var(--ens-line);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 12px 30px rgba(7, 19, 30, 0.07);
+  padding: 14px 16px;
+}
+
+.ct-recipe-title {
+  margin: 0 0 4px;
+  color: var(--ens-navy);
+  font-size: 0.95rem;
+  font-weight: 850;
+}
+
+.ct-recipe-hint {
+  margin: 0 0 10px;
+  color: var(--ens-muted);
+  font-size: 0.8rem;
+}
+
+.ct-recipe-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.ct-recipe-table th,
+.ct-recipe-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--ens-line);
+}
+
+.ct-recipe-table th {
+  color: var(--ens-olive);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ct-recipe-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ct-recipe-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  border: 1px solid var(--ens-line);
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
 .font-note,
 .error {
   min-height: 22px;
