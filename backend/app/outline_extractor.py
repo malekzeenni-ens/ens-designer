@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from fontTools.pens.basePen import BasePen
@@ -7,6 +8,8 @@ from fontTools.ttLib import TTFont
 
 from .models import GeometryPath, GlyphGeometry, PathCommand
 from .text_shaper import ShapedGlyph
+
+logger = logging.getLogger(__name__)
 
 FONT_SIZE_MM = 42.0
 
@@ -77,7 +80,15 @@ def extract_outlines(
                     y_offset=cursor_y + shaped.offset_y,
                     scale=scale,
                 )
-                glyph_set[shaped.glyph_name].draw(pen)
+                try:
+                    glyph_set[shaped.glyph_name].draw(pen)
+                except Exception:
+                    logger.warning(
+                        "Could not extract outline for glyph %r (index %d) — skipping.",
+                        shaped.glyph_name,
+                        index,
+                    )
+                    pen.commands.clear()
                 if pen.commands:
                     path_id = f"path-{index + 1:04d}"
                     path_ids.append(path_id)

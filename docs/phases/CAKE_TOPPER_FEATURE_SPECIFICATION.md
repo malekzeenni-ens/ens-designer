@@ -991,4 +991,54 @@ An optional global shape that unions **all text-line geometry** (stakes excluded
 
 ---
 
+# 20. Number Rendering Bug Fixes
+
+**Fixed:** 2026-06-09 18:49 GMT+1
+
+Two bugs were identified and fixed that caused incorrect or crashed rendering when digit characters (0–9) were entered in the cake topper, particularly with decorative or script fonts.
+
+## 20.1 Bug 1 — Uncaught glyph draw exception (crash / HTTP 500)
+
+**File:** `backend/app/outline_extractor.py`
+
+**Root cause:** `glyph_set[shaped.glyph_name].draw(pen)` had no try/except guard. In specific decorative and OTF/CFF fonts, digit glyphs can be stored as composite glyphs that reference sub-components, or contain CFF charstring structures, that raise non-`ValueError` exceptions during FontTools outline extraction (`struct.error`, `KeyError`, `OverflowError`, etc.). Because the FastAPI route handler only catches `ValueError`, any other exception from `draw()` escaped as an HTTP 500 — the frontend received an "unexpected error" rather than a graceful message.
+
+**Fix:** Wrapped `glyph_set[shaped.glyph_name].draw(pen)` in a `try/except Exception` block. On failure, a warning is logged and `pen.commands` is cleared. The glyph is treated as having no geometry (same behaviour as a `.notdef` glyph with empty outlines) — it contributes no path and no gap, and the remaining glyphs in the word continue rendering normally.
+
+**Behaviour after fix:**
+- Fonts that previously crashed on digits now silently skip the problematic glyph and continue.
+- If ALL digits in a word fail to draw, `build_geometry` raises `ValueError("Selected font cannot render the requested text.")` which is returned as an HTTP 400 with a clear message.
+- Logger emits `WARNING outline_extractor: Could not extract outline for glyph 'zero' (index 0) — skipping.` for each skipped glyph.
+
+## 20.2 Bug 2 — Incorrect PNG preview for digits with counter-holes (visual defect)
+
+**File:** `backend/app/png_exporter.py`
+
+**Root cause:** `_flatten_path` accumulated all subpaths (M…Z segments) within a single `GeometryPath` into one flat point list. A single `GeometryPath` per glyph may contain multiple subpaths: the outer ring followed by counter-hole subpaths (e.g. `0` has outer ring + inner circle; `8` has outer figure-eight + two inner loops). When the Z command closed the outer ring and the next M started the hole, `_flatten_path` continued appending to the same point list, creating a "bridge" chord between the outer ring and the hole. Pillow's `draw.polygon` received a self-intersecting polygon and rendered the hole as solid fill — digits like `0`, `6`, `8`, `9` appeared as filled blobs with no visible counter-holes.
+
+**Fix:** Replaced `_flatten_path` with:
+- `_split_to_subpaths(path)` — splits the path at M…Z boundaries, returning one point list per subpath.
+- `_draw_path(draw, path, fill)` — the new rendering entry point:
+  1. If only one subpath → draw directly (unchanged behaviour for most letters).
+  2. If multiple subpaths → sort by bounding-box area (largest = outer ring).
+  3. For each smaller subpath, apply a **centroid point-in-polygon test** (`_point_in_polygon`):
+     - Centroid inside the outer ring → counter-hole → draw `fill=(255,255,255,0)` (transparent) to erase the previously drawn outer ring in that area.
+     - Centroid outside the outer ring → separate ink component (e.g. the dot on `i`, `j`) → draw filled with the path colour.
+- Added `_centroid` and `_point_in_polygon` (ray-casting) helpers.
+
+**Behaviour after fix:**
+- Digits `0`, `6`, `8`, `9` and letters with counter-holes (`O`, `B`, `D`, `e`, etc.) render with correct transparent holes in the PNG preview.
+- The dot on `i`, `j` and other floating components render correctly as separate filled shapes (not erased as holes).
+- SVG export is unaffected — SVG uses `fill-rule="nonzero"` and was always correct.
+- PNG is preview-only; the fix improves preview fidelity, not production output.
+
+## 20.3 Files changed
+
+| File | Change |
+|---|---|
+| `backend/app/outline_extractor.py` | Added `import logging` / `logger`; wrapped `draw(pen)` in `try/except Exception` with `pen.commands.clear()` on failure |
+| `backend/app/png_exporter.py` | Replaced `_flatten_path` with `_split_to_subpaths`; added `_draw_path`, `_centroid`, `_point_in_polygon`; updated `render_paths_png` and `_export_png_with_pillow` to call `_draw_path` |
+
+---
+
 # End of Document
