@@ -143,6 +143,8 @@ class CakeTopperService:
                 manual_y_offset_mm=round(manual_y, 3),
                 floating_components=meta.get("floating_components", []),
                 color=cfg.color,
+                font_name=meta.get("font_name", ""),
+                font_size_mm=meta.get("font_size_mm", 42.0),
             ))
 
             y_cursor += ink_height
@@ -180,7 +182,7 @@ class CakeTopperService:
         )
 
         # 5. Assemble combined SVG
-        svg = _assemble_svg(translated_path_groups, canvas_width, canvas_height)
+        svg = _assemble_svg(translated_path_groups, canvas_width, canvas_height, line_metadata)
         png_bytes = _render_png(svg, translated_path_groups, canvas_width, canvas_height)
 
         all_warnings: list[str] = []
@@ -223,6 +225,26 @@ class CakeTopperService:
         font_info = self.font_catalog.get_font_info(cfg.font_id)
         shaped = shape_text(normalised, font_path)
         glyphs, paths = extract_outlines(font_path, shaped, font_size_mm=cfg.font_size_mm)
+
+        if not paths:
+            early_chars = _extract_chars(normalised, len(glyphs))
+            notdef_chars = sorted({
+                early_chars[i]
+                for i, g in enumerate(glyphs)
+                if g.glyph_name == ".notdef" and i < len(early_chars) and early_chars[i].strip()
+            })
+            font_display = font_info.full_name
+            if notdef_chars:
+                chars_display = ", ".join(repr(c) for c in notdef_chars)
+                raise ValueError(
+                    f'Line {line_index + 1} ("{word}"): font "{font_display}" has no glyphs for '
+                    f'{chars_display}. This font does not support these characters — '
+                    f'choose a different font for this line.'
+                )
+            raise ValueError(
+                f'Line {line_index + 1} ("{word}"): font "{font_display}" cannot render this text.'
+            )
+
         geometry = build_geometry(normalised, font_info, glyphs, paths)
 
         # Determine overlap target
@@ -283,6 +305,8 @@ class CakeTopperService:
             "gaps_after_mm": [round(g, 3) for g in gaps_after],
             "floating_components": floating_components,
             "warnings": line_warnings,
+            "font_name": font_info.full_name,
+            "font_size_mm": cfg.font_size_mm,
         }
         return geometry, meta
 
@@ -473,8 +497,14 @@ def _paths_bounds(paths: list[GeometryPath]) -> tuple[float, float, float, float
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def _assemble_svg(groups: list[tuple[list[GeometryPath], str]], width: float, height: float) -> str:
+def _assemble_svg(
+    groups: list[tuple[list[GeometryPath], str]],
+    width: float,
+    height: float,
+    line_metadata: list[CakeTopperLineMetadata] | None = None,
+) -> str:
     import svgwrite
+    from datetime import date
     drawing = svgwrite.Drawing(
         size=(f"{round(width, 3)}mm", f"{round(height, 3)}mm"),
         profile="tiny",
@@ -492,7 +522,25 @@ def _assemble_svg(groups: list[tuple[list[GeometryPath], str]], width: float, he
                 stroke="none",
                 fill_rule="nonzero",
             ))
-    return drawing.tostring()
+    svg_str = drawing.tostring()
+    if line_metadata:
+        today = date.today().isoformat()
+        recipe_lines = [
+            f'  Line {i + 1}  "{m.text}"  —  {m.font_name or "Unknown"} · {m.font_size_mm}mm · {m.color}'
+            for i, m in enumerate(line_metadata)
+        ]
+        comment = (
+            "<!--\n"
+            "EnS Designer — Cake Topper Recipe\n"
+            f"Generated: {today}\n\n"
+            + "\n".join(recipe_lines)
+            + "\n-->"
+        )
+        tag_start = svg_str.find("<svg")
+        if tag_start != -1:
+            tag_end = svg_str.find(">", tag_start) + 1
+            svg_str = svg_str[:tag_end] + "\n" + comment + svg_str[tag_end:]
+    return svg_str
 
 
 def _cmd_str(cmd: PathCommand) -> str:

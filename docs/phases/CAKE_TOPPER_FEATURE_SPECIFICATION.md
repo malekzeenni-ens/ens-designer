@@ -1041,4 +1041,168 @@ Two bugs were identified and fixed that caused incorrect or crashed rendering wh
 
 ---
 
+# 21. Font Character-Support Error Message (2026-06-09 19:20 GMT+1)
+
+## 21.1 Problem
+
+When a user chose a decorative script font (e.g. "One Day Swash") for a line containing digits or other characters the font does not support, the system raised a generic HTTP 400 error: `"Selected font cannot render the requested text."` — with no indication of which font was at fault or which characters were missing.
+
+Root cause: decorative/calligraphic fonts commonly omit digit glyphs (0–9) entirely from their cmap. HarfBuzz maps all unmapped codepoints to `.notdef`. If every shaped glyph is `.notdef` and `.notdef` itself has no outline, `extract_outlines` returns an empty `paths` list. `build_geometry` then raises the generic `ValueError` before the per-character notdef analysis runs.
+
+## 21.2 Fix
+
+Added an early guard in `CakeTopperService._generate_line` immediately after `extract_outlines`, before `build_geometry` is called:
+
+```python
+if not paths:
+    early_chars = _extract_chars(normalised, len(glyphs))
+    notdef_chars = sorted({
+        early_chars[i]
+        for i, g in enumerate(glyphs)
+        if g.glyph_name == ".notdef" and i < len(early_chars) and early_chars[i].strip()
+    })
+    font_display = font_info.full_name
+    if notdef_chars:
+        chars_display = ", ".join(repr(c) for c in notdef_chars)
+        raise ValueError(
+            f'Line {line_index + 1} ("{word}"): font "{font_display}" has no glyphs for '
+            f'{chars_display}. This font does not support these characters — '
+            f'choose a different font for this line.'
+        )
+    raise ValueError(
+        f'Line {line_index + 1} ("{word}"): font "{font_display}" cannot render this text.'
+    )
+```
+
+## 21.3 Example user-facing message
+
+```
+Line 2 ("2025"): font "One Day Swash" has no glyphs for '0', '2', '5'.
+This font does not support these characters — choose a different font for this line.
+```
+
+The error is returned as HTTP 400 to the frontend (unchanged behaviour; only the message content improves).
+
+## 21.4 Files changed
+
+| File | Change |
+|---|---|
+| `backend/app/cake_topper_engine.py` | Added early `if not paths:` guard with notdef character identification and descriptive `ValueError` before `build_geometry` call in `_generate_line` |
+
+---
+
+# 22. Design Recipe Embedded in SVG Export (2026-06-09 19:20 GMT+1)
+
+## 22.1 Feature
+
+Every SVG exported by the Cake Topper engine now contains an XML comment immediately after the opening `<svg>` tag. This comment records the complete font recipe for the design: which font and size was used on each line, and what colour each line was assigned.
+
+This allows the operator to reproduce or revert a design by looking at the file itself — no external record is needed.
+
+## 22.2 Format
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" ...>
+<!--
+EnS Designer — Cake Topper Recipe
+Generated: 2026-06-09
+
+  Line 1  "Happy"     —  Great Vibes · 42.0mm · #000000
+  Line 2  "Birthday"  —  Anton · 60.0mm · #ff0000
+  Line 3  "Sarah"     —  Dancing Script Bold · 42.0mm · #000000
+-->
+<path .../>
+```
+
+The comment is injected via string manipulation on `drawing.tostring()` output, targeting the first `>` after the `<svg` tag open — compatible with both SVG-only output (no XML declaration) and output that begins with `<?xml ...?>`.
+
+## 22.3 Data flow
+
+| Step | Location |
+|---|---|
+| `font_info.full_name` and `cfg.font_size_mm` captured | `_generate_line` → added to `meta` dict |
+| `font_name` and `font_size_mm` stored per line | `CakeTopperLineMetadata.font_name` / `.font_size_mm` (new fields) |
+| Line metadata passed to SVG assembler | `generate()` → `_assemble_svg(..., line_metadata)` |
+| Comment injected into SVG string | `_assemble_svg` post-`tostring()` injection |
+
+## 22.4 Model changes
+
+### `backend/app/models.py` — `CakeTopperLineMetadata`
+Two new optional fields with defaults (backwards-compatible):
+```python
+font_name: str = ""
+font_size_mm: float = 42.0
+```
+
+### `frontend/src/types/design.ts` — `CakeTopperLineMetadata`
+Two new fields added to the TypeScript interface:
+```typescript
+font_name: string;
+font_size_mm: number;
+```
+
+## 22.5 Files changed
+
+| File | Change |
+|---|---|
+| `backend/app/models.py` | Added `font_name: str = ""` and `font_size_mm: float = 42.0` to `CakeTopperLineMetadata` |
+| `backend/app/cake_topper_engine.py` | `_generate_line` adds `font_name` / `font_size_mm` to meta dict; `generate()` passes them to `CakeTopperLineMetadata` and passes `line_metadata` to `_assemble_svg`; `_assemble_svg` updated to accept `line_metadata` and inject design recipe comment |
+| `frontend/src/types/design.ts` | Added `font_name: string` and `font_size_mm: number` to `CakeTopperLineMetadata` interface |
+
+---
+
+# 23. Non-Destructive Font Error Handling (2026-06-09 19:35 GMT+1)
+
+## 23.1 Problem
+
+When a font-related API error occurred during an incremental design update (e.g. changing the font for a single line), the `callApi` catch block called `setResult(null)` unconditionally. This wiped the entire preview canvas and forced the user to click "Generate design" from scratch to recover — even though the rest of the design was unchanged.
+
+## 23.2 Fix
+
+Two targeted changes to `CakeTopperPanel.tsx`:
+
+**1. Canvas-preserving error path (`preserveCanvas` flag)**
+
+`callApi` receives a new optional boolean parameter `preserveCanvas` (default `true`). When `true`, a caught error updates the error banner but leaves `result` intact so the preview, line states, gaps, and all controls remain usable. Only `handleGenerate` passes `preserveCanvas = false`, meaning a fresh "Generate design" click on an initial error (no previous result) still clears to a clean slate.
+
+```typescript
+async function callApi(
+  ...,
+  preserveCanvas = true,   // NEW
+) {
+  ...
+  } catch (e) {
+    if (!preserveCanvas) setResult(null);   // only fresh-generate clears canvas
+    setError(e instanceof Error ? e.message : "Could not generate cake topper.");
+  }
+}
+
+function handleGenerate() {
+  setLineStates([]);
+  setInterLineGaps([]);
+  callApi([], [], stakeCount, stakeOffsets, undefined, false);  // preserveCanvas = false
+}
+```
+
+**2. Dismissable error banner**
+
+The error `<div>` is now laid out with flexbox and includes a `×` dismiss button. Clicking it calls `setError(null)` so the user can clear the message once they have read it. The error also auto-clears on the next successful API call (existing behaviour via `setError(null)` at the start of `callApi`).
+
+## 23.3 User experience
+
+| Scenario | Before | After |
+|---|---|---|
+| Change font on Line 2 to one that cannot render the text | Canvas wiped — user must regenerate from scratch | Canvas preserved; error banner appears with "×" dismiss; user changes font and the next call clears the error automatically |
+| Click "Generate design" with an unsupported font | Canvas wiped — correct behaviour | Canvas wiped — unchanged |
+| Dismiss error manually | Not possible | Click "×" to hide banner |
+
+## 23.4 Files changed
+
+| File | Change |
+|---|---|
+| `frontend/src/components/CakeTopperPanel.tsx` | Added `preserveCanvas = true` param to `callApi`; `handleGenerate` passes `false`; error banner gets dismiss `×` button |
+| `frontend/src/styles.css` | `.ct-error` changed to `display: flex`; added `.ct-error-dismiss` button styles |
+
+---
+
 # End of Document

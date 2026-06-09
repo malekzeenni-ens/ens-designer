@@ -289,6 +289,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
       widthMm: parseFloat(outlineWidthMm) || 3,
       color: outlineColor,
     },
+    preserveCanvas = true,
   ) {
     const n = words.length;
     const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
@@ -318,7 +319,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         setInterLineGaps(r.metadata.inter_line_gaps_mm.map(String));
       }
     } catch (e) {
-      setResult(null);
+      if (!preserveCanvas) setResult(null);
       setError(e instanceof Error ? e.message : "Could not generate cake topper.");
     } finally {
       setLoading(false);
@@ -328,7 +329,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   function handleGenerate() {
     setLineStates([]);
     setInterLineGaps([]);
-    callApi([], [], stakeCount, stakeOffsets);
+    callApi([], [], stakeCount, stakeOffsets, undefined, false);
   }
 
   function patchLine(i: number, patch: Partial<LineState>) {
@@ -774,7 +775,15 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
 
           {error && (
             <div className="ct-error" role="alert">
-              <strong>Error:</strong> {error}
+              <span><strong>Error:</strong> {error}</span>
+              <button
+                type="button"
+                className="ct-error-dismiss"
+                onClick={() => setError(null)}
+                aria-label="Dismiss error"
+              >
+                ×
+              </button>
             </div>
           )}
 

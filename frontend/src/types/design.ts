@@ -52,6 +52,8 @@ export interface CakeTopperLineMetadata {
   manual_y_offset_mm: number;
   floating_components: FloatingComponentInfo[];
   color: string;
+  font_name: string;
+  font_size_mm: number;
 }
 
 export interface CakeTopperOutlineMetadata {

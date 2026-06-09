@@ -195,6 +195,8 @@ class CakeTopperLineMetadata(BaseModel):
     manual_y_offset_mm: float = 0.0
     floating_components: list[FloatingComponentInfo] = Field(default_factory=list)
     color: str = "#000000"
+    font_name: str = ""
+    font_size_mm: float = 42.0
 
 
 class CakeTopperStakeOffset(BaseModel):
