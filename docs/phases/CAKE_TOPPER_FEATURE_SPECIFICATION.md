@@ -5,9 +5,9 @@
 Feature: Cake Topper Designer
 Phase: X (delivered), Phase 2 (formal phase)
 Version: 1.1
-Date: 2026-06-01
+Date: 2026-06-09
 Owner: Etch 'N' Shine
-Status: Implemented — line movement drag resolved and documented
+Status: Implemented — Glyph Browser modal popup and SVG recipe visibility documented
 
 ---
 
@@ -1280,6 +1280,39 @@ Clicking a glyph appends the character to the **Line text** input at the top of 
 | `frontend/src/services/generationApi.ts` | Added `fetchFontCharacters(fontId)` API function |
 | `frontend/src/styles.css` | Added full drawer stylesheet (~180 lines): overlay, backdrop, panel, compose bar, category tabs, glyph grid, footer, Browse button |
 | `backend/app/api/routes/fonts.py` | Added `get_font_file`, `get_font_characters`, `_categorise_codepoint`, `_glyph_label` |
+
+---
+
+# 26. Glyph Browser Modal + SVG Recipe Visibility (2026-06-09 23:55 GMT+1)
+
+## 26.1 Problem 1 — Glyph Browser appeared off-screen
+
+The Glyph Browser drawer (§25) used `position: fixed; inset: 0` with `justify-content: flex-end` and `height: 100vh`, which should have rendered as a full-height right-side panel. In practice the panel content appeared below the visible viewport, requiring the user to scroll down to reach the character grid — the backdrop dimmed the page correctly, but the panel itself was not usable as a popup.
+
+## 26.2 Fix 1 — Centred modal dialog
+
+`.ct-glyph-overlay` and `.ct-glyph-drawer` were converted from a full-height side drawer to a centred modal dialog:
+
+- `.ct-glyph-overlay`: `align-items: center; justify-content: center; padding: 24px` (was `justify-content: flex-end` only)
+- `.ct-glyph-drawer`: `width: 680px; max-height: 88vh; border-radius: 14px; overflow: hidden` (was `width: 480px; height: 100vh`, square corners)
+- Entrance animation changed from a horizontal slide-in (`translateX`) to a scale/fade-in (`scale(0.96) → scale(1)`)
+- The internal `.ct-glyph-grid-wrap` (`flex: 1; overflow-y: auto`) already scrolls independently, so the modal body scrolls within `max-height: 88vh` without affecting the page.
+
+## 26.3 Fix 2 — Larger "Line text" compose input
+
+`.ct-glyph-compose-input` font size increased from `1.15rem` to `1.7rem` with more generous padding (`12px 14px`) and `line-height: 1.3`, making the live preview of composed glyphs (especially script/ligature fonts) easier to read at a glance.
+
+## 26.4 SVG recipe metadata — confirmed working, visibility clarified
+
+The design-recipe XML comment added in §22 is correctly embedded in every exported SVG (verified directly against the `/api/cake-topper` response — the `<!-- EnS Designer — Cake Topper Recipe ... -->` block appears immediately after the opening `<svg ...>` tag, listing each line's text, font name, size, and colour).
+
+This comment is **invisible when the SVG is opened in a browser or LightBurn** — XML comments are never rendered visually, by design, and do not affect the cut geometry. To view the recipe, open the downloaded `.svg` file in a text editor (Notepad, VS Code, etc.) or use "View Source" — the recipe block is the first thing in the file after the opening tag. No code change was needed; this section documents the expected access method.
+
+## 26.5 Files changed
+
+| File | Change |
+|---|---|
+| `frontend/src/styles.css` | `.ct-glyph-overlay` centred via flexbox; `.ct-glyph-drawer` converted to a centred modal (`680px`, `max-height: 88vh`, rounded corners); `@keyframes ct-drawer-in` changed to scale/fade; `.ct-glyph-compose-input` font size increased to `1.7rem` with larger padding |
 
 ---
 
