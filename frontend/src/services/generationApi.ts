@@ -9,6 +9,8 @@ import type {
   FontInfo,
   FontUploadResponse,
   GenerateResponse,
+  HistoryEntry,
+  HistoryEntryCreate,
   MaterialProfile,
   OverlapGapConfig,
   OverlapMode,
@@ -127,6 +129,22 @@ export async function generateOverlap(
     }),
   });
   if (!r.ok) return _readError(r, "Could not generate overlap design.");
+  return r.json();
+}
+
+export async function fetchHistory(): Promise<HistoryEntry[]> {
+  const r = await fetch("/api/cake-topper/history");
+  if (!r.ok) return _readError(r, "Could not load export history.");
+  return r.json();
+}
+
+export async function recordHistoryEntry(entry: HistoryEntryCreate): Promise<HistoryEntry> {
+  const r = await fetch("/api/cake-topper/history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  if (!r.ok) return _readError(r, "Could not record export history.");
   return r.json();
 }
 

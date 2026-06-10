@@ -3,10 +3,11 @@ import { useCallback, useEffect, useState } from "react";
 import { CakeTopperPanel } from "./components/CakeTopperPanel";
 import { FontAdvisorPanel } from "./components/FontAdvisorPanel";
 import { FontsPanel } from "./components/FontsPanel";
+import { HistoryPanel } from "./components/HistoryPanel";
 import { fetchFonts, fetchUploadedFonts } from "./services/generationApi";
 import type { FontInfo } from "./types/design";
 
-type WorkspaceTab = "designer" | "advisor" | "fonts";
+type WorkspaceTab = "designer" | "advisor" | "fonts" | "history";
 
 export function App() {
   const [fonts, setFonts] = useState<FontInfo[]>([]);
@@ -57,6 +58,13 @@ export function App() {
               >
                 Fonts
               </button>
+              <button
+                type="button"
+                className={activeTab === "history" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
+                onClick={() => setActiveTab("history")}
+              >
+                History
+              </button>
             </nav>
             {activeTab === "designer" && <CakeTopperPanel fonts={fonts} />}
             {activeTab === "advisor" && (
@@ -65,6 +73,7 @@ export function App() {
             {activeTab === "fonts" && (
               <FontsPanel uploadedFonts={uploadedFonts} onUploadComplete={reloadFonts} />
             )}
+            {activeTab === "history" && <HistoryPanel />}
           </>
         )}
       </section>

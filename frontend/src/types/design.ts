@@ -78,6 +78,23 @@ export interface CakeTopperResult {
   };
 }
 
+export interface HistoryLineEntry {
+  text: string;
+  font_name: string;
+  font_size_mm: number;
+}
+
+export interface HistoryEntryCreate {
+  export_type: "svg" | "png";
+  filename: string;
+  full_text: string;
+  lines: HistoryLineEntry[];
+}
+
+export interface HistoryEntry extends HistoryEntryCreate {
+  timestamp: string;
+}
+
 export interface OverlapGapConfig {
   pair_index: number;
   enabled: boolean;

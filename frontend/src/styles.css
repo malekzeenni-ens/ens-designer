@@ -1106,6 +1106,65 @@ h2 {
   vertical-align: middle;
 }
 
+.ct-history-table-wrap {
+  overflow-x: auto;
+}
+
+.ct-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.ct-history-table th,
+.ct-history-table td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--ens-line);
+}
+
+.ct-history-table th {
+  color: var(--ens-olive);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.ct-history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ct-history-table tbody tr:hover {
+  background: #fbf4e7;
+}
+
+.ct-history-timestamp {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ct-history-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+}
+
+.ct-history-badge--svg {
+  background: #eaf0f5;
+  color: var(--ens-blue);
+}
+
+.ct-history-badge--png {
+  background: var(--ens-gold-soft);
+  color: var(--ens-warm-olive);
+}
+
 .font-note,
 .error {
   min-height: 22px;

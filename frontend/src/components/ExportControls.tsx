@@ -5,18 +5,35 @@ interface ExportControlsProps {
   pngBase64: string | null;
   svgFilename: string;
   pngFilename: string;
+  onExport?: (type: "svg" | "png") => void;
 }
 
-export function ExportControls({ svg, pngBase64, svgFilename, pngFilename }: ExportControlsProps) {
+export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExport }: ExportControlsProps) {
   const disabled = !svg || !pngBase64;
 
   return (
     <div className="export-controls">
-      <button type="button" disabled={disabled} onClick={() => svg && downloadText(svg, svgFilename, "image/svg+xml")}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          if (!svg) return;
+          downloadText(svg, svgFilename, "image/svg+xml");
+          onExport?.("svg");
+        }}
+      >
         <Download size={18} aria-hidden="true" />
         Download SVG
       </button>
-      <button type="button" disabled={disabled} onClick={() => pngBase64 && downloadBase64(pngBase64, pngFilename)}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          if (!pngBase64) return;
+          downloadBase64(pngBase64, pngFilename);
+          onExport?.("png");
+        }}
+      >
         <Download size={18} aria-hidden="true" />
         Download PNG
       </button>

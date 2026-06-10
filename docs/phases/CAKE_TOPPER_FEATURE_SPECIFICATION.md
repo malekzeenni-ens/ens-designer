@@ -1340,4 +1340,151 @@ A new **Design recipe** card is rendered directly below the export bar whenever 
 
 ---
 
+# 28. Export History Tab (2026-06-10 09:10 GMT+1)
+
+## 28.1 Feature
+
+A new **History** tab in the workspace navigation records every export the user makes. Each time **Download SVG** or **Download PNG** is clicked in the Cake Topper Designer, an entry is appended to a persistent log containing:
+
+- Date & time of export (`dd/mm/yyyy HH:mm`, local time)
+- Export type (SVG / PNG badge)
+- Full design text (all lines combined)
+- Font used per line
+- Font size (mm) per line
+
+History is **only** recorded on an actual download click — generating/previewing a design does not create an entry. Colour is intentionally excluded (per user request — not needed for history lookups).
+
+## 28.2 Persistence
+
+History is stored server-side in `backend/data/cake_topper_history.json` — a flat JSON array, append-only, capped at the most recent **500 entries** (oldest entries are dropped once the cap is exceeded). Because it's a file on disk (not in-memory), the log **survives backend restarts**.
+
+Example entry:
+```json
+{
+  "export_type": "svg",
+  "filename": "happy_birthday.svg",
+  "full_text": "happy birthday",
+  "lines": [
+    { "text": "happy", "font_name": "Ayshana Script", "font_size_mm": 42.0 },
+    { "text": "birthday", "font_name": "Ayshana Script", "font_size_mm": 42.0 }
+  ],
+  "timestamp": "2026-06-10T08:05:22.098008+00:00"
+}
+```
+
+## 28.3 Backend
+
+### New module: `backend/app/history_store.py`
+`HistoryStore` class:
+- `add(entry: HistoryEntryCreate) -> HistoryEntry` — stamps `timestamp` (UTC ISO 8601), appends to the JSON file, truncates to `MAX_ENTRIES = 500`.
+- `list() -> list[HistoryEntry]` — reads the JSON file, returns entries newest-first.
+- File path: `<project_root>/backend/data/cake_topper_history.json`. Directory is created on first write if missing.
+
+### New models (`backend/app/models.py`)
+```python
+class HistoryLineEntry(BaseModel):
+    text: str
+    font_name: str = ""
+    font_size_mm: float = 0.0
+
+class HistoryEntryCreate(BaseModel):
+    export_type: Literal["svg", "png"]
+    filename: str
+    full_text: str
+    lines: list[HistoryLineEntry] = Field(default_factory=list)
+
+class HistoryEntry(HistoryEntryCreate):
+    timestamp: str
+```
+
+### New routes: `backend/app/api/routes/history.py`
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/cake-topper/history` | Returns all entries, newest first |
+| `POST` | `/api/cake-topper/history` | Appends one entry, returns it with server-assigned `timestamp` |
+
+Wired into `backend/app/main.py`: `app.state.history_store = HistoryStore(PROJECT_ROOT)`, router included.
+
+## 28.4 Frontend
+
+### New types (`frontend/src/types/design.ts`)
+```typescript
+export interface HistoryLineEntry {
+  text: string;
+  font_name: string;
+  font_size_mm: number;
+}
+export interface HistoryEntryCreate {
+  export_type: "svg" | "png";
+  filename: string;
+  full_text: string;
+  lines: HistoryLineEntry[];
+}
+export interface HistoryEntry extends HistoryEntryCreate {
+  timestamp: string;
+}
+```
+
+### New API functions (`frontend/src/services/generationApi.ts`)
+- `fetchHistory(): Promise<HistoryEntry[]>` — `GET /api/cake-topper/history`
+- `recordHistoryEntry(entry: HistoryEntryCreate): Promise<HistoryEntry>` — `POST /api/cake-topper/history`
+
+### `ExportControls.tsx`
+New optional prop `onExport?: (type: "svg" | "png") => void`, called immediately after the file download is triggered for that button. `OverlapPanel.tsx` (the other consumer of `ExportControls`) does not pass this prop, so overlap exports are not logged — history is scoped to the Cake Topper Designer only.
+
+### `CakeTopperPanel.tsx`
+New `handleExport(type)` function:
+```typescript
+function handleExport(type: "svg" | "png") {
+  if (!result) return;
+  const filename = type === "svg" ? result.svg_filename : result.png_filename;
+  recordHistoryEntry({
+    export_type: type,
+    filename,
+    full_text: words.join(" "),
+    lines: result.metadata.lines.map((line) => ({
+      text: line.text,
+      font_name: line.font_name,
+      font_size_mm: line.font_size_mm,
+    })),
+  }).catch(() => {
+    // Non-critical: history logging failure should not interrupt the download.
+  });
+}
+```
+Passed as `onExport={handleExport}` to both `<ExportControls />` instances (header export bar and bottom export bar).
+
+### New component: `frontend/src/components/HistoryPanel.tsx`
+- Fetches history on mount via `fetchHistory()`, with a manual **Refresh** button.
+- Renders a table with columns: **Date & Time**, **Type** (SVG/PNG badge), **Text**, **Font (per line)**, **Size (per line)**.
+- Per-line font/size cells stack one line per design line (e.g. `Line 1: Ayshana Script` / `Line 2: Anton`).
+- Empty state: "No exports yet. Download an SVG or PNG from the Designer tab to start building history."
+
+### `App.tsx`
+- New `WorkspaceTab` value `"history"`.
+- New **History** tab button in `workspace-tabs` nav, alongside Designer / Font Advisor / Fonts.
+- Renders `<HistoryPanel />` when active.
+
+### `styles.css`
+New rules: `.ct-history-table-wrap`, `.ct-history-table` (+ `th`/`td`), `.ct-history-timestamp`, `.ct-history-badge`, `.ct-history-badge--svg`, `.ct-history-badge--png`.
+
+## 28.5 Files changed
+
+| File | Change |
+|---|---|
+| `backend/app/models.py` | Added `HistoryLineEntry`, `HistoryEntryCreate`, `HistoryEntry` |
+| `backend/app/history_store.py` | New — JSON-backed append-only store, 500-entry cap |
+| `backend/app/api/routes/history.py` | New — `GET`/`POST /api/cake-topper/history` |
+| `backend/app/main.py` | Registered `history_store` on app state and `history_router` |
+| `backend/data/cake_topper_history.json` | New — persisted history data (starts as `[]`) |
+| `frontend/src/types/design.ts` | Added `HistoryLineEntry`, `HistoryEntryCreate`, `HistoryEntry` |
+| `frontend/src/services/generationApi.ts` | Added `fetchHistory`, `recordHistoryEntry` |
+| `frontend/src/components/ExportControls.tsx` | Added optional `onExport` callback fired after each download |
+| `frontend/src/components/CakeTopperPanel.tsx` | Added `handleExport`; wired `onExport` into both `ExportControls` instances |
+| `frontend/src/components/HistoryPanel.tsx` | New — History tab table UI |
+| `frontend/src/App.tsx` | Added "History" workspace tab |
+| `frontend/src/styles.css` | Added `.ct-history-*` table/badge styles |
+
+---
+
 # End of Document

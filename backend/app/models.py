@@ -290,3 +290,20 @@ class OverlapResponse(BaseModel):
     png_filename: str
     overlap_metadata: OverlapMetadata
     dimensions: dict
+
+
+class HistoryLineEntry(BaseModel):
+    text: str
+    font_name: str = ""
+    font_size_mm: float = 0.0
+
+
+class HistoryEntryCreate(BaseModel):
+    export_type: Literal["svg", "png"]
+    filename: str
+    full_text: str
+    lines: list[HistoryLineEntry] = Field(default_factory=list)
+
+
+class HistoryEntry(HistoryEntryCreate):
+    timestamp: str

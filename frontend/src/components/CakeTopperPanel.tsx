@@ -15,7 +15,7 @@ import {
   sortFontsForCakeTopper,
 } from "../config/cakeTopperFontRecommendations";
 import type { CakeTopperFontCategory } from "../config/cakeTopperFontRecommendations";
-import { generateCakeTopper } from "../services/generationApi";
+import { generateCakeTopper, recordHistoryEntry } from "../services/generationApi";
 import type { CakeTopperOutlineRequest } from "../services/generationApi";
 import type {
   AlignmentMode,
@@ -504,6 +504,23 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, undefined, true, newFullText);
   }
 
+  function handleExport(type: "svg" | "png") {
+    if (!result) return;
+    const filename = type === "svg" ? result.svg_filename : result.png_filename;
+    recordHistoryEntry({
+      export_type: type,
+      filename,
+      full_text: words.join(" "),
+      lines: result.metadata.lines.map((line) => ({
+        text: line.text,
+        font_name: line.font_name,
+        font_size_mm: line.font_size_mm,
+      })),
+    }).catch(() => {
+      // Non-critical: history logging failure should not interrupt the download.
+    });
+  }
+
   const meta = result?.metadata;
   const exportSizeText = meta ? `${meta.canvas_width_mm}mm x ${meta.canvas_height_mm}mm` : "Ready";
 
@@ -537,6 +554,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
             pngBase64={result?.png_base64 ?? null}
             svgFilename={result?.svg_filename ?? "cake-topper.svg"}
             pngFilename={result?.png_filename ?? "cake-topper.png"}
+            onExport={handleExport}
           />
         </div>
       </header>
@@ -1167,6 +1185,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
           pngBase64={result?.png_base64 ?? null}
           svgFilename={result?.svg_filename ?? "cake-topper.svg"}
           pngFilename={result?.png_filename ?? "cake-topper.png"}
+          onExport={handleExport}
         />
       </div>
 
