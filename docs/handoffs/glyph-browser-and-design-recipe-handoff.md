@@ -364,7 +364,7 @@ This same mechanism (`preserveCanvas`) also ensures that applying a glyph-browse
 
 ## 5. Open items / next steps for the next agent
 
-1. **Confirm the Glyph Browser modal renders correctly** after a hard browser refresh. If still mispositioned, inspect live DOM (`getComputedStyle`, `offsetParent` chain) — the portal fix should make this very unlikely, but verify empirically.
+1. ~~**Confirm the Glyph Browser modal renders correctly** after a hard browser refresh.~~ **RESOLVED 2026-06-10 23:37 GMT+1** — root cause was a stray extra `}` at `frontend/src/styles.css:1857` (right after `.fa-empty-note`), which unbalanced the stylesheet and silently dropped the `.ct-glyph-overlay` rule from the parsed CSSOM. The portal was correct all along. Fix: removed the stray brace. See `glyph-browser-modal-positioning-fix-report.md` for full root-cause analysis and live validation.
 2. No automated UI tests exist for either feature — manual verification only (`npx tsc --noEmit` passes, confirmed clean).
 3. PNG metadata embedding was explicitly descoped per user ("I don't need more than this") — do not add unless requested.
 4. Both dev servers (backend `:8000`, frontend `:5173`) were restarted as of commit `6b924d7` and confirmed healthy (`/api/fonts` → 200, `/` → 200).
