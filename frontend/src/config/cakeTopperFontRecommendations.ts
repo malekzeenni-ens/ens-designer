@@ -65,7 +65,7 @@ export const FONT_CATEGORY_LABELS: Record<CakeTopperFontCategory, string> = {
   supporting_text: "Supporting Text",
   use_with_caution: "Use With Caution",
   not_recommended: "Not Recommended",
-  uncategorised: "All Fonts A-Z",
+  uncategorised: "Other",
 };
 
 export const FONT_TYPE_LABELS: Record<CakeTopperFontType, string> = {
@@ -936,7 +936,7 @@ export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassif
     riskLevel: "medium",
     whyItWorks: "This font has not been manually ranked yet.",
     riskNotes: "Inspect stroke thickness, counters, detached dots, and joins before cutting.",
-    notes: "Still available in All Fonts A-Z; add a manual override after real cut testing.",
+    notes: "Listed under Other Fonts, ranked by measured stroke fragility; add a manual override after real cut testing.",
   };
 }
 
@@ -997,10 +997,7 @@ export function getFontClassification(font: FontInfo): CakeTopperFontClassificat
 export function getFontOptionLabel(font: FontInfo): string {
   const classification = getFontClassification(font);
   const badge = FONT_CATEGORY_LABELS[classification.category];
-  const score = classification.score >= 60 ? ` - ${classification.score}` : "";
-  return classification.category === "uncategorised"
-    ? font.full_name
-    : `${font.full_name} (${badge}${score})`;
+  return `${font.full_name} (${badge} - ${classification.score})`;
 }
 
 export function fontMatchesCategory(font: FontInfo, category: CakeTopperFontCategory | "all"): boolean {

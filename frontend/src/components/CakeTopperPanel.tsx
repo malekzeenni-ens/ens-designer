@@ -191,7 +191,7 @@ function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory) {
         c.category !== "not_recommended"
       );
     });
-    take("Other Fonts (Unranked)", (font) => getFontClassification(font).category === "uncategorised");
+    take("Other Fonts (by suitability)", (font) => getFontClassification(font).category === "uncategorised");
     take("Use With Caution", (font) => getFontClassification(font).category === "use_with_caution");
     take("Not Recommended / Symbol Fonts", (font) => getFontClassification(font).category === "not_recommended");
     take("All Other Fonts", () => true, true);
