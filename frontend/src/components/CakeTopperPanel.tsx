@@ -175,7 +175,26 @@ function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory) {
   if (category === "all") {
     take("Top 20 Cake Topper Fonts", (font) => getFontClassification(font).category === "top_10");
     take("Next Best 20 Fonts", (font) => getFontClassification(font).category === "next_best_10");
-    take("All Fonts A-Z", () => true, true);
+    take("Script Fonts (by suitability)", (font) => {
+      const c = getFontClassification(font);
+      return c.type === "script" && c.category !== "use_with_caution" && c.category !== "not_recommended";
+    });
+    take("Serif Fonts (by suitability)", (font) => {
+      const c = getFontClassification(font);
+      return c.type === "serif" && c.category !== "use_with_caution" && c.category !== "not_recommended";
+    });
+    take("Sans & Display Fonts (by suitability)", (font) => {
+      const c = getFontClassification(font);
+      return (
+        (c.type === "sans-serif" || c.type === "display") &&
+        c.category !== "use_with_caution" &&
+        c.category !== "not_recommended"
+      );
+    });
+    take("Other Fonts (Unranked)", (font) => getFontClassification(font).category === "uncategorised");
+    take("Use With Caution", (font) => getFontClassification(font).category === "use_with_caution");
+    take("Not Recommended / Symbol Fonts", (font) => getFontClassification(font).category === "not_recommended");
+    take("All Other Fonts", () => true, true);
     return groups;
   }
 
