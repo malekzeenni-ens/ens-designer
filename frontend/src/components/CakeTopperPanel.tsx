@@ -1118,7 +1118,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                         <div className="ct-gaps-section">
                           <div className="ct-subsection-copy">
                             <span className="ct-subsection-title">Letter overlap</span>
-                            <p>Increase overlap to bring letters closer together. Reduce it if letters become unreadable.</p>
+                            <p>Increase overlap to bring letters closer together. Reduce it if letters become unreadable. Pairs marked "(natural)" are already touching from the font's connected strokes and won't change.</p>
                           </div>
                           <div className="ct-gap-pills">
                             {ls.gapStates.map((gs, gi) => (
@@ -1150,11 +1150,23 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                                     <span className="ct-gap-pill-unit">mm</span>
                                   </>
                                 )}
-                                {lineMeta && gs.enabled && (
-                                  <span className="ct-gap-pill-result">
-                                    Actual {lineMeta.gaps_after_mm[gi]?.toFixed(1)}
-                                  </span>
-                                )}
+                                {lineMeta && gs.enabled && (() => {
+                                  const actual = lineMeta.gaps_after_mm[gi];
+                                  const requested = parseFloat(gs.overlapMm) || 0;
+                                  const isNatural = actual !== undefined && actual < -requested - 0.05;
+                                  return (
+                                    <span
+                                      className={`ct-gap-pill-result${isNatural ? " ct-gap-pill-result--natural" : ""}`}
+                                      title={
+                                        isNatural
+                                          ? "These letters already overlap more than the requested amount due to the font's connected strokes. The overlap setting has no further effect here."
+                                          : undefined
+                                      }
+                                    >
+                                      Actual {actual?.toFixed(1)}{isNatural ? " (natural)" : ""}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                             ))}
                           </div>

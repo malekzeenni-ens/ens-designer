@@ -968,6 +968,11 @@ h2 {
   font-weight: 800;
 }
 
+.ct-gap-pill-result--natural {
+  color: #b8860b;
+  cursor: help;
+}
+
 .floating-controls-grid {
   display: grid;
   gap: 7px;
