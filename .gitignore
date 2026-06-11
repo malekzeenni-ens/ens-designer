@@ -8,3 +8,4 @@ __pycache__/
 desktop.ini
 logs/
 .vite-cache/
+backend/scripts/font_fragility_results.json
