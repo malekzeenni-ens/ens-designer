@@ -62,5 +62,18 @@
       }
     ],
     "timestamp": "2026-06-10T08:16:27.393013+00:00"
+  },
+  {
+    "export_type": "svg",
+    "filename": "60.svg",
+    "full_text": "60",
+    "lines": [
+      {
+        "text": "60",
+        "font_name": "Baby Boho Script",
+        "font_size_mm": 40.0
+      }
+    ],
+    "timestamp": "2026-06-11T13:08:00.645936+00:00"
   }
 ]
