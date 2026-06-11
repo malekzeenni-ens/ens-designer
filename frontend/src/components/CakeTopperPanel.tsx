@@ -1139,7 +1139,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
                                     <input
                                       type="number"
                                       min="0.1"
-                                      max="10"
+                                      max="30"
                                       step="0.1"
                                       value={gs.overlapMm}
                                       className="ct-gap-pill-input"

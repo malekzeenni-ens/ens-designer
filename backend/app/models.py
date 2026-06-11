@@ -261,7 +261,7 @@ class FloatingComponentInfo(BaseModel):
 class OverlapGapConfig(BaseModel):
     pair_index: int = Field(ge=0, description="Zero-based index of the inter-glyph gap.")
     enabled: bool = True
-    overlap_mm: float = Field(gt=0, le=10.0, description="Overlap to apply for this specific gap.")
+    overlap_mm: float = Field(gt=0, le=30.0, description="Overlap to apply for this specific gap.")
 
 
 class OverlapRequest(BaseModel):
