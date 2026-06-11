@@ -1208,39 +1208,6 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
         />
       </div>
 
-      {meta && (
-        <div className="ct-recipe">
-          <h3 className="ct-recipe-title">Design recipe</h3>
-          <p className="ct-recipe-hint">
-            Saved with this design — also embedded as a comment at the top of the exported SVG file.
-          </p>
-          <table className="ct-recipe-table">
-            <thead>
-              <tr>
-                <th>Line</th>
-                <th>Text</th>
-                <th>Font</th>
-                <th>Size</th>
-                <th>Colour</th>
-              </tr>
-            </thead>
-            <tbody>
-              {meta.lines.map((line, i) => (
-                <tr key={i}>
-                  <td>{i + 1}</td>
-                  <td>{line.text}</td>
-                  <td>{line.font_name || "—"}</td>
-                  <td>{line.font_size_mm}mm</td>
-                  <td>
-                    <span className="ct-recipe-swatch" style={{ background: line.color }} />
-                    {line.color}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {glyphBrowserLineIndex !== null && (
         <GlyphBrowserDrawer
