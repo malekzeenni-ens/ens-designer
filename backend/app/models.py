@@ -22,6 +22,15 @@ class FontUploadResponse(BaseModel):
     is_duplicate: bool = False
 
 
+class ManualFontsRequest(BaseModel):
+    font_ids: list[str] = Field(default_factory=list)
+
+
+class ManualFontsResponse(BaseModel):
+    font_ids: list[str]
+    fonts: list[FontInfo]
+
+
 class BridgeOverride(BaseModel):
     pair_index: int = Field(ge=0, description="Zero-based index of the inter-glyph gap to override.")
     action: Literal["add", "remove", "set_width"]

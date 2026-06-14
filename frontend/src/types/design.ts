@@ -174,6 +174,11 @@ export interface FontUploadResponse {
   is_duplicate: boolean;
 }
 
+export interface ManualFontsResponse {
+  font_ids: string[];
+  fonts: FontInfo[];
+}
+
 export interface MaterialProfile {
   material_id: string;
   material_name: string;

@@ -4,6 +4,16 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 ---
 
+# Latest Updates
+
+- 2026-06-14 21:59:49 +01:00 - Added persistent Manual Fonts configuration with a seeded 25-font list. Manual fonts are stored in `fonts/.manual_fonts.json`, managed from the Configuration tab, and shown first in Designer font dropdowns.
+- 2026-06-14 21:59:49 +01:00 - Updated local runtime ports after Windows held `127.0.0.1:8000` in a stale bound state. Backend now runs on `http://127.0.0.1:8001`; frontend now runs on `http://127.0.0.1:5174`.
+- 2026-06-14 21:59:49 +01:00 - Added Python 3.13 backend environment `.venv313` and updated `ens_launch.ps1` to use it. The previous Python 3.14 `.venv` could hang while importing FastAPI.
+- 2026-06-14 21:59:49 +01:00 - Updated frontend tooling to `vite@7.3.5` and `@vitejs/plugin-react@5.2.0` after Vite 8 startup/imports hung on this Windows/Node setup.
+- 2026-06-14 21:59:49 +01:00 - Optimised font catalog startup by deriving dropdown metadata from font file paths instead of opening every font binary during `/api/fonts` scans.
+
+---
+
 # Current Status
 
 **Phase 1C — Production Hardening — Complete — v0.3.0**
@@ -42,6 +52,21 @@ The application:
 ---
 
 # Current Workflow
+
+## Configuration
+
+For persistent app preferences. Accessible via the **Configuration** tab.
+
+```text
+Configuration tab
+    -> Manual Fonts
+    -> Search existing project/system fonts
+    -> Add or remove selected manual fonts
+    -> Selections are saved to fonts/.manual_fonts.json
+    -> Designer dropdowns show Manual Fonts as the first font group
+```
+
+Manual font selections are backend-managed and survive browser refreshes, server restarts, and app relaunches. The initial list contains 25 frequent fonts, including Courgette and Lobster copied into `fonts/Courgette,Lobster`.
 
 ## Cake Topper Designer
 
@@ -144,10 +169,11 @@ Download SVG  /  Download PNG
 ## Install Python dependencies
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+uv venv .venv313 --python cpython-3.13.12-windows-x86_64-none
+uv pip install --python .venv313\Scripts\python.exe -r backend\requirements.txt
 ```
+
+Use `.venv313` for backend startup. The older `.venv` was created with Python 3.14 and can hang while importing FastAPI in this project.
 
 ## Start the servers (background — no terminal windows)
 
@@ -158,7 +184,7 @@ $root = "C:\Users\malek\Dropbox\_Etch_n_Shine\AI-Custom-Apps\EnS Designer"
 New-Item -ItemType Directory -Force "$root\logs" | Out-Null
 
 # Backend
-Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\backend'; ..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 *> '$root\logs\backend.log'"
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\backend'; ..\.venv313\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001 *> '$root\logs\backend.log'"
 
 # Frontend
 Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\frontend'; npm.cmd run dev *> '$root\logs\frontend.log'"
@@ -173,7 +199,7 @@ Get-Content logs\frontend.log -Tail 10
 
 Expected output when healthy:
 - Backend: `INFO: Application startup complete.`
-- Frontend: `VITE v8.x.x  ready in Xms`
+- Frontend: `VITE v7.x.x  ready in Xms`
 
 ## Stop the servers
 
@@ -199,7 +225,7 @@ Vite stores its optimized dependency cache at `C:\Users\malek\AppData\Local\Temp
 ## Open in browser
 
 ```
-http://127.0.0.1:5173
+http://127.0.0.1:5174
 ```
 
 ---
@@ -207,7 +233,7 @@ http://127.0.0.1:5173
 # Testing
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest
+.\.venv313\Scripts\python.exe -m pytest
 ```
 
 97 tests — 0 failures (2 skipped when Lobster/Oswald are not installed).
@@ -233,6 +259,19 @@ The backend discovers fonts from the repository-local font library first, then W
 Supported formats: `.ttf` and `.otf`. Duplicates are hidden by font full name and style.
 
 The repository `fonts/` directory is the source of truth for Etch N Shine production fonts. Restart the backend after adding or removing fonts.
+
+## Manual Fonts
+
+Manual Fonts are the frequent-font shortlist shown first in Designer dropdowns.
+
+| Item | Value |
+|---|---|
+| Persistent config | `fonts/.manual_fonts.json` |
+| API read endpoint | `GET /api/fonts/manual` |
+| API save endpoint | `PUT /api/fonts/manual` |
+| UI location | `Configuration` tab |
+
+The backend validates saved font IDs against the live catalog. Missing fonts are skipped instead of breaking startup. When duplicate font names/styles exist as `.ttf` and `.otf`, the catalog preserves IDs explicitly listed in `fonts/.manual_fonts.json`.
 
 ---
 

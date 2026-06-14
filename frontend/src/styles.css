@@ -1772,6 +1772,135 @@ h2 {
   text-align: center;
 }
 
+/* ============================================================
+   Configuration tab
+   ============================================================ */
+
+.config-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.config-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--ens-line);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 12px 30px rgba(7, 19, 30, 0.07);
+}
+
+.config-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.config-card-header h2 {
+  font-size: 1.02rem;
+}
+
+.config-card-header p {
+  margin: 6px 0 0;
+  color: var(--ens-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.config-save-state {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border: 1px solid var(--ens-line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ens-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.config-add-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.config-add-button {
+  min-width: 92px;
+  border-color: var(--ens-navy);
+  background: var(--ens-navy);
+  color: #ffffff;
+}
+
+.manual-font-list {
+  display: grid;
+  gap: 8px;
+}
+
+.manual-font-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid var(--ens-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.manual-font-row span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.manual-font-row strong {
+  overflow: hidden;
+  color: var(--ens-navy);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manual-font-row small {
+  color: var(--ens-muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.manual-font-row button {
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+}
+
+@media (max-width: 760px) {
+  .config-card-header,
+  .manual-font-row {
+    align-items: stretch;
+  }
+
+  .config-card-header,
+  .config-add-row {
+    grid-template-columns: 1fr;
+  }
+
+  .config-card-header,
+  .manual-font-row {
+    flex-direction: column;
+  }
+
+  .config-save-state,
+  .manual-font-row button {
+    align-self: flex-start;
+  }
+}
+
 /* Risk level badges */
 .fonts-risk {
   display: inline-block;

@@ -29,6 +29,7 @@ import type {
 
 interface CakeTopperPanelProps {
   fonts: FontInfo[];
+  manualFonts: FontInfo[];
 }
 
 const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] = [
@@ -157,7 +158,7 @@ function InspectorAccordion({
   );
 }
 
-function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory) {
+function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory, manualFonts: FontInfo[] = []) {
   const sorted = sortFontsForCakeTopper(fonts);
   const seen = new Set<string>();
   const groups: { label: string; fonts: FontInfo[] }[] = [];
@@ -173,6 +174,12 @@ function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory) {
   }
 
   if (category === "all") {
+    const availableIds = new Set(sorted.map((font) => font.id));
+    const manualGroupFonts = manualFonts.filter((font) => availableIds.has(font.id));
+    if (manualGroupFonts.length > 0) {
+      manualGroupFonts.forEach((font) => seen.add(font.id));
+      groups.push({ label: "Manual Fonts", fonts: manualGroupFonts });
+    }
     take("Top 20 Cake Topper Fonts", (font) => getFontClassification(font).category === "top_10");
     take("Next Best 20 Fonts", (font) => getFontClassification(font).category === "next_best_10");
     take("Script Fonts (by suitability)", (font) => {
@@ -214,11 +221,11 @@ function renderFontGroups(groups: { label: string; fonts: FontInfo[] }[]) {
   ));
 }
 
-export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
+export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   const [text, setText] = useState("Happy Birthday");
   const [fontSearch, setFontSearch] = useState("");
   const [fontCategory, setFontCategory] = useState<FontFilterCategory>("all");
-  const [defaultFontId, setDefaultFontId] = useState(fonts[0]?.id ?? "");
+  const [defaultFontId, setDefaultFontId] = useState(manualFonts[0]?.id ?? fonts[0]?.id ?? "");
   const [defaultSize, setDefaultSize] = useState(DEFAULT_SIZE);
   const [defaultOverlap, setDefaultOverlap] = useState<OverlapMode>(DEFAULT_OVERLAP);
   const [lineStates, setLineStates] = useState<LineState[]>([]);
@@ -251,20 +258,21 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
   }, [fonts, fontCategory, fontSearch]);
 
   const fontGroups = useMemo(
-    () => makeFontGroups(filteredFonts, fontCategory),
-    [filteredFonts, fontCategory],
+    () => makeFontGroups(filteredFonts, fontCategory, manualFonts),
+    [filteredFonts, fontCategory, manualFonts],
   );
 
   const allFontGroups = useMemo(
-    () => makeFontGroups(fonts, "all"),
-    [fonts],
+    () => makeFontGroups(fonts, "all", manualFonts),
+    [fonts, manualFonts],
   );
 
   useEffect(() => {
-    if (filteredFonts.length > 0 && !filteredFonts.some((f) => f.id === defaultFontId)) {
-      setDefaultFontId(filteredFonts[0].id);
+    const firstGroupedFontId = fontGroups[0]?.fonts[0]?.id;
+    if (firstGroupedFontId && !filteredFonts.some((f) => f.id === defaultFontId)) {
+      setDefaultFontId(firstGroupedFontId);
     }
-  }, [filteredFonts]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [defaultFontId, filteredFonts, fontGroups]);
 
   function buildLineConfigs(states: LineState[]): CakeTopperLineConfig[] {
     return states.map((s) => ({
@@ -499,7 +507,7 @@ export function CakeTopperPanel({ fonts }: CakeTopperPanelProps) {
     setText("Happy Birthday");
     setFontSearch("");
     setFontCategory("all");
-    setDefaultFontId(fonts[0]?.id ?? "");
+    setDefaultFontId(manualFonts[0]?.id ?? fonts[0]?.id ?? "");
     setDefaultSize(DEFAULT_SIZE);
     setDefaultOverlap(DEFAULT_OVERLAP);
     setLineStates([]);

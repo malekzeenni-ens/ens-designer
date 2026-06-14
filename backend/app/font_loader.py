@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
-
-from fontTools.ttLib import TTFont
 
 from .models import FontInfo
 
 FONT_EXTENSIONS = {".ttf", ".otf"}
 UPLOAD_MANIFEST = ".uploaded_manifest.json"
+MANUAL_FONTS_MANIFEST = ".manual_fonts.json"
 
 
 @dataclass(frozen=True)
@@ -44,7 +44,8 @@ class FontCatalog:
             return self._records
 
         records: dict[str, FontRecord] = {}
-        seen_names: set[tuple[str, str]] = set()
+        seen_names: dict[tuple[str, str], str] = {}
+        manual_ids = set(self._read_manifest_ids(MANUAL_FONTS_MANIFEST, "manual"))
         for source, directory in self._font_directories():
             if not directory.exists():
                 continue
@@ -52,8 +53,17 @@ class FontCatalog:
                 if path.suffix.lower() not in FONT_EXTENSIONS or not path.is_file():
                     continue
                 record = self._read_font(source, path)
-                if record is not None and _font_key(record.info) not in seen_names:
-                    seen_names.add(_font_key(record.info))
+                if record is None:
+                    continue
+                key = _font_key(record.info)
+                existing_id = seen_names.get(key)
+                if existing_id is None:
+                    seen_names[key] = record.info.id
+                    records[record.info.id] = record
+                    continue
+                if record.info.id in manual_ids and existing_id not in manual_ids:
+                    records.pop(existing_id, None)
+                    seen_names[key] = record.info.id
                     records[record.info.id] = record
 
         self._records = dict(sorted(records.items(), key=lambda item: item[1].info.full_name.lower()))
@@ -77,14 +87,7 @@ class FontCatalog:
 
     def get_uploaded_font_ids(self) -> list[str]:
         """Return font IDs recorded in the upload manifest."""
-        manifest_path = self.project_root / "fonts" / UPLOAD_MANIFEST
-        if not manifest_path.exists():
-            return []
-        try:
-            data = json.loads(manifest_path.read_text(encoding="utf-8"))
-            return data.get("uploaded", [])
-        except Exception:
-            return []
+        return self._read_manifest_ids(UPLOAD_MANIFEST, "uploaded")
 
     def record_upload(self, font_id: str) -> None:
         """Persist a font ID to the upload manifest."""
@@ -94,6 +97,48 @@ class FontCatalog:
             ids.append(font_id)
         manifest_path.write_text(json.dumps({"uploaded": ids}, indent=2), encoding="utf-8")
 
+    def get_manual_font_ids(self) -> list[str]:
+        """Return saved manual font IDs that still exist in the live catalog."""
+        raw_ids = self._read_manifest_ids(MANUAL_FONTS_MANIFEST, "manual")
+        records = self._scan()
+        valid_ids: list[str] = []
+        for font_id in raw_ids:
+            if font_id in records and font_id not in valid_ids:
+                valid_ids.append(font_id)
+        return valid_ids
+
+    def list_manual_fonts(self) -> list[FontInfo]:
+        records = self._scan()
+        return [records[font_id].info for font_id in self.get_manual_font_ids()]
+
+    def save_manual_font_ids(self, font_ids: list[str]) -> list[str]:
+        """Persist manual font IDs after de-duping and dropping unknown fonts."""
+        records = self._scan()
+        valid_ids: list[str] = []
+        for font_id in font_ids:
+            if font_id in records and font_id not in valid_ids:
+                valid_ids.append(font_id)
+        manifest_path = self.project_root / "fonts" / MANUAL_FONTS_MANIFEST
+        manifest_path.write_text(json.dumps({"manual": valid_ids}, indent=2), encoding="utf-8")
+        return valid_ids
+
+    def _read_manifest_ids(self, manifest_name: str, key: str) -> list[str]:
+        manifest_path = self.project_root / "fonts" / manifest_name
+        if not manifest_path.exists():
+            return []
+        try:
+            data = json.loads(manifest_path.read_text(encoding="utf-8"))
+            raw_ids = data.get(key, [])
+        except Exception:
+            return []
+        if not isinstance(raw_ids, list):
+            return []
+        ids: list[str] = []
+        for font_id in raw_ids:
+            if isinstance(font_id, str) and font_id not in ids:
+                ids.append(font_id)
+        return ids
+
     def _font_directories(self) -> list[tuple[str, Path]]:
         directories: list[tuple[str, Path]] = [("project", self.project_root / "fonts")]
         windows_fonts = Path("C:/Windows/Fonts")
@@ -102,19 +147,10 @@ class FontCatalog:
         return directories
 
     def _read_font(self, source: str, path: Path) -> FontRecord | None:
-        try:
-            font = TTFont(path, lazy=True)
-            names = font["name"]
-            family = names.getBestFamilyName() or path.stem
-            full_name = names.getBestFullName() or family
-            style = names.getBestSubFamilyName() or "Regular"
-        except Exception:
+        if path.suffix.lower() not in FONT_EXTENSIONS or not path.is_file():
             return None
-        finally:
-            try:
-                font.close()
-            except Exception:
-                pass
+
+        family, full_name, style = _font_names_from_path(path)
 
         font_id = hashlib.sha1(str(path.resolve()).encode("utf-8")).hexdigest()[:16]
         info = FontInfo(id=font_id, family=family, full_name=full_name, style=style, source=source)  # type: ignore[arg-type]
@@ -127,3 +163,43 @@ def _font_key(font: FontInfo) -> tuple[str, str]:
 
 def _normalise_name(value: str) -> str:
     return " ".join(value.casefold().split())
+
+
+def _font_names_from_path(path: Path) -> tuple[str, str, str]:
+    """Build catalog display metadata without opening every font binary."""
+    name = path.stem
+    cleaned = name.replace("_", " ").replace("-", " ")
+    cleaned = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    style_tokens = {
+        "regular": "Regular",
+        "bold": "Bold",
+        "italic": "Italic",
+        "medium": "Medium",
+        "semibold": "SemiBold",
+        "semi bold": "SemiBold",
+        "black": "Black",
+        "light": "Light",
+        "thin": "Thin",
+        "extrabold": "ExtraBold",
+        "extra bold": "ExtraBold",
+        "extralight": "ExtraLight",
+        "extra light": "ExtraLight",
+        "demo": "DEMO",
+    }
+
+    lower = cleaned.casefold()
+    style = "Regular"
+    full_name = cleaned or path.stem
+    for token, label in sorted(style_tokens.items(), key=lambda item: len(item[0]), reverse=True):
+        pattern = rf"(?:^|\s){re.escape(token)}$"
+        if re.search(pattern, lower):
+            style = label
+            full_name = re.sub(pattern, "", full_name, flags=re.IGNORECASE).strip()
+            break
+
+    if not full_name:
+        full_name = cleaned or path.stem
+    family = full_name
+    return family, full_name, style

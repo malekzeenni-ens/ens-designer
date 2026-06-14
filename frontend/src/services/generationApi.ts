@@ -67,6 +67,24 @@ export async function fetchUploadedFonts(): Promise<FontInfo[]> {
   return r.json();
 }
 
+export async function fetchManualFonts(): Promise<FontInfo[]> {
+  const r = await fetch("/api/fonts/manual");
+  if (!r.ok) throw new Error("Could not load manual fonts.");
+  const body = await r.json();
+  return body.fonts;
+}
+
+export async function saveManualFonts(fontIds: string[]): Promise<FontInfo[]> {
+  const r = await fetch("/api/fonts/manual", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ font_ids: fontIds }),
+  });
+  if (!r.ok) return _readError(r, "Could not save manual fonts.");
+  const body = await r.json();
+  return body.fonts;
+}
+
 export async function uploadFont(file: File): Promise<FontUploadResponse> {
   const form = new FormData();
   form.append("file", file);

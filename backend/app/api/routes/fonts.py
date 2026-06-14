@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from fontTools.ttLib import TTFont
 
-from ...models import FontUploadResponse
+from ...models import FontUploadResponse, ManualFontsRequest, ManualFontsResponse
 
 router = APIRouter(prefix="/api/fonts", tags=["fonts"])
 
@@ -28,6 +28,28 @@ def list_uploaded_fonts(request: Request):
     uploaded_ids = catalog.get_uploaded_font_ids()
     all_records = catalog._scan()
     return [all_records[fid].info for fid in uploaded_ids if fid in all_records]
+
+
+@router.get("/manual", response_model=ManualFontsResponse)
+def list_manual_fonts(request: Request):
+    catalog = request.app.state.font_catalog
+    font_ids = catalog.get_manual_font_ids()
+    records = catalog._scan()
+    return ManualFontsResponse(
+        font_ids=font_ids,
+        fonts=[records[font_id].info for font_id in font_ids],
+    )
+
+
+@router.put("/manual", response_model=ManualFontsResponse)
+def update_manual_fonts(payload: ManualFontsRequest, request: Request):
+    catalog = request.app.state.font_catalog
+    font_ids = catalog.save_manual_font_ids(payload.font_ids)
+    records = catalog._scan()
+    return ManualFontsResponse(
+        font_ids=font_ids,
+        fonts=[records[font_id].info for font_id in font_ids],
+    )
 
 
 @router.post("/upload", response_model=FontUploadResponse)
