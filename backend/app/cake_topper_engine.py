@@ -16,9 +16,12 @@ from __future__ import annotations
 
 import base64
 import logging
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from shapely.geometry import MultiPolygon, Point, Polygon
+from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
 from .canonical_geometry import build_geometry, recalculate_geometry_bounds
@@ -29,6 +32,7 @@ from .models import (
     CakeTopperLineMetadata,
     CakeTopperMetadata,
     CakeTopperOutlineMetadata,
+    CakeTopperRingMetadata,
     CakeTopperRequest,
     CakeTopperResponse,
     CakeTopperStakeMetadata,
@@ -60,6 +64,7 @@ MAX_LINES = 4
 CANVAS_PADDING_MM = 5.0
 DEFAULT_INTER_LINE_GAP_MM = 3.0
 DEFAULT_STAKE_COUNT = 0
+MIN_RING_OVERLAP_MM = 4.0
 
 _MODE_OVERLAP_MM: dict[str, float] = {
     "auto":   1.0,
@@ -158,13 +163,21 @@ class CakeTopperService:
         # lines alone, not to each other.
         line_only_paths = [p for group, _ in translated_path_groups for p in group]
 
-        stake_paths, stake_metadata = _build_stakes(request, line_only_paths)
-        if stake_paths:
-            translated_path_groups.append((stake_paths, DEFAULT_PATH_COLOR))
-
         outline_metadata: CakeTopperOutlineMetadata | None = None
+        ring_metadata: CakeTopperRingMetadata | None = None
+        ring_warnings: list[str] = []
         if request.outline_enabled:
-            outline_paths = _generate_outline(line_only_paths, request.outline_width_mm)
+            outline_geometry = _generate_outline_geometry(line_only_paths, request.outline_width_mm)
+            if request.ring_config.enabled and outline_geometry is not None:
+                outline_geometry, ring_metadata, ring_warnings = _apply_ring_to_base(
+                    request,
+                    outline_geometry,
+                    line_only_paths,
+                )
+            outline_paths = _compound_paths_from_shapely(
+                outline_geometry,
+                "R0-backing-with-ring" if request.ring_config.enabled else "OUTLINE",
+            )
             if outline_paths:
                 # Inserted at the front so it renders behind the lines/stakes.
                 translated_path_groups.insert(0, (outline_paths, request.outline_color))
@@ -172,11 +185,22 @@ class CakeTopperService:
                     width_mm=round(request.outline_width_mm, 3),
                     color=request.outline_color,
                 )
+        elif request.ring_config.enabled:
+            ring_metadata, ring_warnings = _disabled_ring_metadata(request)
+            ring_warnings.append(
+                "Ring/keyhole is intended for designs with an outline/backing layer. "
+                "Enable outline to create a structurally safe keychain body."
+            )
 
-        translated_path_groups, line_metadata, stake_metadata, canvas_width, canvas_height = _fit_canvas_to_paths(
+        stake_paths, stake_metadata = _build_stakes(request, line_only_paths)
+        if stake_paths:
+            translated_path_groups.append((stake_paths, DEFAULT_PATH_COLOR))
+
+        translated_path_groups, line_metadata, stake_metadata, ring_metadata, canvas_width, canvas_height = _fit_canvas_to_paths(
             translated_path_groups,
             line_metadata,
             stake_metadata,
+            ring_metadata,
             canvas_width,
             canvas_height,
         )
@@ -194,6 +218,7 @@ class CakeTopperService:
             logger.warning("Text truncated: dropped %d word(s): %s", len(dropped_words), dropped_words)
         for _, meta in line_results:
             all_warnings.extend(meta.get("warnings", []))
+        all_warnings.extend(ring_warnings)
 
         base_name = _safe_filename("_".join(words))
         return CakeTopperResponse(
@@ -206,6 +231,7 @@ class CakeTopperService:
                 words=words,
                 lines=line_metadata,
                 stakes=stake_metadata,
+                ring=ring_metadata,
                 inter_line_gaps_mm=[round(g, 3) for g in inter_gaps[:n - 1]],
                 canvas_width_mm=round(canvas_width, 3),
                 canvas_height_mm=round(canvas_height, 3),
@@ -431,12 +457,14 @@ def _fit_canvas_to_paths(
     path_groups: list[tuple[list[GeometryPath], str]],
     line_metadata: list[CakeTopperLineMetadata],
     stake_metadata: list[CakeTopperStakeMetadata],
+    ring_metadata: CakeTopperRingMetadata | None,
     width: float,
     height: float,
 ) -> tuple[
     list[tuple[list[GeometryPath], str]],
     list[CakeTopperLineMetadata],
     list[CakeTopperStakeMetadata],
+    CakeTopperRingMetadata | None,
     float,
     float,
 ]:
@@ -444,7 +472,7 @@ def _fit_canvas_to_paths(
     all_paths = [p for group, _ in path_groups for p in group]
     bounds = _paths_bounds(all_paths)
     if bounds is None:
-        return path_groups, line_metadata, stake_metadata, width, height
+        return path_groups, line_metadata, stake_metadata, ring_metadata, width, height
 
     min_x, min_y, max_x, max_y = bounds
     canvas_min_x = min(0.0, min_x - CANVAS_PADDING_MM)
@@ -476,8 +504,13 @@ def _fit_canvas_to_paths(
             })
             for meta in stake_metadata
         ]
+        if ring_metadata is not None:
+            ring_metadata = ring_metadata.model_copy(update={
+                "center_x_mm": round(ring_metadata.center_x_mm + shift_x, 3),
+                "center_y_mm": round(ring_metadata.center_y_mm + shift_y, 3),
+            })
 
-    return path_groups, line_metadata, stake_metadata, fitted_width, fitted_height
+    return path_groups, line_metadata, stake_metadata, ring_metadata, fitted_width, fitted_height
 
 
 def _paths_bounds(paths: list[GeometryPath]) -> tuple[float, float, float, float] | None:
@@ -571,6 +604,12 @@ def _render_png(
 
 def _generate_outline(paths: list[GeometryPath], width_mm: float) -> list[GeometryPath]:
     """Union all closed line paths into one silhouette, then grow it outward by width_mm."""
+    grown = _generate_outline_geometry(paths, width_mm)
+    return shapely_to_paths(grown, "OUTLINE")
+
+
+def _generate_outline_geometry(paths: list[GeometryPath], width_mm: float):
+    """Union all closed line paths into one silhouette, then grow it outward by width_mm."""
     polygons = []
     for path in paths:
         if not path.closed:
@@ -579,15 +618,238 @@ def _generate_outline(paths: list[GeometryPath], width_mm: float) -> list[Geomet
         if poly is not None and not poly.is_empty and poly.area > 0:
             polygons.append(poly)
     if not polygons:
-        return []
+        return None
 
     try:
         combined = unary_union(polygons)
         grown = combined.buffer(width_mm, join_style="round")
     except Exception:
         logger.warning("Outline generation failed; skipping combined outline.")
-        return []
+        return None
     if grown.is_empty:
+        return None
+
+    return grown
+
+
+def _apply_ring_to_base(
+    request: CakeTopperRequest,
+    base_geometry,
+    line_paths: list[GeometryPath],
+) -> tuple[object, CakeTopperRingMetadata, list[str]]:
+    cfg = request.ring_config
+    outer_radius = cfg.outer_diameter_mm / 2.0
+    hole_radius = cfg.hole_diameter_mm / 2.0
+    wall_thickness = (cfg.outer_diameter_mm - cfg.hole_diameter_mm) / 2.0
+    warnings = _ring_validation_warnings(cfg, wall_thickness)
+
+    min_x, min_y, max_x, _ = base_geometry.bounds
+    if cfg.position == "top-center":
+        center_x = (min_x + max_x) / 2.0
+    elif cfg.position == "top-right":
+        center_x = max_x - outer_radius
+    elif cfg.position == "custom":
+        center_x = min_x + outer_radius
+    else:
+        center_x = min_x + outer_radius
+    center_y = min_y + cfg.overlap_mm - outer_radius
+    center_x += cfg.x_offset_mm
+    center_y += cfg.y_offset_mm
+
+    ring_outer = Point(center_x, center_y).buffer(outer_radius, quad_segs=64)
+    ring_hole = Point(center_x, center_y).buffer(hole_radius, quad_segs=64)
+    neck_width = _approximate_ring_neck_width(outer_radius, cfg.overlap_mm)
+
+    if neck_width is not None and neck_width < cfg.min_neck_width_mm:
+        warnings.append(
+            "Ring connection to the backing may be too weak. Increase overlap or move the ring closer to the design body."
+        )
+
+    try:
+        overlap_area = ring_outer.intersection(base_geometry).area
+    except Exception:
+        overlap_area = 0.0
+    if overlap_area <= 0:
+        warnings.append(
+            "Ring/keyhole is not touching the backing layer. Move it closer to the design body."
+        )
+        metadata = _ring_metadata(
+            cfg.position,
+            center_x,
+            center_y,
+            cfg.outer_diameter_mm,
+            cfg.hole_diameter_mm,
+            cfg.x_offset_mm,
+            cfg.y_offset_mm,
+            wall_thickness,
+            neck_width,
+            warnings,
+        )
+        return base_geometry, metadata, warnings
+
+    try:
+        with_tab = unary_union([base_geometry, ring_outer]).buffer(0)
+        with_hole = with_tab.difference(ring_hole).buffer(0)
+    except Exception:
+        warnings.append("Ring/keyhole geometry could not be generated. Try a different position or size.")
+        metadata = _ring_metadata(
+            cfg.position,
+            center_x,
+            center_y,
+            cfg.outer_diameter_mm,
+            cfg.hole_diameter_mm,
+            cfg.x_offset_mm,
+            cfg.y_offset_mm,
+            wall_thickness,
+            neck_width,
+            warnings,
+        )
+        return base_geometry, metadata, warnings
+
+    line_geometry = _paths_union(line_paths)
+    if line_geometry is not None:
+        try:
+            if ring_hole.intersects(line_geometry):
+                warnings.append("Ring hole may be too close to the text. Move the ring or increase the outline offset.")
+        except Exception:
+            pass
+
+    metadata = _ring_metadata(
+        cfg.position,
+        center_x,
+        center_y,
+        cfg.outer_diameter_mm,
+        cfg.hole_diameter_mm,
+        cfg.x_offset_mm,
+        cfg.y_offset_mm,
+        wall_thickness,
+        neck_width,
+        warnings,
+    )
+    return with_hole, metadata, warnings
+
+
+def _disabled_ring_metadata(request: CakeTopperRequest) -> tuple[CakeTopperRingMetadata, list[str]]:
+    cfg = request.ring_config
+    wall_thickness = (cfg.outer_diameter_mm - cfg.hole_diameter_mm) / 2.0
+    warnings = _ring_validation_warnings(cfg, wall_thickness)
+    metadata = _ring_metadata(
+        cfg.position,
+        0.0,
+        0.0,
+        cfg.outer_diameter_mm,
+        cfg.hole_diameter_mm,
+        cfg.x_offset_mm,
+        cfg.y_offset_mm,
+        wall_thickness,
+        _approximate_ring_neck_width(cfg.outer_diameter_mm / 2.0, cfg.overlap_mm),
+        warnings,
+    )
+    return metadata, warnings
+
+
+def _ring_validation_warnings(cfg, wall_thickness: float) -> list[str]:
+    warnings: list[str] = []
+    if wall_thickness < cfg.min_wall_thickness_mm:
+        warnings.append(
+            "Ring wall thickness is below 3 mm. Increase the outer diameter or reduce the hole diameter."
+        )
+    if cfg.overlap_mm < MIN_RING_OVERLAP_MM:
+        warnings.append(
+            "Ring connection to the backing may be too weak. Increase overlap or move the ring closer to the design body."
+        )
+    return warnings
+
+
+def _ring_metadata(
+    position: str,
+    center_x: float,
+    center_y: float,
+    outer_diameter: float,
+    hole_diameter: float,
+    x_offset: float,
+    y_offset: float,
+    wall_thickness: float,
+    neck_width: float | None,
+    warnings: list[str],
+) -> CakeTopperRingMetadata:
+    return CakeTopperRingMetadata(
+        enabled=True,
+        position=position,
+        center_x_mm=round(center_x, 3),
+        center_y_mm=round(center_y, 3),
+        outer_diameter_mm=round(outer_diameter, 3),
+        hole_diameter_mm=round(hole_diameter, 3),
+        outer_radius_mm=round(outer_diameter / 2.0, 3),
+        hole_radius_mm=round(hole_diameter / 2.0, 3),
+        x_offset_mm=round(x_offset, 3),
+        y_offset_mm=round(y_offset, 3),
+        wall_thickness_mm=round(wall_thickness, 3),
+        neck_width_mm=round(neck_width, 3) if neck_width is not None else None,
+        is_valid=len(warnings) == 0,
+        warnings=warnings,
+    )
+
+
+def _approximate_ring_neck_width(outer_radius: float, overlap: float) -> float | None:
+    if overlap <= 0 or outer_radius <= 0:
+        return None
+    clamped_overlap = min(overlap, outer_radius * 2.0)
+    distance_from_center = outer_radius - clamped_overlap
+    value = outer_radius**2 - distance_from_center**2
+    if value < 0:
+        return None
+    return 2.0 * math.sqrt(value)
+
+
+def _paths_union(paths: list[GeometryPath]):
+    polygons = []
+    for path in paths:
+        if not path.closed:
+            continue
+        poly = path_to_shapely(path)
+        if poly is not None and not poly.is_empty and poly.area > 0:
+            polygons.append(poly)
+    if not polygons:
+        return None
+    try:
+        return unary_union(polygons).buffer(0)
+    except Exception:
+        return None
+
+
+def _compound_paths_from_shapely(geometry, path_id_prefix: str) -> list[GeometryPath]:
+    if geometry is None or geometry.is_empty:
+        return []
+    if isinstance(geometry, Polygon):
+        polygons = [geometry]
+    elif isinstance(geometry, MultiPolygon):
+        polygons = list(geometry.geoms)
+    else:
         return []
 
-    return shapely_to_paths(grown, "OUTLINE")
+    paths: list[GeometryPath] = []
+    for poly_idx, poly in enumerate(polygons):
+        if poly.is_empty:
+            continue
+        oriented = orient(poly, sign=1.0)
+        commands: list[PathCommand] = []
+        _append_ring_commands(commands, list(oriented.exterior.coords))
+        for interior in oriented.interiors:
+            _append_ring_commands(commands, list(interior.coords))
+        if commands:
+            paths.append(GeometryPath(
+                path_id=f"{path_id_prefix}-{poly_idx:04d}",
+                commands=commands,
+                closed=True,
+            ))
+    return paths
+
+
+def _append_ring_commands(commands: list[PathCommand], coords: list[tuple[float, float]]) -> None:
+    if len(coords) < 3:
+        return
+    commands.append(PathCommand(type="M", x=round(coords[0][0], 3), y=round(coords[0][1], 3)))
+    for x, y in coords[1:]:
+        commands.append(PathCommand(type="L", x=round(x, 3), y=round(y, 3)))
+    commands.append(PathCommand(type="Z"))

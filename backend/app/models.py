@@ -186,6 +186,7 @@ class CakeTopperRequest(BaseModel):
     line_configs: list[CakeTopperLineConfig] = Field(default_factory=list)
     inter_line_gaps_mm: list[float] = Field(default_factory=list)
     stake_config: "CakeTopperStakeConfig" = Field(default_factory=lambda: CakeTopperStakeConfig())
+    ring_config: "CakeTopperRingConfig" = Field(default_factory=lambda: CakeTopperRingConfig())
     outline_enabled: bool = False
     outline_width_mm: float = Field(default=3.0, gt=0, le=50.0)
     outline_color: str = Field(default="#000000", pattern=HEX_COLOR_PATTERN)
@@ -222,6 +223,18 @@ class CakeTopperStakeConfig(BaseModel):
     offsets: list[CakeTopperStakeOffset] = Field(default_factory=list)
 
 
+class CakeTopperRingConfig(BaseModel):
+    enabled: bool = False
+    position: Literal["top-left", "top-center", "top-right", "left", "right", "custom"] = "top-left"
+    outer_diameter_mm: float = Field(default=12.0, ge=10.0, le=15.0)
+    hole_diameter_mm: float = Field(default=5.0, ge=4.0, le=6.0)
+    overlap_mm: float = Field(default=5.0, ge=0.0, le=20.0)
+    x_offset_mm: float = 0.0
+    y_offset_mm: float = 0.0
+    min_wall_thickness_mm: float = Field(default=3.0, gt=0.0, le=10.0)
+    min_neck_width_mm: float = Field(default=5.0, gt=0.0, le=20.0)
+
+
 class CakeTopperStakeMetadata(BaseModel):
     stake_index: int
     width_mm: float
@@ -237,10 +250,28 @@ class CakeTopperOutlineMetadata(BaseModel):
     color: str
 
 
+class CakeTopperRingMetadata(BaseModel):
+    enabled: bool
+    position: str
+    center_x_mm: float
+    center_y_mm: float
+    outer_diameter_mm: float
+    hole_diameter_mm: float
+    outer_radius_mm: float
+    hole_radius_mm: float
+    x_offset_mm: float
+    y_offset_mm: float
+    wall_thickness_mm: float
+    neck_width_mm: float | None = None
+    is_valid: bool
+    warnings: list[str] = Field(default_factory=list)
+
+
 class CakeTopperMetadata(BaseModel):
     words: list[str]
     lines: list[CakeTopperLineMetadata]
     stakes: list[CakeTopperStakeMetadata] = Field(default_factory=list)
+    ring: Optional[CakeTopperRingMetadata] = None
     inter_line_gaps_mm: list[float]
     canvas_width_mm: float
     canvas_height_mm: float

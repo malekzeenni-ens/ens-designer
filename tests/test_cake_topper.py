@@ -468,3 +468,98 @@ class TestCakeTopperStakes:
         svg = _ct(client, font_id, text="Happy", stake_config={"count": 1})["svg"]
         assert 'id="S0-stake"' in svg
         assert " Q " in svg
+
+
+# ---------------------------------------------------------------------------
+# Ring / Keyhole
+# ---------------------------------------------------------------------------
+
+class TestCakeTopperRing:
+    def test_default_has_no_ring(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy")
+        assert data["metadata"]["ring"] is None
+
+    def test_enabled_ring_metadata_defaults(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={"enabled": True})
+        ring = data["metadata"]["ring"]
+        assert ring is not None
+        assert ring["outer_diameter_mm"] == 12.0
+        assert ring["hole_diameter_mm"] == 5.0
+        assert ring["wall_thickness_mm"] == 3.5
+        assert ring["position"] == "top-left"
+
+    def test_invalid_wall_thickness_returns_warning(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={
+            "enabled": True,
+            "outer_diameter_mm": 10.0,
+            "hole_diameter_mm": 6.0,
+        })
+        ring = data["metadata"]["ring"]
+        assert ring is not None
+        assert ring["is_valid"] is False
+        assert any("wall thickness" in warning.lower() for warning in ring["warnings"])
+        assert any("wall thickness" in warning.lower() for warning in data["warnings"])
+
+    def test_ring_requires_outline_warning_without_backing(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy", ring_config={"enabled": True})
+        assert data["metadata"]["ring"] is not None
+        assert any("outline" in warning.lower() for warning in data["warnings"])
+        assert "R0-backing-with-ring" not in data["svg"]
+
+    def test_svg_contains_backing_with_real_ring_hole_geometry(self, client: TestClient, font_id: str) -> None:
+        svg = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={"enabled": True})["svg"]
+        assert 'id="R0-backing-with-ring-0000"' in svg
+        assert "<circle" not in svg
+        assert "#FFFFFF" not in svg.upper()
+        ring_path_start = svg.index('id="R0-backing-with-ring-0000"')
+        path_tag_start = svg.rfind("<path", 0, ring_path_start)
+        path_tag_end = svg.find("/>", ring_path_start)
+        ring_path_tag = svg[path_tag_start:path_tag_end]
+        assert ring_path_tag.count("M ") >= 2
+        assert ring_path_tag.count("Z") >= 2
+
+    def test_ring_offsets_shift_metadata(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={"enabled": True})
+        shifted = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={
+            "enabled": True,
+            "x_offset_mm": 4.0,
+            "y_offset_mm": -2.0,
+        })
+        base_ring = base["metadata"]["ring"]
+        shifted_ring = shifted["metadata"]["ring"]
+        assert shifted_ring["x_offset_mm"] == 4.0
+        assert shifted_ring["y_offset_mm"] == -2.0
+        assert shifted_ring["center_x_mm"] - base_ring["center_x_mm"] == pytest.approx(4.0, abs=0.01)
+
+    def test_ring_canvas_expands_when_moved_up(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={"enabled": True})
+        shifted = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={
+            "enabled": True,
+            "y_offset_mm": -4.0,
+        })
+        assert shifted["metadata"]["canvas_height_mm"] > base["metadata"]["canvas_height_mm"]
+
+    def test_ring_positions_produce_different_centres(self, client: TestClient, font_id: str) -> None:
+        left = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={
+            "enabled": True,
+            "position": "top-left",
+        })["metadata"]["ring"]
+        center = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={
+            "enabled": True,
+            "position": "top-center",
+        })["metadata"]["ring"]
+        right = _ct(client, font_id, text="Happy", outline_enabled=True, ring_config={
+            "enabled": True,
+            "position": "top-right",
+        })["metadata"]["ring"]
+        assert left["center_x_mm"] < center["center_x_mm"] < right["center_x_mm"]
+
+    def test_ring_uses_outline_colour(self, client: TestClient, font_id: str) -> None:
+        svg = _ct(client, font_id, text="Happy", outline_enabled=True, outline_color="#FFD700", ring_config={
+            "enabled": True,
+        })["svg"]
+        ring_path_start = svg.index('id="R0-backing-with-ring-0000"')
+        path_tag_start = svg.rfind("<path", 0, ring_path_start)
+        path_tag_end = svg.find("/>", ring_path_start)
+        ring_path_tag = svg[path_tag_start:path_tag_end]
+        assert 'fill="#FFD700"' in ring_path_tag

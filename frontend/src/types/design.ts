@@ -1,5 +1,6 @@
 export type OverlapMode = "auto" | "light" | "medium" | "strong" | "custom";
 export type AlignmentMode = "left" | "center" | "right" | "manual";
+export type CakeTopperRingPosition = "top-left" | "top-center" | "top-right" | "left" | "right" | "custom";
 
 export interface CakeTopperLineConfig {
   font_id: string;
@@ -39,6 +40,33 @@ export interface CakeTopperStakeMetadata {
   manual_y_offset_mm: number;
 }
 
+export interface CakeTopperRingConfig {
+  enabled: boolean;
+  position: CakeTopperRingPosition;
+  outer_diameter_mm: number;
+  hole_diameter_mm: number;
+  overlap_mm: number;
+  x_offset_mm: number;
+  y_offset_mm: number;
+}
+
+export interface CakeTopperRingMetadata {
+  enabled: boolean;
+  position: CakeTopperRingPosition;
+  center_x_mm: number;
+  center_y_mm: number;
+  outer_diameter_mm: number;
+  hole_diameter_mm: number;
+  outer_radius_mm: number;
+  hole_radius_mm: number;
+  x_offset_mm: number;
+  y_offset_mm: number;
+  wall_thickness_mm: number;
+  neck_width_mm: number | null;
+  is_valid: boolean;
+  warnings: string[];
+}
+
 export interface CakeTopperLineMetadata {
   text: string;
   glyph_chars: string[];
@@ -71,6 +99,7 @@ export interface CakeTopperResult {
     words: string[];
     lines: CakeTopperLineMetadata[];
     stakes: CakeTopperStakeMetadata[];
+    ring: CakeTopperRingMetadata | null;
     inter_line_gaps_mm: number[];
     canvas_width_mm: number;
     canvas_height_mm: number;

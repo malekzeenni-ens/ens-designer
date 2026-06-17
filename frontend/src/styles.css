@@ -377,6 +377,11 @@ h2 {
   border-radius: 2px 2px 999px 999px;
 }
 
+.preview-drag-handle--ring {
+  border-style: solid;
+  border-radius: 999px;
+}
+
 .preview-drag-handle:active {
   cursor: grabbing;
 }
@@ -702,6 +707,76 @@ h2 {
   color: var(--ens-navy);
   font-size: 0.82rem;
   font-weight: 850;
+}
+
+.ct-ring-section {
+  border-top: 1px solid var(--ens-line);
+  padding-top: 12px;
+}
+
+.ct-ring-title-row,
+.ct-ring-size-row,
+.ct-ring-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ct-ring-copy {
+  margin: 0;
+  color: var(--ens-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.ct-ring-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.ct-ring-status {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--ens-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ct-ring-status--safe {
+  background: #e8f7ef;
+  color: #11663f;
+}
+
+.ct-ring-status--warning {
+  background: #fff3d6;
+  color: #8a5b00;
+}
+
+.ct-ring-status--pending,
+.ct-ring-status--off {
+  background: #f4f1eb;
+  color: var(--ens-muted);
+}
+
+.ct-ring-summary span {
+  padding: 5px 8px;
+  border: 1px solid var(--ens-line);
+  border-radius: 999px;
+  background: #fff8eb;
+  color: var(--ens-muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.ct-ring-warnings {
+  margin: 0;
+  padding-left: 18px;
+  color: #8a5b00;
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 .ct-lines-section .ct-inspector-section-body {

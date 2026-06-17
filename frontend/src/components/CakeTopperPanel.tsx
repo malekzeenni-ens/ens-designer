@@ -20,6 +20,8 @@ import type { CakeTopperOutlineRequest } from "../services/generationApi";
 import type {
   AlignmentMode,
   CakeTopperLineConfig,
+  CakeTopperRingConfig,
+  CakeTopperRingPosition,
   CakeTopperResult,
   CakeTopperStakeConfig,
   FontInfo,
@@ -60,6 +62,7 @@ type GapState = { enabled: boolean; overlapMm: string };
 type InspectorSectionId = "create" | "layout" | "lines";
 type StakeCount = 0 | 1 | 2;
 type StakeOffsetState = { xMm: string; yMm: string };
+type RingOffsetState = { xMm: string; yMm: string };
 type FontFilterCategory = CakeTopperFontCategory | "all";
 type LineState = {
   fontId: string;
@@ -82,6 +85,15 @@ const DEFAULT_INTER_GAP = "3";
 const DEFAULT_STAKE_WIDTH = 3;
 const DEFAULT_STAKE_LENGTH = 50;
 const DEFAULT_STAKE_OVERLAP = 2;
+const DEFAULT_RING_OUTER_DIAMETER = "12";
+const DEFAULT_RING_HOLE_DIAMETER = "5";
+const DEFAULT_RING_OVERLAP = 5;
+const RING_POSITIONS: { value: CakeTopperRingPosition; label: string }[] = [
+  { value: "top-left", label: "Top-left" },
+  { value: "top-center", label: "Top-centre" },
+  { value: "top-right", label: "Top-right" },
+  { value: "custom", label: "Custom" },
+];
 const FONT_FILTERS: { value: FontFilterCategory; label: string }[] = [
   { value: "all", label: "All fonts" },
   { value: "top_10", label: "Top 20" },
@@ -240,6 +252,12 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   const [outlineEnabled, setOutlineEnabled] = useState(false);
   const [outlineWidthMm, setOutlineWidthMm] = useState(DEFAULT_OUTLINE_WIDTH_MM);
   const [outlineColor, setOutlineColor] = useState(DEFAULT_COLOR);
+  const [ringEnabled, setRingEnabled] = useState(false);
+  const [ringPosition, setRingPosition] = useState<CakeTopperRingPosition>("top-left");
+  const [ringOuterDiameterMm, setRingOuterDiameterMm] = useState(DEFAULT_RING_OUTER_DIAMETER);
+  const [ringHoleDiameterMm, setRingHoleDiameterMm] = useState(DEFAULT_RING_HOLE_DIAMETER);
+  const [ringOffset, setRingOffset] = useState<RingOffsetState>({ xMm: "0", yMm: "0" });
+  const [selectedRing, setSelectedRing] = useState(false);
   const [glyphBrowserLineIndex, setGlyphBrowserLineIndex] = useState<number | null>(null);
   const [openSections, setOpenSections] =
     useState<Record<InspectorSectionId, boolean>>(DEFAULT_OPEN_SECTIONS);
@@ -308,6 +326,24 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     };
   }
 
+  function buildRingConfig(
+    enabled = ringEnabled,
+    position = ringPosition,
+    outerDiameterMm = ringOuterDiameterMm,
+    holeDiameterMm = ringHoleDiameterMm,
+    offset = ringOffset,
+  ): CakeTopperRingConfig {
+    return {
+      enabled,
+      position,
+      outer_diameter_mm: parseFloat(outerDiameterMm) || 12,
+      hole_diameter_mm: parseFloat(holeDiameterMm) || 5,
+      overlap_mm: DEFAULT_RING_OVERLAP,
+      x_offset_mm: parseFloat(offset.xMm) || 0,
+      y_offset_mm: parseFloat(offset.yMm) || 0,
+    };
+  }
+
   async function callApi(
     states: LineState[],
     gaps: string[],
@@ -320,6 +356,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     },
     preserveCanvas = true,
     textOverride?: string,
+    ringConfig: CakeTopperRingConfig = buildRingConfig(),
   ) {
     const activeText = textOverride ?? text;
     const n = activeText.trim().split(/\s+/).filter(Boolean).slice(0, 4).length;
@@ -339,6 +376,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
         configs,
         gapValues,
         buildStakeConfig(count, offsets),
+        ringConfig,
         outline,
       );
       setResult(r);
@@ -460,6 +498,92 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
   }
 
+  function handleRingEnabledChange(enabled: boolean) {
+    setRingEnabled(enabled);
+    setSelectedRing(enabled);
+    if (enabled) {
+      setSelectedLine(null);
+      setSelectedStake(null);
+    }
+    const nextOutlineEnabled = enabled ? true : outlineEnabled;
+    if (enabled && !outlineEnabled) {
+      setOutlineEnabled(true);
+    }
+    if (result) {
+      callApi(
+        lineStates,
+        interLineGaps,
+        stakeCount,
+        stakeOffsets,
+        {
+          enabled: nextOutlineEnabled,
+          widthMm: parseFloat(outlineWidthMm) || 3,
+          color: outlineColor,
+        },
+        true,
+        undefined,
+        buildRingConfig(enabled),
+      );
+    }
+  }
+
+  function setRingPositionAndRegenerate(position: CakeTopperRingPosition) {
+    setRingPosition(position);
+    if (result) {
+      callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, undefined, true, undefined, buildRingConfig(ringEnabled, position));
+    }
+  }
+
+  function setRingOuterAndRegenerate(value: string) {
+    setRingOuterDiameterMm(value);
+    if (result && !isNaN(parseFloat(value))) {
+      callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, undefined, true, undefined, buildRingConfig(ringEnabled, ringPosition, value));
+    }
+  }
+
+  function setRingHoleAndRegenerate(value: string) {
+    setRingHoleDiameterMm(value);
+    if (result && !isNaN(parseFloat(value))) {
+      callApi(
+        lineStates,
+        interLineGaps,
+        stakeCount,
+        stakeOffsets,
+        undefined,
+        true,
+        undefined,
+        buildRingConfig(ringEnabled, ringPosition, ringOuterDiameterMm, value),
+      );
+    }
+  }
+
+  function setRingOffsetAndRegenerate(nextOffset: RingOffsetState) {
+    setRingOffset(nextOffset);
+    if (result && !isNaN(parseFloat(nextOffset.xMm)) && !isNaN(parseFloat(nextOffset.yMm))) {
+      callApi(
+        lineStates,
+        interLineGaps,
+        stakeCount,
+        stakeOffsets,
+        undefined,
+        true,
+        undefined,
+        buildRingConfig(ringEnabled, ringPosition, ringOuterDiameterMm, ringHoleDiameterMm, nextOffset),
+      );
+    }
+  }
+
+  function handleRingDrag(dxMm: number, dyMm: number) {
+    const nextOffset = {
+      xMm: String(Math.round(((parseFloat(ringOffset.xMm) || 0) + dxMm) * 10) / 10),
+      yMm: String(Math.round(((parseFloat(ringOffset.yMm) || 0) + dyMm) * 10) / 10),
+    };
+    setSelectedLine(null);
+    setSelectedStake(null);
+    setSelectedRing(true);
+    setRingOffsetAndRegenerate(nextOffset);
+  }
+
   function toggleOutline(enabled: boolean) {
     setOutlineEnabled(enabled);
     callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, {
@@ -492,11 +616,19 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   function selectLine(lineIndex: number) {
     setSelectedLine(lineIndex);
     setSelectedStake(null);
+    setSelectedRing(false);
   }
 
   function selectStake(stakeIndex: number) {
     setSelectedStake(stakeIndex);
     setSelectedLine(null);
+    setSelectedRing(false);
+  }
+
+  function selectRing() {
+    setSelectedRing(true);
+    setSelectedLine(null);
+    setSelectedStake(null);
   }
 
   function toggleInspectorSection(id: InspectorSectionId) {
@@ -519,6 +651,15 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     setStakeCount(0);
     setStakeOffsets([]);
     setSelectedStake(null);
+    setRingEnabled(false);
+    setRingPosition("top-left");
+    setRingOuterDiameterMm(DEFAULT_RING_OUTER_DIAMETER);
+    setRingHoleDiameterMm(DEFAULT_RING_HOLE_DIAMETER);
+    setRingOffset({ xMm: "0", yMm: "0" });
+    setSelectedRing(false);
+    setOutlineEnabled(false);
+    setOutlineWidthMm(DEFAULT_OUTLINE_WIDTH_MM);
+    setOutlineColor(DEFAULT_COLOR);
     setOpenSections(DEFAULT_OPEN_SECTIONS);
   }
 
@@ -550,6 +691,14 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
 
   const meta = result?.metadata;
   const exportSizeText = meta ? `${meta.canvas_width_mm}mm x ${meta.canvas_height_mm}mm` : "Ready";
+  const ringMeta = meta?.ring ?? null;
+  const ringStatus = !ringEnabled
+    ? "Off"
+    : ringMeta?.is_valid
+      ? "Safe"
+      : ringMeta
+        ? "Warning"
+        : "Pending";
 
   return (
     <div className="ct-panel">
@@ -619,14 +768,23 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                 wMm: stake.width_mm,
                 hMm: stake.length_mm,
               }))}
+              ringBox={meta?.ring ? {
+                xMm: meta.ring.center_x_mm - meta.ring.outer_radius_mm,
+                yMm: meta.ring.center_y_mm - meta.ring.outer_radius_mm,
+                wMm: meta.ring.outer_diameter_mm,
+                hMm: meta.ring.outer_diameter_mm,
+              } : null}
               canvasWidthMm={meta?.canvas_width_mm}
               canvasHeightMm={meta?.canvas_height_mm}
               selectedLine={selectedLine}
               selectedStake={selectedStake}
+              selectedRing={selectedRing}
               onSelectLine={selectLine}
               onSelectStake={selectStake}
+              onSelectRing={selectRing}
               onLineDrag={handleLineDrag}
               onStakeDrag={handleStakeDrag}
+              onRingDrag={handleRingDrag}
             />
           </div>
 
@@ -832,6 +990,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                 </div>
               )}
             </div>
+
           </InspectorAccordion>
 
           {error && (
@@ -936,6 +1095,116 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                     ))}
                   </div>
                 </>
+              )}
+            </div>
+
+            <div className="ct-position-section ct-ring-section">
+              <div className="ct-ring-title-row">
+                <div className="ct-subsection-copy">
+                  <span className="ct-subsection-title">Ring / Keyhole</span>
+                  <p>
+                    Add a keychain hole to the outline/backing. The reinforced tab is only the acrylic around the hole.
+                  </p>
+                </div>
+                <span className={`ct-ring-status ct-ring-status--${ringStatus.toLowerCase()}`}>
+                  {ringStatus}
+                </span>
+              </div>
+              <label className="ct-outline-toggle">
+                <input
+                  type="checkbox"
+                  checked={ringEnabled}
+                  onChange={(e) => handleRingEnabledChange(e.target.checked)}
+                />
+                <span>Add ring / keyhole</span>
+              </label>
+              {ringEnabled && (
+                <div className="ct-ring-controls">
+                  <label className="ct-card-field">
+                    <span>Position</span>
+                    <select
+                      value={ringPosition}
+                      onChange={(e) => setRingPositionAndRegenerate(e.target.value as CakeTopperRingPosition)}
+                    >
+                      {RING_POSITIONS.map((position) => (
+                        <option key={position.value} value={position.value}>
+                          {position.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="ct-ring-size-row">
+                    <label className="ct-card-field ct-card-field--sm">
+                      <span>Hole diameter</span>
+                      <span className="ct-unit-input ct-unit-input--compact">
+                        <input
+                          type="number"
+                          min="4"
+                          max="6"
+                          step="0.5"
+                          value={ringHoleDiameterMm}
+                          onChange={(e) => setRingHoleAndRegenerate(e.target.value)}
+                        />
+                        <span>mm</span>
+                      </span>
+                    </label>
+                    <label className="ct-card-field ct-card-field--sm">
+                      <span>Reinforced tab</span>
+                      <span className="ct-unit-input ct-unit-input--compact">
+                        <input
+                          type="number"
+                          min="10"
+                          max="15"
+                          step="0.5"
+                          value={ringOuterDiameterMm}
+                          onChange={(e) => setRingOuterAndRegenerate(e.target.value)}
+                        />
+                        <span>mm</span>
+                      </span>
+                    </label>
+                  </div>
+                  <div className="ct-stake-offset-row">
+                    <span>Ring offset</span>
+                    <span className="ct-unit-input ct-unit-input--compact">
+                      <input
+                        type="number"
+                        min="-500"
+                        max="500"
+                        step="0.5"
+                        value={ringOffset.xMm}
+                        aria-label="Ring X offset"
+                        onChange={(e) => setRingOffsetAndRegenerate({ ...ringOffset, xMm: e.target.value })}
+                      />
+                      <span>X</span>
+                    </span>
+                    <span className="ct-unit-input ct-unit-input--compact">
+                      <input
+                        type="number"
+                        min="-500"
+                        max="500"
+                        step="0.5"
+                        value={ringOffset.yMm}
+                        aria-label="Ring Y offset"
+                        onChange={(e) => setRingOffsetAndRegenerate({ ...ringOffset, yMm: e.target.value })}
+                      />
+                      <span>Y</span>
+                    </span>
+                  </div>
+                  {ringMeta && (
+                    <div className="ct-ring-summary">
+                      <span>Wall {ringMeta.wall_thickness_mm.toFixed(1)}mm</span>
+                      {ringMeta.neck_width_mm !== null && <span>Neck {ringMeta.neck_width_mm.toFixed(1)}mm</span>}
+                      <span>Hole {ringMeta.hole_diameter_mm.toFixed(1)}mm</span>
+                    </div>
+                  )}
+                  {ringMeta?.warnings && ringMeta.warnings.length > 0 && (
+                    <ul className="ct-ring-warnings">
+                      {ringMeta.warnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
             </div>
           </InspectorAccordion>

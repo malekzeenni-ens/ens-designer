@@ -7,34 +7,42 @@ interface LineBox {
   hMm: number;
 }
 
-type DragKind = "line" | "stake";
+type DragKind = "line" | "stake" | "ring";
 
 interface PreviewPanelProps {
   svg: string | null;
   lineBoxes?: LineBox[];
   stakeBoxes?: LineBox[];
+  ringBox?: LineBox | null;
   canvasWidthMm?: number;
   canvasHeightMm?: number;
   selectedLine?: number | null;
   selectedStake?: number | null;
+  selectedRing?: boolean;
   onSelectLine?: (i: number) => void;
   onSelectStake?: (i: number) => void;
+  onSelectRing?: () => void;
   onLineDrag?: (i: number, dxMm: number, dyMm: number) => void;
   onStakeDrag?: (i: number, dxMm: number, dyMm: number) => void;
+  onRingDrag?: (dxMm: number, dyMm: number) => void;
 }
 
 export function PreviewPanel({
   svg,
   lineBoxes,
   stakeBoxes,
+  ringBox,
   canvasWidthMm,
   canvasHeightMm,
   selectedLine,
   selectedStake,
+  selectedRing,
   onSelectLine,
   onSelectStake,
+  onSelectRing,
   onLineDrag,
   onStakeDrag,
+  onRingDrag,
 }: PreviewPanelProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const cleanupDragRef = useRef<(() => void) | null>(null);
@@ -70,7 +78,7 @@ export function PreviewPanel({
       handleEl.isConnected
         ? handleEl
         : hostRef.current?.querySelector<HTMLElement>(
-            `[data-${kind}-index="${itemIndex}"]`,
+            kind === "ring" ? "[data-ring-index=\"0\"]" : `[data-${kind}-index="${itemIndex}"]`,
           ) ?? null;
 
     function cleanup() {
@@ -104,8 +112,10 @@ export function PreviewPanel({
       const host = hostRef.current;
       if (kind === "line") {
         onSelectLine?.(itemIndex);
-      } else {
+      } else if (kind === "stake") {
         onSelectStake?.(itemIndex);
+      } else {
+        onSelectRing?.();
       }
 
       if (!host || !canvasWidthMm || !canvasHeightMm) {
@@ -123,8 +133,10 @@ export function PreviewPanel({
       if (Math.abs(dxMm) > 0.05 || Math.abs(dyMm) > 0.05) {
         if (kind === "line") {
           onLineDrag?.(itemIndex, dxMm, dyMm);
-        } else {
+        } else if (kind === "stake") {
           onStakeDrag?.(itemIndex, dxMm, dyMm);
+        } else {
+          onRingDrag?.(dxMm, dyMm);
         }
       }
     }
@@ -137,7 +149,7 @@ export function PreviewPanel({
 
   const showOverlay =
     svg &&
-    ((lineBoxes && lineBoxes.length > 0) || (stakeBoxes && stakeBoxes.length > 0)) &&
+    ((lineBoxes && lineBoxes.length > 0) || (stakeBoxes && stakeBoxes.length > 0) || ringBox) &&
     canvasWidthMm &&
     canvasHeightMm;
 
@@ -179,6 +191,20 @@ export function PreviewPanel({
                     title={`Drag to move Stake ${i + 1}`}
                   />
                 ))}
+                {ringBox && (
+                  <div
+                    className={`preview-drag-handle preview-drag-handle--ring${selectedRing ? " preview-drag-handle--selected" : ""}`}
+                    style={{
+                      left: `${(ringBox.xMm / canvasWidthMm!) * 100}%`,
+                      top: `${(ringBox.yMm / canvasHeightMm!) * 100}%`,
+                      width: `${(ringBox.wMm / canvasWidthMm!) * 100}%`,
+                      height: `${(ringBox.hMm / canvasHeightMm!) * 100}%`,
+                    }}
+                    data-ring-index={0}
+                    onPointerDown={(e) => startDrag(e, "ring", 0)}
+                    title="Drag to move Ring / Keyhole"
+                  />
+                )}
               </div>
             )}
           </div>

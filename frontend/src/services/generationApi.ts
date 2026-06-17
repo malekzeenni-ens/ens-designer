@@ -1,6 +1,7 @@
 import type {
   BridgeOverride,
   CakeTopperLineConfig,
+  CakeTopperRingConfig,
   CakeTopperResult,
   CakeTopperStakeConfig,
   CharacterInfo,
@@ -180,6 +181,7 @@ export async function generateCakeTopper(
   lineConfigs: CakeTopperLineConfig[],
   interLineGapsMm: number[],
   stakeConfig?: CakeTopperStakeConfig,
+  ringConfig?: CakeTopperRingConfig,
   outline?: CakeTopperOutlineRequest,
 ): Promise<CakeTopperResult> {
   let r: Response;
@@ -195,6 +197,7 @@ export async function generateCakeTopper(
         line_configs: lineConfigs,
         inter_line_gaps_mm: interLineGapsMm,
         stake_config: stakeConfig,
+        ring_config: ringConfig,
         outline_enabled: outline?.enabled ?? false,
         outline_width_mm: outline?.widthMm ?? 3.0,
         outline_color: outline?.color ?? "#000000",
