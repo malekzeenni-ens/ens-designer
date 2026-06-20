@@ -96,7 +96,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ## [2026-06-20 18:37:16 Europe/London] - Add Interactive Sizing Preview Controls
 
 ### Commit
-- Commit hash: `<pending>`
+- Commit hash: `17a31b112ca5a492e90abb34014b763d7b4c6810`
 - Previous commit hash: `8d57717395c343512c979943f83c8c53bdc4799f`
 - Branch: `main`
 - Deployment target: `main`
@@ -134,7 +134,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ### Revert Instructions
 ```bash
-git revert <pending>
+git revert 17a31b112ca5a492e90abb34014b763d7b4c6810
 ```
 
 ### Snapshot Status
