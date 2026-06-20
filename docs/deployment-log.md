@@ -96,7 +96,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ## [2026-06-20 18:46:43 Europe/London] - Scale Sizing Preview By Cake Diameter
 
 ### Commit
-- Commit hash: `<pending>`
+- Commit hash: `91696f93b875b07f69bfa7bcf238c15f7e0aa5d2`
 - Previous commit hash: `57838976b47227c94c75621f78dd03298907fbfd`
 - Branch: `main`
 - Deployment target: `main`
@@ -132,7 +132,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ### Revert Instructions
 ```bash
-git revert <pending>
+git revert 91696f93b875b07f69bfa7bcf238c15f7e0aa5d2
 ```
 
 ### Snapshot Status
