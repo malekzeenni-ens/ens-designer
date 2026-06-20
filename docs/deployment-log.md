@@ -91,3 +91,63 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ### Snapshot Status
 - Known-good snapshot: Yes
 - Phase 1 MVP complete: Yes
+
+---
+
+## [2026-06-20 18:27:15 Europe/London] - Add Sizing Source Docs And Font Assets
+
+### Commit
+- Commit hash: `03eaa4a26b534b908b1523f2ac0b1ac8b6bed36e`
+- Previous commit hash: `37a57fe00947311eca346e273ff86b326127b8e5`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Added the Sizing Assistant Phase 1 source-of-truth documents and newly pending font assets.
+
+### Files Changed
+- `docs/architecture/ENS_Sizing_Assistant_Phase_1_Implementation_Approach.md`
+- `docs/business/ENS_Sizing_Assistant_Phase_1_PSD_FSD.md`
+- `fonts/CrimsonPro-Black.ttf`
+- `fonts/CrimsonPro-BlackItalic.ttf`
+- `fonts/CrimsonPro-Bold.ttf`
+- `fonts/CrimsonPro-Bold_1.ttf`
+- `fonts/CrimsonPro-Light.ttf`
+- `fonts/CrimsonPro-Medium.ttf`
+- `fonts/CrimsonPro-Regular.ttf`
+- `fonts/CrimsonPro-SemiBold.ttf`
+- `fonts/Gabriela-Regular.ttf`
+- `fonts/Inika-Bold.ttf`
+- `fonts/Inika-Regular.ttf`
+- `fonts/Parisienne-Regular.ttf`
+- `fonts/Sedan-Italic.ttf`
+- `fonts/Sedan-Regular.ttf`
+
+### Implementation Details
+- Added the product/functional specification and implementation approach documents used for Sizing Assistant Phase 1.
+- Added 14 TTF font files under `fonts/`.
+- Verified the pending TTF files can be opened by FontTools and expose family/style metadata.
+- Noted that `CrimsonPro-Bold.ttf` and `CrimsonPro-Bold_1.ttf` report the same family/style and byte size, but both were committed because the request was to commit all pending files.
+- No application code was changed in this commit.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 31 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Reviewed pending file list before staging.
+- Checked the two Markdown source documents open and contain the expected Sizing Assistant Phase 1 headings.
+- Checked all 14 pending TTF files with FontTools.
+
+### Known Issues / Follow-Ups
+- `CrimsonPro-Bold.ttf` and `CrimsonPro-Bold_1.ttf` appear to be duplicate font assets.
+
+### Revert Instructions
+```bash
+git revert 03eaa4a26b534b908b1523f2ac0b1ac8b6bed36e
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
