@@ -47,6 +47,7 @@ export type SizingStatus =
 export type WarningSeverity = "info" | "warning" | "critical";
 export type StakeRecommendation = "none" | "single" | "double";
 export type DimensionUnit = "px" | "mm" | "unitless" | "unknown";
+export type SizingAreaMode = "fullDesign" | "visibleArtwork";
 
 export type UploadedDesignMetadata = {
   name: string;
@@ -54,6 +55,10 @@ export type UploadedDesignMetadata = {
   originalWidth: number | null;
   originalHeight: number | null;
   originalUnit: DimensionUnit;
+  sizingAreaMode?: SizingAreaMode;
+  sizingWidth?: number | null;
+  sizingHeight?: number | null;
+  visibleArtworkHeightPercent?: number;
   viewBox?: string;
   rawSvgText?: string;
   previewUrl?: string;

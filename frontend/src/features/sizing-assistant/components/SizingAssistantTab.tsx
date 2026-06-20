@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { calculateSizingRecommendation } from "../engine/calculateSizingRecommendation";
 import type {
   ManualOverrideState,
+  SizingAreaMode,
   SizingProductConfig,
   UploadedDesignMetadata,
 } from "../engine/sizingTypes";
@@ -35,10 +36,12 @@ const defaultManualOverride: ManualOverrideState = {
 
 const defaultPreviewSettings: SizingPreviewSettings = {
   previewRecommendedSize: true,
-  offsetXPct: 0,
-  offsetYPct: 0,
+  offsetXPct: 28,
+  offsetYPct: -18,
   rotationDeg: 0,
 };
+
+const defaultVisibleArtworkHeightPercent = 72;
 
 export function SizingAssistantTab() {
   const [uploadedFile, setUploadedFile] = useState<UploadedDesignMetadata | null>(null);
@@ -47,24 +50,29 @@ export function SizingAssistantTab() {
   const [previewSettings, setPreviewSettings] =
     useState<SizingPreviewSettings>(defaultPreviewSettings);
 
-  const recommendation = useMemo(() => {
+  const recommendationUploadedFile = useMemo(() => {
     if (!uploadedFile) return null;
+    return buildRecommendationUploadedFile(uploadedFile);
+  }, [uploadedFile]);
+
+  const recommendation = useMemo(() => {
+    if (!recommendationUploadedFile) return null;
     return calculateSizingRecommendation({
-      uploadedFile,
+      uploadedFile: recommendationUploadedFile,
       productConfig,
       manualOverride,
     });
-  }, [manualOverride, productConfig, uploadedFile]);
+  }, [manualOverride, productConfig, recommendationUploadedFile]);
 
   const aspectRatio =
-    uploadedFile?.originalWidth && uploadedFile.originalHeight
-      ? uploadedFile.originalWidth / uploadedFile.originalHeight
+    recommendationUploadedFile?.originalWidth && recommendationUploadedFile.originalHeight
+      ? recommendationUploadedFile.originalWidth / recommendationUploadedFile.originalHeight
       : null;
 
   function handleUpload(metadata: UploadedDesignMetadata) {
     setUploadedFile((previous) => {
       if (previous?.previewUrl) URL.revokeObjectURL(previous.previewUrl);
-      return metadata;
+      return normaliseSizingArea(metadata);
     });
     setManualOverride(defaultManualOverride);
     setPreviewSettings(defaultPreviewSettings);
@@ -79,9 +87,21 @@ export function SizingAssistantTab() {
         originalWidth: width,
         originalHeight: height,
         originalUnit: dimensionsDetected ? "unitless" : current.originalUnit,
+        sizingWidth: width,
+        sizingHeight:
+          current.sizingAreaMode === "visibleArtwork" && height
+            ? roundOne(height * ((current.visibleArtworkHeightPercent ?? defaultVisibleArtworkHeightPercent) / 100))
+            : height,
         dimensionsDetected,
         errors: dimensionsDetected ? [] : current.errors,
       };
+    });
+  }
+
+  function handleSizingAreaChange(mode: SizingAreaMode, visibleArtworkHeightPercent?: number) {
+    setUploadedFile((current) => {
+      if (!current) return current;
+      return applySizingAreaMode(current, mode, visibleArtworkHeightPercent);
     });
   }
 
@@ -109,6 +129,7 @@ export function SizingAssistantTab() {
             uploadedFile={uploadedFile}
             onUpload={handleUpload}
             onManualDimensionsChange={handleManualDimensionsChange}
+            onSizingAreaChange={handleSizingAreaChange}
           />
           <SizingInputPanel config={productConfig} onChange={setProductConfig} />
           <ManualOverrideControls
@@ -138,4 +159,73 @@ export function SizingAssistantTab() {
       </div>
     </div>
   );
+}
+
+function normaliseSizingArea(metadata: UploadedDesignMetadata): UploadedDesignMetadata {
+  return applySizingAreaMode(
+    {
+      ...metadata,
+      sizingAreaMode: metadata.sizingAreaMode ?? "fullDesign",
+      visibleArtworkHeightPercent:
+        metadata.visibleArtworkHeightPercent ?? defaultVisibleArtworkHeightPercent,
+    },
+    metadata.sizingAreaMode ?? "fullDesign",
+    metadata.visibleArtworkHeightPercent,
+  );
+}
+
+function applySizingAreaMode(
+  metadata: UploadedDesignMetadata,
+  mode: SizingAreaMode,
+  visibleArtworkHeightPercent = metadata.visibleArtworkHeightPercent ?? defaultVisibleArtworkHeightPercent,
+): UploadedDesignMetadata {
+  if (!metadata.originalWidth || !metadata.originalHeight) {
+    return {
+      ...metadata,
+      sizingAreaMode: mode,
+      visibleArtworkHeightPercent,
+      sizingWidth: metadata.originalWidth,
+      sizingHeight: metadata.originalHeight,
+    };
+  }
+
+  const nextPercent = clamp(visibleArtworkHeightPercent, 40, 100);
+  const sizingHeight =
+    mode === "visibleArtwork" ? roundOne(metadata.originalHeight * (nextPercent / 100)) : metadata.originalHeight;
+
+  return {
+    ...metadata,
+    sizingAreaMode: mode,
+    visibleArtworkHeightPercent: nextPercent,
+    sizingWidth: metadata.originalWidth,
+    sizingHeight,
+  };
+}
+
+function buildRecommendationUploadedFile(metadata: UploadedDesignMetadata): UploadedDesignMetadata {
+  if (
+    metadata.sizingAreaMode === "visibleArtwork" &&
+    metadata.sizingWidth &&
+    metadata.sizingHeight &&
+    metadata.sizingWidth > 0 &&
+    metadata.sizingHeight > 0
+  ) {
+    return {
+      ...metadata,
+      originalWidth: metadata.sizingWidth,
+      originalHeight: metadata.sizingHeight,
+      dimensionsDetected: true,
+      errors: [],
+    };
+  }
+
+  return metadata;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundOne(value: number): number {
+  return Math.round(value * 10) / 10;
 }

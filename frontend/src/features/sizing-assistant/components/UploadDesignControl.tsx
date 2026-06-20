@@ -2,18 +2,20 @@ import { FileImage, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { parsePngDimensions, parseSvgDimensions } from "../engine/parseDesignDimensions";
-import type { UploadedDesignMetadata } from "../engine/sizingTypes";
+import type { SizingAreaMode, UploadedDesignMetadata } from "../engine/sizingTypes";
 
 interface UploadDesignControlProps {
   uploadedFile: UploadedDesignMetadata | null;
   onUpload: (metadata: UploadedDesignMetadata) => void;
   onManualDimensionsChange: (width: number | null, height: number | null) => void;
+  onSizingAreaChange: (mode: SizingAreaMode, visibleArtworkHeightPercent?: number) => void;
 }
 
 export function UploadDesignControl({
   uploadedFile,
   onUpload,
   onManualDimensionsChange,
+  onSizingAreaChange,
 }: UploadDesignControlProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -115,6 +117,50 @@ export function UploadDesignControl({
         </p>
       )}
 
+      {uploadedFile?.dimensionsDetected && (
+        <div className="sa-sizing-area-control">
+          <div className="sa-field-heading">
+            <strong>Sizing area</strong>
+            <span>Use full upload unless the SVG already includes a stake.</span>
+          </div>
+          <label className="sa-preview-toggle">
+            <input
+              type="checkbox"
+              checked={uploadedFile.sizingAreaMode === "visibleArtwork"}
+              onChange={(event) =>
+                onSizingAreaChange(
+                  event.target.checked ? "visibleArtwork" : "fullDesign",
+                  uploadedFile.visibleArtworkHeightPercent,
+                )
+              }
+            />
+            <span>Ignore uploaded stake for sizing</span>
+          </label>
+          {uploadedFile.sizingAreaMode === "visibleArtwork" && (
+            <label className="sa-visible-artwork-control">
+              <span>Visible artwork height</span>
+              <input
+                type="range"
+                min="40"
+                max="100"
+                step="1"
+                value={uploadedFile.visibleArtworkHeightPercent ?? 72}
+                onChange={(event) => onSizingAreaChange("visibleArtwork", Number(event.target.value))}
+              />
+              <strong>{uploadedFile.visibleArtworkHeightPercent ?? 72}%</strong>
+            </label>
+          )}
+          <p className="sa-sizing-area-note">
+            Recommendations use{" "}
+            <strong>
+              {formatDimension(uploadedFile.sizingWidth ?? uploadedFile.originalWidth)} x{" "}
+              {formatDimension(uploadedFile.sizingHeight ?? uploadedFile.originalHeight)} {uploadedFile.originalUnit}
+            </strong>
+            . Export keeps the full SVG and scales it proportionally.
+          </p>
+        </div>
+      )}
+
       {needsManualDimensions && (
         <div className="sa-manual-dimensions">
           <p>The SVG dimensions could not be detected. Please enter the original design width and height manually.</p>
@@ -159,4 +205,9 @@ export function UploadDesignControl({
 function parseManual(value: string): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function formatDimension(value: number | null | undefined): string {
+  if (!value) return "-";
+  return String(Math.round(value * 10) / 10);
 }

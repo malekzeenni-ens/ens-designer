@@ -38,6 +38,7 @@ export function SizingPreviewPanel({
     uploadedFile?.originalWidth && uploadedFile.originalHeight
       ? uploadedFile.originalWidth / uploadedFile.originalHeight
       : null;
+  const recommendedPreviewDimensions = getRecommendedPreviewDimensions(uploadedFile, recommendation);
   const sourceWidthPercent = sourceAspectRatio
     ? Math.min(62, Math.max(14, sourceAspectRatio >= 1 ? 38 : 38 * sourceAspectRatio))
     : 34;
@@ -45,10 +46,10 @@ export function SizingPreviewPanel({
     ? Math.min(48, Math.max(10, sourceWidthPercent / sourceAspectRatio))
     : 22;
   const designWidthPercent = recommendation && previewSettings.previewRecommendedSize
-    ? Math.min(76, Math.max(5, (recommendation.recommendedWidthMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
+    ? Math.min(76, Math.max(5, (recommendedPreviewDimensions.widthMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
     : sourceWidthPercent;
   const designHeightPercent = recommendation && previewSettings.previewRecommendedSize
-    ? Math.min(58, Math.max(5, (recommendation.recommendedHeightMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
+    ? Math.min(58, Math.max(5, (recommendedPreviewDimensions.heightMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
     : sourceHeightPercent;
   const designTransform = `translate(-50%, 0) translate(${previewSettings.offsetXPct}%, ${previewSettings.offsetYPct}%) rotate(${previewSettings.rotationDeg}deg)`;
 
@@ -59,8 +60,8 @@ export function SizingPreviewPanel({
   function resetPlacement() {
     onPreviewSettingsChange({
       ...previewSettings,
-      offsetXPct: 0,
-      offsetYPct: 0,
+      offsetXPct: 28,
+      offsetYPct: -18,
       rotationDeg: 0,
     });
   }
@@ -216,11 +217,21 @@ export function SizingPreviewPanel({
       <div className="sa-measurements">
         <span>
           {previewSettings.previewRecommendedSize ? "Recommended preview width" : "Uploaded proportions"}
-          <strong>{recommendation && previewSettings.previewRecommendedSize ? `${recommendation.recommendedWidthMm} mm` : "Original proportions only"}</strong>
+          <strong>
+            {recommendation && previewSettings.previewRecommendedSize
+              ? `${recommendation.recommendedWidthMm} mm visible`
+              : "Original proportions only"}
+          </strong>
         </span>
         <span>
           {previewSettings.previewRecommendedSize ? "Recommended preview height" : "Recommended export height"}
-          <strong>{recommendation ? `${recommendation.recommendedHeightMm} mm` : "-"}</strong>
+          <strong>
+            {recommendation
+              ? uploadedFile?.sizingAreaMode === "visibleArtwork" && previewSettings.previewRecommendedSize
+                ? `${recommendation.recommendedHeightMm} mm visible / ${recommendedPreviewDimensions.heightMm} mm full`
+                : `${recommendation.recommendedHeightMm} mm`
+              : "-"}
+          </strong>
         </span>
       </div>
     </section>
@@ -234,4 +245,33 @@ function clamp(value: number, min: number, max: number): number {
 function formatStatus(status: string | undefined): string {
   if (!status) return "Awaiting design";
   return status.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+}
+
+function getRecommendedPreviewDimensions(
+  uploadedFile: UploadedDesignMetadata | null,
+  recommendation: SizingRecommendation | null,
+): { widthMm: number; heightMm: number } {
+  if (!recommendation) return { widthMm: 0, heightMm: 0 };
+  if (
+    uploadedFile?.sizingAreaMode === "visibleArtwork" &&
+    uploadedFile.originalWidth &&
+    uploadedFile.originalHeight &&
+    uploadedFile.sizingWidth &&
+    uploadedFile.sizingHeight
+  ) {
+    const scaleFromVisibleWidth = recommendation.recommendedWidthMm / uploadedFile.sizingWidth;
+    return {
+      widthMm: roundOne(uploadedFile.originalWidth * scaleFromVisibleWidth),
+      heightMm: roundOne(uploadedFile.originalHeight * scaleFromVisibleWidth),
+    };
+  }
+
+  return {
+    widthMm: recommendation.recommendedWidthMm,
+    heightMm: recommendation.recommendedHeightMm,
+  };
+}
+
+function roundOne(value: number): number {
+  return Math.round(value * 10) / 10;
 }

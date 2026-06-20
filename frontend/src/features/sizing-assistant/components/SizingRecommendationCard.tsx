@@ -22,28 +22,29 @@ export function SizingRecommendationCard({
   previewSettings,
 }: SizingRecommendationCardProps) {
   const [includePreviewPlacement, setIncludePreviewPlacement] = useState(false);
+  const exportDimensions = getExportDimensions(uploadedFile, recommendation);
 
   function downloadSvg() {
-    if (!uploadedFile?.rawSvgText || !recommendation?.exportAvailable) return;
+    if (!uploadedFile?.rawSvgText || !recommendation?.exportAvailable || !exportDimensions) return;
     const svg = includePreviewPlacement
       ? exportPreviewPlacementSvg({
           rawSvgText: uploadedFile.rawSvgText,
-          widthMm: recommendation.recommendedWidthMm,
-          heightMm: recommendation.recommendedHeightMm,
+          widthMm: exportDimensions.widthMm,
+          heightMm: exportDimensions.heightMm,
           offsetXPct: previewSettings.offsetXPct,
           offsetYPct: previewSettings.offsetYPct,
           rotationDeg: previewSettings.rotationDeg,
         })
       : exportResizedSvg({
           rawSvgText: uploadedFile.rawSvgText,
-          widthMm: recommendation.recommendedWidthMm,
-          heightMm: recommendation.recommendedHeightMm,
+          widthMm: exportDimensions.widthMm,
+          heightMm: exportDimensions.heightMm,
         });
     const filename = buildSizedSvgFilename({
       productType: config.productType,
       cakeSize: config.cakeSize,
-      widthMm: recommendation.recommendedWidthMm,
-      heightMm: recommendation.recommendedHeightMm,
+      widthMm: exportDimensions.widthMm,
+      heightMm: exportDimensions.heightMm,
     });
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
@@ -94,21 +95,34 @@ export function SizingRecommendationCard({
                 note={uploadedFile?.originalUnit === "mm" ? "Physical source size detected." : "Used for proportions only."}
               />
               <SizeComparisonItem
-                label="Recommended cut size"
-                value={`${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`}
-                note="Based on cake size, product type, height guidance, and aspect ratio."
+                label="Sizing area"
+                value={formatSizingArea(uploadedFile)}
+                note={
+                  uploadedFile?.sizingAreaMode === "visibleArtwork"
+                    ? "Visible artwork only; uploaded stake is ignored for recommendation."
+                    : "Full upload is used for recommendation."
+                }
               />
               <SizeComparisonItem
-                label="Export size"
+                label="Recommended cut size"
+                value={`${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`}
+                note="Visible topper size based on cake size, product type, height guidance, and aspect ratio."
+              />
+              <SizeComparisonItem
+                label="Exported SVG size"
                 value={
                   includePreviewPlacement
-                    ? `${roundOne(recommendation.recommendedWidthMm * 1.8)} x ${roundOne(recommendation.recommendedHeightMm * 1.8)} mm canvas`
-                    : `${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`
+                    ? `${roundOne((exportDimensions?.widthMm ?? recommendation.recommendedWidthMm) * 1.8)} x ${roundOne((exportDimensions?.heightMm ?? recommendation.recommendedHeightMm) * 1.8)} mm canvas`
+                    : exportDimensions
+                      ? `${exportDimensions.widthMm} x ${exportDimensions.heightMm} mm`
+                      : `${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`
                 }
                 note={
                   includePreviewPlacement
                     ? "Larger placement canvas with moved/rotated design."
-                    : "Resized original SVG dimensions."
+                    : uploadedFile?.sizingAreaMode === "visibleArtwork"
+                      ? "Full uploaded SVG scaled from the visible artwork area."
+                      : "Resized original SVG dimensions."
                 }
               />
             </div>
@@ -145,6 +159,9 @@ export function SizingRecommendationCard({
             <Metric label="Stake recommendation" value={recommendation.stakeRecommendation} />
             <Metric label="Scale factor" value={`${recommendation.scaleFactor}x`} />
             <Metric label="Export geometry" value={includePreviewPlacement ? "Includes preview placement" : "Resized original SVG"} />
+            {uploadedFile?.sizingAreaMode === "visibleArtwork" && (
+              <Metric label="Sizing basis" value="Visible artwork only" />
+            )}
           </dl>
         </details>
 
@@ -188,7 +205,7 @@ export function SizingRecommendationCard({
               <span>Include preview placement and angle in SVG</span>
             </label>
             <p className="sa-export-note">
-              Default export keeps the resized original SVG. Placement export uses a larger layout canvas and applies the preview move/angle. Stake guides are advisory unless the uploaded SVG already contains the stake geometry.
+              Default export keeps the resized original SVG. If uploaded stake sizing is ignored, the full SVG is scaled from the visible artwork area so the stake remains proportional. Placement export uses a larger layout canvas and applies the preview move/angle.
             </p>
           </section>
         </details>
@@ -238,6 +255,39 @@ function SizeComparisonItem({
 function formatUploadedSize(uploadedFile: UploadedDesignMetadata | null): string {
   if (!uploadedFile?.originalWidth || !uploadedFile.originalHeight) return "Not detected";
   return `${roundOne(uploadedFile.originalWidth)} x ${roundOne(uploadedFile.originalHeight)} ${uploadedFile.originalUnit}`;
+}
+
+function formatSizingArea(uploadedFile: UploadedDesignMetadata | null): string {
+  if (!uploadedFile) return "Not detected";
+  const width = uploadedFile.sizingWidth ?? uploadedFile.originalWidth;
+  const height = uploadedFile.sizingHeight ?? uploadedFile.originalHeight;
+  if (!width || !height) return "Not detected";
+  return `${roundOne(width)} x ${roundOne(height)} ${uploadedFile.originalUnit}`;
+}
+
+function getExportDimensions(
+  uploadedFile: UploadedDesignMetadata | null,
+  recommendation: SizingRecommendation | null,
+): { widthMm: number; heightMm: number } | null {
+  if (!uploadedFile || !recommendation) return null;
+  if (
+    uploadedFile.sizingAreaMode === "visibleArtwork" &&
+    uploadedFile.originalWidth &&
+    uploadedFile.originalHeight &&
+    uploadedFile.sizingWidth &&
+    uploadedFile.sizingHeight
+  ) {
+    const scaleFromVisibleWidth = recommendation.recommendedWidthMm / uploadedFile.sizingWidth;
+    return {
+      widthMm: roundOne(uploadedFile.originalWidth * scaleFromVisibleWidth),
+      heightMm: roundOne(uploadedFile.originalHeight * scaleFromVisibleWidth),
+    };
+  }
+
+  return {
+    widthMm: recommendation.recommendedWidthMm,
+    heightMm: recommendation.recommendedHeightMm,
+  };
 }
 
 function roundOne(value: number): number {

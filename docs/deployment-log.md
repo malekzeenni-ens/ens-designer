@@ -15,6 +15,61 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-06-20 20:40:03 Europe/London] - Clarify Uploaded Stake Sizing Preview
+
+### Commit
+- Commit hash: `e6a5fd73b484d08187df0f58ee15326e9576b4c3`
+- Previous commit hash: `1e331cd595257d218a98317b8024642f193cf448`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Added explicit controls for uploaded SVGs that already include stake geometry, improved transparent preview rendering, and shifted the default topper placement higher/right on the cake preview.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingAssistantTab.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingRecommendationCard.tsx`
+- `frontend/src/features/sizing-assistant/components/UploadDesignControl.tsx`
+- `frontend/src/features/sizing-assistant/engine/sizingTypes.ts`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Added a sizing-area mode so operators can keep the full uploaded SVG, or size from visible artwork when the uploaded file already contains a stake.
+- Added a visible artwork height percentage slider for stake-included uploads.
+- Recommendations now use the selected sizing area, while export scales the full SVG proportionally so existing stake geometry remains intact.
+- Updated the size comparison card to distinguish uploaded design, sizing area, recommended visible cut size, and exported SVG size.
+- Updated the recommended preview dimensions to show the full exported SVG size when uploaded stake geometry is being ignored for recommendation.
+- Made the SVG preview wrapper transparent and moved the default preview placement higher/right.
+- Intentionally did not add automatic stake or geometry detection.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 32 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Confirmed `http://127.0.0.1:5174` returned HTTP 200 from the local Vite server.
+- Reviewed the Sizing Assistant diff to confirm the change is scoped to upload sizing, preview placement, recommendation labels, and SVG export dimensions.
+- Checked that Phase 1 geometry exclusions are preserved; stake handling remains operator-controlled.
+
+### Known Issues / Follow-Ups
+- The app does not automatically detect where the uploaded stake begins; operators must enable "Ignore uploaded stake for sizing" and adjust visible artwork height manually.
+- Browser screenshot verification was not automated for this visual adjustment.
+
+### Revert Instructions
+```bash
+git revert e6a5fd73b484d08187df0f58ee15326e9576b4c3
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+- Phase 1 MVP complete: Yes
+
+---
+
 ## [2026-06-20 18:20:53 Europe/London] - Phase 1 Complete: Sizing Assistant MVP
 
 ### Commit
@@ -442,3 +497,4 @@ git revert 03eaa4a26b534b908b1523f2ac0b1ac8b6bed36e
 
 ### Snapshot Status
 - Known-good snapshot: Yes
+
