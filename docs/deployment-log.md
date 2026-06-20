@@ -18,7 +18,7 @@ Each completed phase or meaningful code change must include:
 ## [2026-06-20 22:21:00 Europe/London] - Update Manual Fonts Manifest
 
 ### Commit
-- Commit hash: `PENDING`
+- Commit hash: `ff1542f`
 - Previous commit hash: `2232496`
 - Branch: `main`
 - Deployment target: `main`
@@ -46,7 +46,7 @@ Each completed phase or meaningful code change must include:
 
 ### Revert Instructions
 ```bash
-git revert PENDING
+git revert ff1542f
 ```
 
 ### Snapshot Status
