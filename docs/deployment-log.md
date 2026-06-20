@@ -96,7 +96,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ## [2026-06-20 18:30:47 Europe/London] - Improve Sizing Assistant Preview Perspective
 
 ### Commit
-- Commit hash: `<pending>`
+- Commit hash: `03446d4e5d48dd7ba77c4ab77d6e69776efa3465`
 - Previous commit hash: `faca6912d85f77091b306cda7dd92ad82670873a`
 - Branch: `main`
 - Deployment target: `main`
@@ -131,7 +131,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ### Revert Instructions
 ```bash
-git revert <pending>
+git revert 03446d4e5d48dd7ba77c4ab77d6e69776efa3465
 ```
 
 ### Snapshot Status
