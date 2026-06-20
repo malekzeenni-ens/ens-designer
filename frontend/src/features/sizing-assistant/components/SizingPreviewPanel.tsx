@@ -215,11 +215,11 @@ export function SizingPreviewPanel({
 
       <div className="sa-measurements">
         <span>
-          {previewSettings.previewRecommendedSize ? "Preview width" : "Source preview"}
+          {previewSettings.previewRecommendedSize ? "Recommended preview width" : "Uploaded proportions"}
           <strong>{recommendation && previewSettings.previewRecommendedSize ? `${recommendation.recommendedWidthMm} mm` : "Original proportions only"}</strong>
         </span>
         <span>
-          {previewSettings.previewRecommendedSize ? "Preview height" : "Export size"}
+          {previewSettings.previewRecommendedSize ? "Recommended preview height" : "Recommended export height"}
           <strong>{recommendation ? `${recommendation.recommendedHeightMm} mm` : "-"}</strong>
         </span>
       </div>

@@ -102,6 +102,40 @@ export function SizingRecommendationCard({
         <Metric label="Export geometry" value={includePreviewPlacement ? "Includes preview placement" : "Resized original SVG"} />
       </dl>
 
+      <section className="sa-size-comparison" aria-label="Uploaded and recommended size comparison">
+        <h2>Size comparison</h2>
+        <div className="sa-size-comparison-grid">
+          <SizeComparisonItem
+            label="Uploaded design"
+            value={formatUploadedSize(uploadedFile)}
+            note={uploadedFile?.originalUnit === "mm" ? "Physical source size detected." : "Used for proportions only."}
+          />
+          <SizeComparisonItem
+            label="Recommended cut size"
+            value={`${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`}
+            note="Based on cake size, product type, height guidance, and aspect ratio."
+          />
+          <SizeComparisonItem
+            label="Export size"
+            value={
+              includePreviewPlacement
+                ? `${roundOne(recommendation.recommendedWidthMm * 1.8)} x ${roundOne(recommendation.recommendedHeightMm * 1.8)} mm canvas`
+                : `${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`
+            }
+            note={
+              includePreviewPlacement
+                ? "Larger placement canvas with moved/rotated design."
+                : "Resized original SVG dimensions."
+            }
+          />
+        </div>
+        {uploadedFile?.originalUnit !== "mm" && (
+          <p className="sa-size-comparison-note">
+            This upload has no reliable physical millimetre size. The detected dimensions define proportions; final cut size comes from the recommendation or manual override.
+          </p>
+        )}
+      </section>
+
       <section className="sa-actions-section">
         <h2>Warnings</h2>
         <WarningList warnings={recommendation.warnings} />
@@ -153,6 +187,33 @@ function Metric({ label, value }: { label: string; value: string }) {
       <dd>{value}</dd>
     </div>
   );
+}
+
+function SizeComparisonItem({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note: string;
+}) {
+  return (
+    <article>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{note}</small>
+    </article>
+  );
+}
+
+function formatUploadedSize(uploadedFile: UploadedDesignMetadata | null): string {
+  if (!uploadedFile?.originalWidth || !uploadedFile.originalHeight) return "Not detected";
+  return `${roundOne(uploadedFile.originalWidth)} x ${roundOne(uploadedFile.originalHeight)} ${uploadedFile.originalUnit}`;
+}
+
+function roundOne(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function formatAspect(aspectCategory: string): string {

@@ -93,6 +93,55 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ---
 
+## [2026-06-20 19:43:13 Europe/London] - Clarify Current And Recommended Sizes
+
+### Commit
+- Commit hash: `<pending>`
+- Previous commit hash: `5ed4a94fa0320f82c7d6cfc2e24fa6fff15962e9`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Added an explicit size comparison section so uploaded dimensions, recommended cut size, and export size are visible together.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingRecommendationCard.tsx`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Added a `Size comparison` panel to the recommendation card.
+- Shows uploaded design dimensions and whether they represent physical size or proportions only.
+- Shows recommended cut size in millimetres.
+- Shows actual export size, including larger canvas dimensions when preview-placement export is enabled.
+- Added explanatory copy for unitless SVGs: detected dimensions define proportions only, while final cut size comes from recommendation or manual override.
+- Updated preview labels to `Recommended preview width`, `Recommended preview height`, `Uploaded proportions`, and `Original proportions only`.
+- Sizing calculations and export logic were intentionally unchanged.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 32 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Started the Vite dev server and confirmed `http://127.0.0.1:5174` returned HTTP 200.
+- Reviewed changed files and confirmed the update is scoped to Sizing Assistant sizing clarity.
+
+### Known Issues / Follow-Ups
+- None.
+
+### Revert Instructions
+```bash
+git revert <pending>
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 19:31:38 Europe/London] - Add Sizing Assistant Export Mode Clarity
 
 ### Commit
