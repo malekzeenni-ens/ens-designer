@@ -216,7 +216,7 @@ export function SizingPreviewPanel({
       <div className="sa-measurements">
         <span>
           {previewSettings.previewRecommendedSize ? "Preview width" : "Source preview"}
-          <strong>{recommendation && previewSettings.previewRecommendedSize ? `${recommendation.recommendedWidthMm} mm` : "Reference only"}</strong>
+          <strong>{recommendation && previewSettings.previewRecommendedSize ? `${recommendation.recommendedWidthMm} mm` : "Original proportions only"}</strong>
         </span>
         <span>
           {previewSettings.previewRecommendedSize ? "Preview height" : "Export size"}

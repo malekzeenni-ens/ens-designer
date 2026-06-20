@@ -93,6 +93,58 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ---
 
+## [2026-06-20 19:31:38 Europe/London] - Add Sizing Assistant Export Mode Clarity
+
+### Commit
+- Commit hash: `<pending>`
+- Previous commit hash: `6de812d9b24ddab532ea87007a705e5cb9eb3515`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Clarified Sizing Assistant preview/export behavior and added an optional preview-placement SVG export mode.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingAssistantTab.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingRecommendationCard.tsx`
+- `frontend/src/features/sizing-assistant/engine/exportResizedSvg.ts`
+- `frontend/src/features/sizing-assistant/tests/exportResizedSvg.test.ts`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Added an explicit export option to include preview placement and angle in the exported SVG.
+- Kept the default export as the resized original SVG for production-safe continuity.
+- Added explanatory copy that placement export uses a larger layout canvas and that stake guides are advisory unless the uploaded SVG already includes stake geometry.
+- Updated preview labels from `Reference only` to `Original proportions only`.
+- Added `exportPreviewPlacementSvg` to preserve original vector content inside a transformed group on a millimetre canvas.
+- Added test coverage for preview-placement export dimensions, transform, and content preservation.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 32 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Started the Vite dev server and confirmed `http://127.0.0.1:5174` returned HTTP 200.
+- Reviewed changed files and confirmed sizing calculations, status logic, and standard resized export behavior remain available.
+
+### Known Issues / Follow-Ups
+- Preview-placement export uses a layout canvas and should be validated in LightBurn/current laser workflow before relying on placement offsets for production.
+- Stake guide generation remains advisory; this update does not generate new stake geometry.
+
+### Revert Instructions
+```bash
+git revert <pending>
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 18:46:43 Europe/London] - Scale Sizing Preview By Cake Diameter
 
 ### Commit

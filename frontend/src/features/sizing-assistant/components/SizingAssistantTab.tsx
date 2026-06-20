@@ -131,6 +131,7 @@ export function SizingAssistantTab() {
           uploadedFile={uploadedFile}
           config={productConfig}
           recommendation={recommendation}
+          previewSettings={previewSettings}
         />
       </div>
     </div>

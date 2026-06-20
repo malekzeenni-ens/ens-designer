@@ -1,29 +1,44 @@
 import { Download } from "lucide-react";
+import { useState } from "react";
 
-import { exportResizedSvg } from "../engine/exportResizedSvg";
+import { exportPreviewPlacementSvg, exportResizedSvg } from "../engine/exportResizedSvg";
 import { buildSizedSvgFilename } from "../engine/filenameUtils";
 import { cakeSizes, productTypeLabel } from "../engine/sizingRules";
 import type { SizingProductConfig, SizingRecommendation, UploadedDesignMetadata } from "../engine/sizingTypes";
+import type { SizingPreviewSettings } from "./SizingAssistantTab";
 import { WarningList } from "./WarningList";
 
 interface SizingRecommendationCardProps {
   uploadedFile: UploadedDesignMetadata | null;
   config: SizingProductConfig;
   recommendation: SizingRecommendation | null;
+  previewSettings: SizingPreviewSettings;
 }
 
 export function SizingRecommendationCard({
   uploadedFile,
   config,
   recommendation,
+  previewSettings,
 }: SizingRecommendationCardProps) {
+  const [includePreviewPlacement, setIncludePreviewPlacement] = useState(false);
+
   function downloadSvg() {
     if (!uploadedFile?.rawSvgText || !recommendation?.exportAvailable) return;
-    const svg = exportResizedSvg({
-      rawSvgText: uploadedFile.rawSvgText,
-      widthMm: recommendation.recommendedWidthMm,
-      heightMm: recommendation.recommendedHeightMm,
-    });
+    const svg = includePreviewPlacement
+      ? exportPreviewPlacementSvg({
+          rawSvgText: uploadedFile.rawSvgText,
+          widthMm: recommendation.recommendedWidthMm,
+          heightMm: recommendation.recommendedHeightMm,
+          offsetXPct: previewSettings.offsetXPct,
+          offsetYPct: previewSettings.offsetYPct,
+          rotationDeg: previewSettings.rotationDeg,
+        })
+      : exportResizedSvg({
+          rawSvgText: uploadedFile.rawSvgText,
+          widthMm: recommendation.recommendedWidthMm,
+          heightMm: recommendation.recommendedHeightMm,
+        });
     const filename = buildSizedSvgFilename({
       productType: config.productType,
       cakeSize: config.cakeSize,
@@ -84,6 +99,7 @@ export function SizingRecommendationCard({
         />
         <Metric label="Stake recommendation" value={recommendation.stakeRecommendation} />
         <Metric label="Scale factor" value={`${recommendation.scaleFactor}x`} />
+        <Metric label="Export geometry" value={includePreviewPlacement ? "Includes preview placement" : "Resized original SVG"} />
       </dl>
 
       <section className="sa-actions-section">
@@ -100,6 +116,22 @@ export function SizingRecommendationCard({
         </ul>
       </section>
 
+      <section className="sa-actions-section sa-export-options">
+        <h2>Export options</h2>
+        <label className="sa-preview-toggle">
+          <input
+            type="checkbox"
+            checked={includePreviewPlacement}
+            disabled={!recommendation.exportAvailable}
+            onChange={(event) => setIncludePreviewPlacement(event.target.checked)}
+          />
+          <span>Include preview placement and angle in SVG</span>
+        </label>
+        <p className="sa-export-note">
+          Default export keeps the resized original SVG. Placement export uses a larger layout canvas and applies the preview move/angle. Stake guides are advisory unless the uploaded SVG already contains the stake geometry.
+        </p>
+      </section>
+
       <button
         type="button"
         className="ct-primary-action"
@@ -108,7 +140,7 @@ export function SizingRecommendationCard({
         title={uploadedFile?.type === "png" ? "SVG export is not available for PNG uploads" : undefined}
       >
         <Download size={18} aria-hidden="true" />
-        Export resized SVG
+        {includePreviewPlacement ? "Export placed SVG" : "Export resized SVG"}
       </button>
     </aside>
   );
