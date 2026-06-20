@@ -96,7 +96,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ## [2026-06-20 19:31:38 Europe/London] - Add Sizing Assistant Export Mode Clarity
 
 ### Commit
-- Commit hash: `<pending>`
+- Commit hash: `188a5f752ae216189d24c8b35afdec8e3138bff9`
 - Previous commit hash: `6de812d9b24ddab532ea87007a705e5cb9eb3515`
 - Branch: `main`
 - Deployment target: `main`
@@ -137,7 +137,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ### Revert Instructions
 ```bash
-git revert <pending>
+git revert 188a5f752ae216189d24c8b35afdec8e3138bff9
 ```
 
 ### Snapshot Status
