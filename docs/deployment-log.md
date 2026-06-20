@@ -96,7 +96,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ## [2026-06-20 19:52:23 Europe/London] - Rework Sizing Assistant Canvas Layout
 
 ### Commit
-- Commit hash: `<pending>`
+- Commit hash: `d3a8a2da0223a69f04359fc2183422af8cc7e427`
 - Previous commit hash: `2346f5b5a8b2ed84a601d9916d049b4bb278256d`
 - Branch: `main`
 - Deployment target: `main`
@@ -133,7 +133,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ### Revert Instructions
 ```bash
-git revert <pending>
+git revert d3a8a2da0223a69f04359fc2183422af8cc7e427
 ```
 
 ### Snapshot Status
