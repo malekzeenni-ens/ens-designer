@@ -18,7 +18,7 @@ Each completed phase or meaningful code change must include:
 ## [2026-06-20 18:20:53 Europe/London] - Phase 1 Complete: Sizing Assistant MVP
 
 ### Commit
-- Commit hash: `bd907a5b152b49968f657a989716f04da1d4002d`
+- Commit hash: `b28575ce02f63445a0a7946e8435b9150655edbf`
 - Previous commit hash: `ef79d4c306ffcfdb9a8ca8f71c25fcf93bb35b75`
 - Branch: `main`
 - Deployment target: `main`
@@ -85,7 +85,7 @@ Each completed phase or meaningful code change must include:
 
 ### Revert Instructions
 ```bash
-git revert bd907a5b152b49968f657a989716f04da1d4002d
+git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ```
 
 ### Snapshot Status
