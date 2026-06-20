@@ -141,19 +141,19 @@ export function SizingAssistantTab() {
         </div>
 
         <div className="sa-main-panel">
-          <SizingRecommendationCard
-            uploadedFile={uploadedFile}
-            config={productConfig}
-            recommendation={recommendation}
-            previewSettings={previewSettings}
-          />
-
           <SizingPreviewPanel
             uploadedFile={uploadedFile}
             config={productConfig}
             recommendation={recommendation}
             previewSettings={previewSettings}
             onPreviewSettingsChange={setPreviewSettings}
+          />
+
+          <SizingRecommendationCard
+            uploadedFile={uploadedFile}
+            config={productConfig}
+            recommendation={recommendation}
+            previewSettings={previewSettings}
           />
         </div>
       </div>

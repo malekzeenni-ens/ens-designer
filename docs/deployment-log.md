@@ -15,6 +15,47 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-06-20 21:22:00 Europe/London] - Move Sizing Preview Above Recommendation
+
+### Commit
+- Commit hash: `PENDING`
+- Previous commit hash: `6923cc7`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Swapped the Sizing Assistant main-column order so the preview canvas renders above the Recommendation card.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingAssistantTab.tsx`
+
+### Implementation Details
+- Reordered `SizingPreviewPanel` before `SizingRecommendationCard` inside the `sa-main-panel` column.
+- No CSS changes required since the column already stacks children vertically.
+- Sizing calculations, warnings, status logic, and export behavior were intentionally unchanged.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 32 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+
+### Manual Validation
+- Reviewed the diff to confirm the change is scoped to component render order in `sa-main-panel`.
+
+### Known Issues / Follow-Ups
+- Browser screenshot verification was not automated for this layout adjustment.
+
+### Revert Instructions
+```bash
+git revert PENDING
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 20:40:03 Europe/London] - Clarify Uploaded Stake Sizing Preview
 
 ### Commit
