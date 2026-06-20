@@ -18,7 +18,7 @@ Each completed phase or meaningful code change must include:
 ## [2026-06-20 20:40:03 Europe/London] - Clarify Uploaded Stake Sizing Preview
 
 ### Commit
-- Commit hash: `e6a5fd73b484d08187df0f58ee15326e9576b4c3`
+- Commit hash: `1f63d776cccadcb6d660b1fe4f91e5812802d326`
 - Previous commit hash: `1e331cd595257d218a98317b8024642f193cf448`
 - Branch: `main`
 - Deployment target: `main`
@@ -61,7 +61,7 @@ Each completed phase or meaningful code change must include:
 
 ### Revert Instructions
 ```bash
-git revert e6a5fd73b484d08187df0f58ee15326e9576b4c3
+git revert 1f63d776cccadcb6d660b1fe4f91e5812802d326
 ```
 
 ### Snapshot Status
