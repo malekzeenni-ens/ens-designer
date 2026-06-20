@@ -90,6 +90,52 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ### Snapshot Status
 - Known-good snapshot: Yes
+
+---
+
+## [2026-06-20 18:30:47 Europe/London] - Improve Sizing Assistant Preview Perspective
+
+### Commit
+- Commit hash: `<pending>`
+- Previous commit hash: `faca6912d85f77091b306cda7dd92ad82670873a`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Changed the Sizing Assistant visual guide from a dominant top-down cake footprint to a front/elevation cake view.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Reworked the centre preview to show a front-facing cake body with top ellipse, cake width label, and smaller plan-reference diameter chip.
+- Topper-style products now render the uploaded design above the cake top with a stake depth guide when stake depth applies.
+- Charm-style products render the uploaded design on the front cake face.
+- Sizing calculations, aspect-ratio locking, warning/status logic, export logic, and existing Designer behavior were intentionally unchanged.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 31 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Started the Vite dev server and confirmed `http://127.0.0.1:5174` returned HTTP 200.
+- Reviewed the changed files and confirmed the update is scoped to Sizing Assistant preview presentation.
+
+### Known Issues / Follow-Ups
+- Browser screenshot verification was not automated for this visual adjustment.
+- LightBurn validation is unaffected and still applies to SVG export workflow.
+
+### Revert Instructions
+```bash
+git revert <pending>
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
 - Phase 1 MVP complete: Yes
 
 ---

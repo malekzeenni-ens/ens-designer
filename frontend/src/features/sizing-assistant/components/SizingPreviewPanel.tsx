@@ -1,6 +1,7 @@
 import { Lock } from "lucide-react";
 
 import { cakeSizes } from "../engine/sizingRules";
+import { stakeApplies } from "../engine/calculateStakeRecommendation";
 import type { SizingProductConfig, SizingRecommendation, UploadedDesignMetadata } from "../engine/sizingTypes";
 
 interface SizingPreviewPanelProps {
@@ -11,12 +12,13 @@ interface SizingPreviewPanelProps {
 
 export function SizingPreviewPanel({ uploadedFile, config, recommendation }: SizingPreviewPanelProps) {
   const cakeDiameter = cakeSizes[config.cakeSize].diameterMm;
+  const isTopperView = stakeApplies(config.productType);
   const designWidthPercent = recommendation
-    ? Math.min(88, Math.max(8, (recommendation.recommendedWidthMm / cakeDiameter) * 80))
+    ? Math.min(76, Math.max(10, (recommendation.recommendedWidthMm / cakeDiameter) * 72))
     : 34;
   const designHeightPercent = recommendation
-    ? Math.min(88, Math.max(8, (recommendation.recommendedHeightMm / cakeDiameter) * 80))
-    : 24;
+    ? Math.min(48, Math.max(8, (recommendation.recommendedHeightMm / cakeDiameter) * 72))
+    : 22;
 
   return (
     <section className="sa-preview-panel" aria-label="Sizing preview">
@@ -31,11 +33,14 @@ export function SizingPreviewPanel({ uploadedFile, config, recommendation }: Siz
       </div>
 
       <div className="sa-cake-stage">
-        <div className="sa-cake-footprint">
-          <span>{cakeDiameter} mm</span>
+        <div className="sa-front-scene">
+          <span className="sa-view-label">Front view</span>
+          <div className="sa-plan-reference" aria-label={`Cake footprint diameter ${cakeDiameter} mm`}>
+            <span>{cakeDiameter} mm diameter</span>
+          </div>
           {uploadedFile ? (
             <div
-              className="sa-design-preview"
+              className={`sa-design-preview${isTopperView ? " sa-design-preview--topper" : " sa-design-preview--charm"}`}
               style={{ width: `${designWidthPercent}%`, height: `${designHeightPercent}%` }}
             >
               {uploadedFile.type === "svg" && uploadedFile.rawSvgText ? (
@@ -49,6 +54,14 @@ export function SizingPreviewPanel({ uploadedFile, config, recommendation }: Siz
           ) : (
             <div className="sa-design-preview sa-design-preview--empty">Upload</div>
           )}
+          {isTopperView && recommendation?.stakeDepthMm && (
+            <div className="sa-stake-guide" style={{ height: `${Math.min(22, Math.max(10, (recommendation.stakeDepthMm / cakeDiameter) * 72))}%` }}>
+              <span>{recommendation.stakeDepthMm} mm stake</span>
+            </div>
+          )}
+          <div className="sa-cake-front">
+            <span className="sa-cake-width-label">{cakeDiameter} mm cake width</span>
+          </div>
         </div>
       </div>
 
