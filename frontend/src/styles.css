@@ -2568,8 +2568,9 @@ h2 {
   top: 12px;
   right: 10px;
   display: grid;
-  width: 86px;
   aspect-ratio: 1;
+  min-width: 54px;
+  max-width: 86px;
   place-items: center;
   border: 1px solid rgba(76, 100, 124, 0.32);
   border-radius: 50%;
@@ -2587,10 +2588,6 @@ h2 {
 
 .sa-cake-front {
   position: absolute;
-  left: 11%;
-  right: 11%;
-  bottom: 40px;
-  height: 34%;
   border: 2px solid rgba(76, 100, 124, 0.28);
   border-top: none;
   border-radius: 0 0 18px 18px;
@@ -2654,20 +2651,14 @@ h2 {
 
 .sa-design-preview--topper {
   position: absolute;
-  left: 50%;
-  bottom: calc(40px + 34% + 22px);
 }
 
 .sa-design-preview--charm {
   position: absolute;
-  left: 50%;
-  bottom: calc(40px + 11%);
 }
 
 .sa-stake-guide {
   position: absolute;
-  left: 50%;
-  bottom: calc(40px + 34% - 6px);
   width: 9%;
   min-width: 22px;
   max-width: 42px;

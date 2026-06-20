@@ -93,6 +93,53 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ---
 
+## [2026-06-20 18:46:43 Europe/London] - Scale Sizing Preview By Cake Diameter
+
+### Commit
+- Commit hash: `<pending>`
+- Previous commit hash: `57838976b47227c94c75621f78dd03298907fbfd`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Updated the Sizing Assistant preview so cake size changes are reflected visually on the canvas.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Added a shared visual scale model using 10 inch / 254mm as the maximum preview reference.
+- Scaled 4, 6, 8, and 10 inch cake drawings proportionally instead of drawing every cake at the same visual size.
+- Scaled recommended topper/charm preview dimensions against the same visual reference as the cake.
+- Scaled stake guide height using the same preview scale.
+- Renamed the preview toggle to `Preview recommended physical size` for clarity.
+- Sizing calculations, warnings, status, manual override dimensions, and SVG export behavior were intentionally unchanged.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 31 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Started the Vite dev server and confirmed `http://127.0.0.1:5174` returned HTTP 200.
+- Reviewed the changed files and confirmed the update is scoped to Sizing Assistant preview presentation.
+
+### Known Issues / Follow-Ups
+- Browser screenshot verification was not automated for the visual scale change.
+
+### Revert Instructions
+```bash
+git revert <pending>
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 18:37:16 Europe/London] - Add Interactive Sizing Preview Controls
 
 ### Commit

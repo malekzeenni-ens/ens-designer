@@ -6,6 +6,10 @@ import { stakeApplies } from "../engine/calculateStakeRecommendation";
 import type { SizingProductConfig, SizingRecommendation, UploadedDesignMetadata } from "../engine/sizingTypes";
 import type { SizingPreviewSettings } from "./SizingAssistantTab";
 
+const MAX_PREVIEW_CAKE_DIAMETER_MM = cakeSizes["10"].diameterMm;
+const MAX_CAKE_WIDTH_PERCENT = 78;
+const CAKE_DEPTH_RATIO = 0.42;
+
 interface SizingPreviewPanelProps {
   uploadedFile: UploadedDesignMetadata | null;
   config: SizingProductConfig;
@@ -24,6 +28,12 @@ export function SizingPreviewPanel({
   const sceneRef = useRef<HTMLDivElement>(null);
   const cakeDiameter = cakeSizes[config.cakeSize].diameterMm;
   const isTopperView = stakeApplies(config.productType);
+  const cakeWidthPercent = (cakeDiameter / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT;
+  const cakeHeightPercent = Math.max(18, cakeWidthPercent * CAKE_DEPTH_RATIO);
+  const cakeLeftPercent = 50 - cakeWidthPercent / 2;
+  const cakeBottomPercent = 9;
+  const cakeTopPercent = cakeBottomPercent + cakeHeightPercent;
+  const cakeTopperGapPercent = 4;
   const sourceAspectRatio =
     uploadedFile?.originalWidth && uploadedFile.originalHeight
       ? uploadedFile.originalWidth / uploadedFile.originalHeight
@@ -35,10 +45,10 @@ export function SizingPreviewPanel({
     ? Math.min(48, Math.max(10, sourceWidthPercent / sourceAspectRatio))
     : 22;
   const designWidthPercent = recommendation && previewSettings.previewRecommendedSize
-    ? Math.min(76, Math.max(10, (recommendation.recommendedWidthMm / cakeDiameter) * 72))
+    ? Math.min(76, Math.max(5, (recommendation.recommendedWidthMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
     : sourceWidthPercent;
   const designHeightPercent = recommendation && previewSettings.previewRecommendedSize
-    ? Math.min(48, Math.max(8, (recommendation.recommendedHeightMm / cakeDiameter) * 72))
+    ? Math.min(58, Math.max(5, (recommendation.recommendedHeightMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
     : sourceHeightPercent;
   const designTransform = `translate(-50%, 0) translate(${previewSettings.offsetXPct}%, ${previewSettings.offsetYPct}%) rotate(${previewSettings.rotationDeg}deg)`;
 
@@ -114,7 +124,7 @@ export function SizingPreviewPanel({
             disabled={!recommendation}
             onChange={(event) => patchPreviewSettings({ previewRecommendedSize: event.target.checked })}
           />
-          <span>Preview recommended size</span>
+          <span>Preview recommended physical size</span>
         </label>
         <label className="sa-angle-control">
           <span>Angle</span>
@@ -144,7 +154,11 @@ export function SizingPreviewPanel({
       <div className="sa-cake-stage">
         <div className="sa-front-scene" ref={sceneRef}>
           <span className="sa-view-label">Front view</span>
-          <div className="sa-plan-reference" aria-label={`Cake footprint diameter ${cakeDiameter} mm`}>
+          <div
+            className="sa-plan-reference"
+            aria-label={`Cake footprint diameter ${cakeDiameter} mm`}
+            style={{ width: `${Math.max(42, cakeWidthPercent * 0.28)}%` }}
+          >
             <span>{cakeDiameter} mm diameter</span>
           </div>
           {uploadedFile ? (
@@ -153,6 +167,10 @@ export function SizingPreviewPanel({
               style={{
                 width: `${designWidthPercent}%`,
                 height: `${designHeightPercent}%`,
+                left: "50%",
+                bottom: isTopperView
+                  ? `${cakeTopPercent + cakeTopperGapPercent}%`
+                  : `${cakeBottomPercent + cakeHeightPercent * 0.28}%`,
                 transform: designTransform,
               }}
               onPointerDown={startDrag}
@@ -170,11 +188,26 @@ export function SizingPreviewPanel({
             <div className="sa-design-preview sa-design-preview--empty">Upload</div>
           )}
           {isTopperView && recommendation?.stakeDepthMm && (
-            <div className="sa-stake-guide" style={{ height: `${Math.min(22, Math.max(10, (recommendation.stakeDepthMm / cakeDiameter) * 72))}%` }}>
+            <div
+              className="sa-stake-guide"
+              style={{
+                height: `${Math.min(24, Math.max(6, (recommendation.stakeDepthMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))}%`,
+                left: "50%",
+                bottom: `${cakeTopPercent - 3}%`,
+              }}
+            >
               <span>{recommendation.stakeDepthMm} mm stake</span>
             </div>
           )}
-          <div className="sa-cake-front">
+          <div
+            className="sa-cake-front"
+            style={{
+              left: `${cakeLeftPercent}%`,
+              width: `${cakeWidthPercent}%`,
+              height: `${cakeHeightPercent}%`,
+              bottom: `${cakeBottomPercent}%`,
+            }}
+          >
             <span className="sa-cake-width-label">{cakeDiameter} mm cake width</span>
           </div>
         </div>
