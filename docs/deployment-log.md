@@ -18,7 +18,7 @@ Each completed phase or meaningful code change must include:
 ## [2026-06-20 21:22:00 Europe/London] - Move Sizing Preview Above Recommendation
 
 ### Commit
-- Commit hash: `PENDING`
+- Commit hash: `a6dd114`
 - Previous commit hash: `6923cc7`
 - Branch: `main`
 - Deployment target: `main`
@@ -48,7 +48,7 @@ Each completed phase or meaningful code change must include:
 
 ### Revert Instructions
 ```bash
-git revert PENDING
+git revert a6dd114
 ```
 
 ### Snapshot Status
