@@ -15,6 +15,45 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-06-20 22:21:00 Europe/London] - Update Manual Fonts Manifest
+
+### Commit
+- Commit hash: `PENDING`
+- Previous commit hash: `2232496`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Committed `fonts/.manual_fonts.json` manifest update to clean the worktree; 5 additional font IDs were added to the manually-curated font list.
+
+### Files Changed
+- `fonts/.manual_fonts.json`
+
+### Implementation Details
+- `fonts/.manual_fonts.json` is the persisted manifest read/written by `backend/app/font_loader.py` (`MANUAL_FONTS_MANIFEST`) to track manually-curated font IDs surfaced in the font picker.
+- The file had drifted from a prior local session (manual font curation via the running app) and was left uncommitted; no code change was made, only the data file is being checked in.
+- No application code was changed in this commit.
+
+### Tests Run
+- `npm test` (frontend) - Passed: 7 files, 32 tests.
+- `.\.venv313\Scripts\python.exe -m pytest -q` (backend) - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Confirmed `fonts/.manual_fonts.json` is tracked in git (not in `.gitignore`) and the diff only adds 5 new font ID entries.
+
+### Known Issues / Follow-Ups
+- None.
+
+### Revert Instructions
+```bash
+git revert PENDING
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 21:22:00 Europe/London] - Move Sizing Preview Above Recommendation
 
 ### Commit
