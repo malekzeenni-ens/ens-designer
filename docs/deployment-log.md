@@ -96,7 +96,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 ## [2026-06-20 19:43:13 Europe/London] - Clarify Current And Recommended Sizes
 
 ### Commit
-- Commit hash: `<pending>`
+- Commit hash: `213469eadbd4a2215f424fe1cf40fd286813ddcb`
 - Previous commit hash: `5ed4a94fa0320f82c7d6cfc2e24fa6fff15962e9`
 - Branch: `main`
 - Deployment target: `main`
@@ -134,7 +134,7 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ### Revert Instructions
 ```bash
-git revert <pending>
+git revert 213469eadbd4a2215f424fe1cf40fd286813ddcb
 ```
 
 ### Snapshot Status
