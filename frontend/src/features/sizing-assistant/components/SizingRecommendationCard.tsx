@@ -80,91 +80,119 @@ export function SizingRecommendationCard({
         </span>
       </div>
 
-      <dl className="sa-metric-list">
-        <Metric label="Product type" value={productTypeLabel(config.productType)} />
-        <Metric label="Cake size" value={cakeSizes[config.cakeSize].label} />
-        <Metric label="Cake diameter" value={`${recommendation.cakeDiameterMm} mm`} />
-        <Metric label="Aspect ratio" value={recommendation.aspectRatio.toFixed(2)} />
-        <Metric label="Aspect category" value={formatAspect(recommendation.aspectCategory)} />
-        <Metric label="Visible width" value={`${recommendation.recommendedWidthMm} mm`} />
-        <Metric label="Visible height" value={`${recommendation.recommendedHeightMm} mm`} />
-        <Metric
-          label="Acceptable width"
-          value={`${recommendation.acceptableMinWidthMm}-${recommendation.acceptableMaxWidthMm} mm`}
-        />
-        <Metric label="Stake depth" value={recommendation.stakeDepthMm ? `${recommendation.stakeDepthMm} mm` : "N/A"} />
-        <Metric
-          label="Total cut height"
-          value={recommendation.totalCutHeightMm ? `${recommendation.totalCutHeightMm} mm` : "N/A"}
-        />
-        <Metric label="Stake recommendation" value={recommendation.stakeRecommendation} />
-        <Metric label="Scale factor" value={`${recommendation.scaleFactor}x`} />
-        <Metric label="Export geometry" value={includePreviewPlacement ? "Includes preview placement" : "Resized original SVG"} />
-      </dl>
+      <div className="sa-recommendation-accordions">
+        <details className="sa-accordion" open>
+          <summary>
+            <span>Size comparison</span>
+            <strong>{recommendation.recommendedWidthMm} x {recommendation.recommendedHeightMm} mm</strong>
+          </summary>
+          <section className="sa-size-comparison" aria-label="Uploaded and recommended size comparison">
+            <div className="sa-size-comparison-grid">
+              <SizeComparisonItem
+                label="Uploaded design"
+                value={formatUploadedSize(uploadedFile)}
+                note={uploadedFile?.originalUnit === "mm" ? "Physical source size detected." : "Used for proportions only."}
+              />
+              <SizeComparisonItem
+                label="Recommended cut size"
+                value={`${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`}
+                note="Based on cake size, product type, height guidance, and aspect ratio."
+              />
+              <SizeComparisonItem
+                label="Export size"
+                value={
+                  includePreviewPlacement
+                    ? `${roundOne(recommendation.recommendedWidthMm * 1.8)} x ${roundOne(recommendation.recommendedHeightMm * 1.8)} mm canvas`
+                    : `${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`
+                }
+                note={
+                  includePreviewPlacement
+                    ? "Larger placement canvas with moved/rotated design."
+                    : "Resized original SVG dimensions."
+                }
+              />
+            </div>
+            {uploadedFile?.originalUnit !== "mm" && (
+              <p className="sa-size-comparison-note">
+                This upload has no reliable physical millimetre size. The detected dimensions define proportions; final cut size comes from the recommendation or manual override.
+              </p>
+            )}
+          </section>
+        </details>
 
-      <section className="sa-size-comparison" aria-label="Uploaded and recommended size comparison">
-        <h2>Size comparison</h2>
-        <div className="sa-size-comparison-grid">
-          <SizeComparisonItem
-            label="Uploaded design"
-            value={formatUploadedSize(uploadedFile)}
-            note={uploadedFile?.originalUnit === "mm" ? "Physical source size detected." : "Used for proportions only."}
-          />
-          <SizeComparisonItem
-            label="Recommended cut size"
-            value={`${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`}
-            note="Based on cake size, product type, height guidance, and aspect ratio."
-          />
-          <SizeComparisonItem
-            label="Export size"
-            value={
-              includePreviewPlacement
-                ? `${roundOne(recommendation.recommendedWidthMm * 1.8)} x ${roundOne(recommendation.recommendedHeightMm * 1.8)} mm canvas`
-                : `${recommendation.recommendedWidthMm} x ${recommendation.recommendedHeightMm} mm`
-            }
-            note={
-              includePreviewPlacement
-                ? "Larger placement canvas with moved/rotated design."
-                : "Resized original SVG dimensions."
-            }
-          />
-        </div>
-        {uploadedFile?.originalUnit !== "mm" && (
-          <p className="sa-size-comparison-note">
-            This upload has no reliable physical millimetre size. The detected dimensions define proportions; final cut size comes from the recommendation or manual override.
-          </p>
-        )}
-      </section>
+        <details className="sa-accordion">
+          <summary>
+            <span>Recommendation details</span>
+            <strong>{formatAspect(recommendation.aspectCategory)}</strong>
+          </summary>
+          <dl className="sa-metric-list">
+            <Metric label="Product type" value={productTypeLabel(config.productType)} />
+            <Metric label="Cake size" value={cakeSizes[config.cakeSize].label} />
+            <Metric label="Cake diameter" value={`${recommendation.cakeDiameterMm} mm`} />
+            <Metric label="Aspect ratio" value={recommendation.aspectRatio.toFixed(2)} />
+            <Metric label="Aspect category" value={formatAspect(recommendation.aspectCategory)} />
+            <Metric label="Visible width" value={`${recommendation.recommendedWidthMm} mm`} />
+            <Metric label="Visible height" value={`${recommendation.recommendedHeightMm} mm`} />
+            <Metric
+              label="Acceptable width"
+              value={`${recommendation.acceptableMinWidthMm}-${recommendation.acceptableMaxWidthMm} mm`}
+            />
+            <Metric label="Stake depth" value={recommendation.stakeDepthMm ? `${recommendation.stakeDepthMm} mm` : "N/A"} />
+            <Metric
+              label="Total cut height"
+              value={recommendation.totalCutHeightMm ? `${recommendation.totalCutHeightMm} mm` : "N/A"}
+            />
+            <Metric label="Stake recommendation" value={recommendation.stakeRecommendation} />
+            <Metric label="Scale factor" value={`${recommendation.scaleFactor}x`} />
+            <Metric label="Export geometry" value={includePreviewPlacement ? "Includes preview placement" : "Resized original SVG"} />
+          </dl>
+        </details>
 
-      <section className="sa-actions-section">
-        <h2>Warnings</h2>
-        <WarningList warnings={recommendation.warnings} />
-      </section>
+        <details className="sa-accordion" open={recommendation.warnings.length > 0}>
+          <summary>
+            <span>Warnings</span>
+            <strong>{recommendation.warnings.length}</strong>
+          </summary>
+          <section className="sa-actions-section">
+            <WarningList warnings={recommendation.warnings} />
+          </section>
+        </details>
 
-      <section className="sa-actions-section">
-        <h2>Suggested actions</h2>
-        <ul className="sa-note-list">
-          {recommendation.notes.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-        </ul>
-      </section>
+        <details className="sa-accordion">
+          <summary>
+            <span>Suggested actions</span>
+            <strong>{recommendation.notes.length}</strong>
+          </summary>
+          <section className="sa-actions-section">
+            <ul className="sa-note-list">
+              {recommendation.notes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </section>
+        </details>
 
-      <section className="sa-actions-section sa-export-options">
-        <h2>Export options</h2>
-        <label className="sa-preview-toggle">
-          <input
-            type="checkbox"
-            checked={includePreviewPlacement}
-            disabled={!recommendation.exportAvailable}
-            onChange={(event) => setIncludePreviewPlacement(event.target.checked)}
-          />
-          <span>Include preview placement and angle in SVG</span>
-        </label>
-        <p className="sa-export-note">
-          Default export keeps the resized original SVG. Placement export uses a larger layout canvas and applies the preview move/angle. Stake guides are advisory unless the uploaded SVG already contains the stake geometry.
-        </p>
-      </section>
+        <details className="sa-accordion">
+          <summary>
+            <span>Export options</span>
+            <strong>{includePreviewPlacement ? "Placed" : "Resized"}</strong>
+          </summary>
+          <section className="sa-actions-section sa-export-options">
+            <label className="sa-preview-toggle">
+              <input
+                type="checkbox"
+                checked={includePreviewPlacement}
+                disabled={!recommendation.exportAvailable}
+                onChange={(event) => setIncludePreviewPlacement(event.target.checked)}
+              />
+              <span>Include preview placement and angle in SVG</span>
+            </label>
+            <p className="sa-export-note">
+              Default export keeps the resized original SVG. Placement export uses a larger layout canvas and applies the preview move/angle. Stake guides are advisory unless the uploaded SVG already contains the stake geometry.
+            </p>
+          </section>
+        </details>
+      </div>
 
       <button
         type="button"

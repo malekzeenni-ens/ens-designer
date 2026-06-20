@@ -2306,7 +2306,7 @@ h2 {
 
 .sa-workspace {
   display: grid;
-  grid-template-columns: minmax(280px, 0.88fr) minmax(360px, 1.28fr) minmax(300px, 0.92fr);
+  grid-template-columns: minmax(290px, 420px) minmax(0, 1fr);
   gap: 14px;
   align-items: start;
 }
@@ -2314,6 +2314,12 @@ h2 {
 .sa-left-panel {
   display: grid;
   gap: 12px;
+}
+
+.sa-main-panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
 }
 
 .sa-card,
@@ -2719,10 +2725,8 @@ h2 {
 }
 
 .sa-recommendation-card {
-  position: sticky;
-  top: 16px;
-  max-height: calc(100vh - 32px);
-  overflow-y: auto;
+  display: grid;
+  gap: 12px;
 }
 
 .sa-metric-list {
@@ -2757,14 +2761,14 @@ h2 {
 .sa-size-comparison {
   display: grid;
   gap: 9px;
-  padding: 10px;
-  border: 1px solid rgba(221, 191, 147, 0.5);
-  border-radius: 8px;
-  background: #fff8eb;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .sa-size-comparison-grid {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -2799,6 +2803,68 @@ h2 {
 
 .sa-size-comparison-note {
   margin: 0;
+}
+
+.sa-recommendation-accordions {
+  display: grid;
+  gap: 8px;
+}
+
+.sa-accordion {
+  border: 1px solid var(--ens-line);
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.sa-accordion summary {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  color: var(--ens-navy);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 900;
+  list-style: none;
+}
+
+.sa-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.sa-accordion summary::before {
+  content: "+";
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(76, 100, 124, 0.28);
+  border-radius: 50%;
+  color: var(--ens-blue);
+  font-weight: 900;
+}
+
+.sa-accordion[open] summary::before {
+  content: "-";
+}
+
+.sa-accordion summary span {
+  flex: 1 1 auto;
+}
+
+.sa-accordion summary strong {
+  color: var(--ens-muted);
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.sa-accordion > :not(summary) {
+  margin: 0 11px 11px;
 }
 
 .sa-actions-section {
@@ -2882,8 +2948,7 @@ h2 {
     grid-template-columns: 1fr;
   }
 
-  .sa-preview-panel,
-  .sa-recommendation-card {
+  .sa-preview-panel {
     position: static;
     max-height: none;
   }
@@ -2892,6 +2957,7 @@ h2 {
 @media (max-width: 640px) {
   .sa-inline-fields,
   .sa-metric-list div,
+  .sa-size-comparison-grid,
   .sa-preview-controls {
     grid-template-columns: 1fr;
   }

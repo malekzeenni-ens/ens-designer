@@ -93,6 +93,54 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ---
 
+## [2026-06-20 19:52:23 Europe/London] - Rework Sizing Assistant Canvas Layout
+
+### Commit
+- Commit hash: `<pending>`
+- Previous commit hash: `2346f5b5a8b2ed84a601d9916d049b4bb278256d`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Moved the recommendation panel into the main top row and expanded the preview/canvas area.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingAssistantTab.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingRecommendationCard.tsx`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Changed Sizing Assistant from a three-column layout to a left input column plus a wider main column.
+- Moved the recommendation card above the preview canvas inside the main column.
+- Added collapsible accordions for size comparison, recommendation details, warnings, suggested actions, and export options.
+- Kept the size comparison accordion open by default and warnings open when warnings exist.
+- Updated responsive layout so the assistant stacks cleanly on narrower screens.
+- Sizing rules, export logic, preview controls, and Designer generation behavior were intentionally unchanged.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 32 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Started the Vite dev server and confirmed `http://127.0.0.1:5174` returned HTTP 200.
+- Reviewed changed files and confirmed the update is scoped to Sizing Assistant UX layout.
+
+### Known Issues / Follow-Ups
+- Browser screenshot verification was not automated for this layout adjustment.
+
+### Revert Instructions
+```bash
+git revert <pending>
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 19:43:13 Europe/London] - Clarify Current And Recommended Sizes
 
 ### Commit
