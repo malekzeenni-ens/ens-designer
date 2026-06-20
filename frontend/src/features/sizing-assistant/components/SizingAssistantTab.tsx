@@ -13,6 +13,13 @@ import { SizingPreviewPanel } from "./SizingPreviewPanel";
 import { SizingRecommendationCard } from "./SizingRecommendationCard";
 import { UploadDesignControl } from "./UploadDesignControl";
 
+export type SizingPreviewSettings = {
+  previewRecommendedSize: boolean;
+  offsetXPct: number;
+  offsetYPct: number;
+  rotationDeg: number;
+};
+
 const defaultConfig: SizingProductConfig = {
   productType: "topCakeTopper",
   cakeSize: "6",
@@ -26,10 +33,19 @@ const defaultManualOverride: ManualOverrideState = {
   enabled: false,
 };
 
+const defaultPreviewSettings: SizingPreviewSettings = {
+  previewRecommendedSize: true,
+  offsetXPct: 0,
+  offsetYPct: 0,
+  rotationDeg: 0,
+};
+
 export function SizingAssistantTab() {
   const [uploadedFile, setUploadedFile] = useState<UploadedDesignMetadata | null>(null);
   const [productConfig, setProductConfig] = useState<SizingProductConfig>(defaultConfig);
   const [manualOverride, setManualOverride] = useState<ManualOverrideState>(defaultManualOverride);
+  const [previewSettings, setPreviewSettings] =
+    useState<SizingPreviewSettings>(defaultPreviewSettings);
 
   const recommendation = useMemo(() => {
     if (!uploadedFile) return null;
@@ -51,6 +67,7 @@ export function SizingAssistantTab() {
       return metadata;
     });
     setManualOverride(defaultManualOverride);
+    setPreviewSettings(defaultPreviewSettings);
   }
 
   function handleManualDimensionsChange(width: number | null, height: number | null) {
@@ -106,6 +123,8 @@ export function SizingAssistantTab() {
           uploadedFile={uploadedFile}
           config={productConfig}
           recommendation={recommendation}
+          previewSettings={previewSettings}
+          onPreviewSettingsChange={setPreviewSettings}
         />
 
         <SizingRecommendationCard

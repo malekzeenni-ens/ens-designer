@@ -93,6 +93,55 @@ git revert b28575ce02f63445a0a7946e8435b9150655edbf
 
 ---
 
+## [2026-06-20 18:37:16 Europe/London] - Add Interactive Sizing Preview Controls
+
+### Commit
+- Commit hash: `<pending>`
+- Previous commit hash: `8d57717395c343512c979943f83c8c53bdc4799f`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Added draggable/rotatable preview controls and an explicit recommended-size preview toggle for the Sizing Assistant.
+
+### Files Changed
+- `docs/deployment-log.md`
+- `frontend/src/features/sizing-assistant/components/SizingAssistantTab.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Added preview-only state for recommended-size preview, X/Y placement offset, and rotation angle.
+- Reset preview placement when a new design is uploaded.
+- Added a `Preview recommended size` toggle so the operator can switch between the recommended physical size preview and a source/reference preview.
+- Made the uploaded design draggable inside the front cake preview with bounded placement.
+- Added an angle slider and reset button for previewing how the design sits visually on the topper/cake.
+- Kept sizing calculations, aspect-ratio locking, warning/status logic, and SVG export dimensions unchanged.
+
+### Tests Run
+- `npm test` - Passed: 7 files, 31 tests.
+- `npm run build` - Passed.
+- `npm run lint` - Not available: no lint script in `frontend/package.json`.
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 188 tests, 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Started the Vite dev server and confirmed `http://127.0.0.1:5174` returned HTTP 200.
+- Reviewed the changed files and confirmed the update is scoped to Sizing Assistant preview behavior.
+
+### Known Issues / Follow-Ups
+- Drag/rotation was not verified with browser screenshot automation.
+- Preview placement is visual-only and intentionally does not alter exported SVG dimensions or artwork geometry.
+
+### Revert Instructions
+```bash
+git revert <pending>
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 18:30:47 Europe/London] - Improve Sizing Assistant Preview Perspective
 
 ### Commit
