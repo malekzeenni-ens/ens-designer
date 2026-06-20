@@ -5,10 +5,11 @@ import { ConfigurationPanel } from "./components/ConfigurationPanel";
 import { FontAdvisorPanel } from "./components/FontAdvisorPanel";
 import { FontsPanel } from "./components/FontsPanel";
 import { HistoryPanel } from "./components/HistoryPanel";
+import { SizingAssistantTab } from "./features/sizing-assistant/components/SizingAssistantTab";
 import { fetchFonts, fetchManualFonts, fetchUploadedFonts, saveManualFonts } from "./services/generationApi";
 import type { FontInfo } from "./types/design";
 
-type WorkspaceTab = "designer" | "advisor" | "fonts" | "configuration" | "history";
+type WorkspaceTab = "designer" | "sizingAssistant" | "advisor" | "fonts" | "configuration" | "history";
 
 export function App() {
   const [fonts, setFonts] = useState<FontInfo[]>([]);
@@ -55,6 +56,13 @@ export function App() {
               </button>
               <button
                 type="button"
+                className={activeTab === "sizingAssistant" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
+                onClick={() => setActiveTab("sizingAssistant")}
+              >
+                Sizing Assistant
+              </button>
+              <button
+                type="button"
                 className={activeTab === "advisor" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
                 onClick={() => setActiveTab("advisor")}
               >
@@ -83,6 +91,7 @@ export function App() {
               </button>
             </nav>
             {activeTab === "designer" && <CakeTopperPanel fonts={fonts} manualFonts={manualFonts} />}
+            {activeTab === "sizingAssistant" && <SizingAssistantTab />}
             {activeTab === "advisor" && (
               <FontAdvisorPanel fonts={fonts} uploadedFonts={uploadedFonts} />
             )}

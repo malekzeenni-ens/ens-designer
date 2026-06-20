@@ -2294,3 +2294,388 @@ h2 {
   flex-shrink: 0;
   font-size: 0.78rem;
 }
+
+/* ============================================================
+   Sizing Assistant
+   ============================================================ */
+
+.sa-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.sa-workspace {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.88fr) minmax(360px, 1.28fr) minmax(300px, 0.92fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.sa-left-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.sa-card,
+.sa-preview-panel {
+  border: 1px solid var(--ens-line);
+  border-radius: 10px;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 12px 30px rgba(7, 19, 30, 0.07);
+}
+
+.sa-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.sa-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sa-card-heading p,
+.sa-empty-note,
+.sa-dimensions-note,
+.sa-manual-dimensions p {
+  margin: 4px 0 0;
+  color: var(--ens-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.sa-header-chip,
+.sa-lock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.sa-header-chip {
+  color: var(--ens-gold-soft);
+}
+
+.sa-lock-chip {
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid rgba(76, 100, 124, 0.28);
+  border-radius: 999px;
+  background: #f7fbff;
+  color: var(--ens-blue);
+}
+
+.sa-drop-zone {
+  position: relative;
+  display: grid;
+  min-height: 132px;
+  place-items: center;
+  gap: 6px;
+  padding: 20px;
+  border: 2px dashed var(--ens-line);
+  border-radius: 10px;
+  background: #fdfaf5;
+  color: var(--ens-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sa-drop-zone:hover,
+.sa-drop-zone--active {
+  border-color: var(--ens-blue);
+  background: #f0f6ff;
+}
+
+.sa-drop-zone strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ens-navy);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-drop-zone span {
+  font-size: 0.78rem;
+}
+
+.sa-input-panel {
+  gap: 10px;
+}
+
+.sa-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sa-manual-controls {
+  background: #fff8eb;
+  box-shadow: none;
+}
+
+.sa-manual-dimensions {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(200, 121, 65, 0.32);
+  border-radius: 8px;
+  background: #fff8f0;
+}
+
+.sa-preview-panel {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 12px;
+  min-height: 700px;
+  padding: 14px;
+}
+
+.sa-preview-topbar,
+.sa-measurements {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sa-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f4f1eb;
+  color: var(--ens-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.sa-status-badge--goodToCut {
+  background: #e8f7ef;
+  color: #11663f;
+}
+
+.sa-status-badge--needsReview,
+.sa-status-badge--pending {
+  background: #fff3d6;
+  color: #8a5b00;
+}
+
+.sa-status-badge--tooWide,
+.sa-status-badge--tooTall,
+.sa-status-badge--tooSmall,
+.sa-status-badge--notRecommended {
+  background: #fff4f2;
+  color: #922b21;
+}
+
+.sa-cake-stage {
+  display: grid;
+  min-height: 540px;
+  place-items: center;
+  border: 1px solid var(--ens-line);
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(124, 124, 107, 0.16) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(124, 124, 107, 0.16) 1px, transparent 1px),
+    #ffffff;
+  background-size: 28px 28px;
+  overflow: hidden;
+}
+
+.sa-cake-footprint {
+  position: relative;
+  display: grid;
+  width: min(82vw, 430px);
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid rgba(76, 100, 124, 0.36);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 229, 203, 0.42), rgba(255, 255, 255, 0.74));
+}
+
+.sa-cake-footprint > span {
+  position: absolute;
+  top: 16px;
+  color: var(--ens-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.sa-design-preview {
+  display: grid;
+  min-width: 34px;
+  min-height: 24px;
+  place-items: center;
+  padding: 2px;
+  border: 1px dashed rgba(7, 19, 30, 0.38);
+  background: rgba(255, 255, 255, 0.78);
+  overflow: hidden;
+}
+
+.sa-design-preview svg,
+.sa-design-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sa-design-preview--empty {
+  color: var(--ens-olive);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.sa-measurements span {
+  display: grid;
+  gap: 3px;
+  min-width: 128px;
+  padding: 10px;
+  border: 1px solid var(--ens-line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ens-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sa-measurements strong {
+  color: var(--ens-navy);
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.sa-recommendation-card {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.sa-metric-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.sa-metric-list div {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.85fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(221, 210, 192, 0.74);
+}
+
+.sa-metric-list dt {
+  color: var(--ens-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.sa-metric-list dd {
+  margin: 0;
+  color: var(--ens-navy);
+  font-size: 0.86rem;
+  font-weight: 850;
+  text-align: right;
+}
+
+.sa-actions-section {
+  display: grid;
+  gap: 8px;
+}
+
+.sa-warning-list,
+.sa-note-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sa-warning {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 9px;
+  border: 1px solid var(--ens-line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ens-muted);
+  font-size: 0.8rem;
+  line-height: 1.38;
+}
+
+.sa-warning--warning {
+  border-color: rgba(200, 121, 65, 0.4);
+  background: #fff8f0;
+  color: #7a4010;
+}
+
+.sa-warning--critical {
+  border-color: rgba(192, 57, 43, 0.4);
+  background: #fff4f2;
+  color: #922b21;
+}
+
+.sa-warning strong,
+.sa-warning small {
+  display: block;
+}
+
+.sa-warning small {
+  margin-top: 3px;
+  opacity: 0.84;
+}
+
+.sa-note-list {
+  padding-left: 18px;
+  list-style: disc;
+  color: var(--ens-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1180px) {
+  .sa-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .sa-preview-panel,
+  .sa-recommendation-card {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .sa-inline-fields,
+  .sa-metric-list div {
+    grid-template-columns: 1fr;
+  }
+
+  .sa-metric-list dd {
+    text-align: left;
+  }
+
+  .sa-cake-stage {
+    min-height: 380px;
+  }
+}
