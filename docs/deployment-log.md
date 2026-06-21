@@ -15,6 +15,65 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-06-21 23:00:00 Europe/London] - Backend Remediation: Font ID Stability, History Crash, Exception Handling (Batches 1-3)
+
+### Commit
+- Commit hash: `cd24ccd`
+- Previous commit hash: `e0f1985`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Implemented Batches 1-3 of `docs/Regression Testing.md`, the remediation plan from the 2026-06-20/21 full-codebase audit: backend `font_id` stability, a history-store crash fix, and consistent exception handling across routes and the geometry/font-loading layers.
+
+### Files Changed
+- `backend/app/api/routes/cake_topper.py`
+- `backend/app/api/routes/fonts.py`
+- `backend/app/api/routes/generation.py`
+- `backend/app/api/routes/overlap.py`
+- `backend/app/cake_topper_engine.py`
+- `backend/app/connectivity_engine.py`
+- `backend/app/font_loader.py`
+- `backend/app/history_store.py`
+- `backend/app/png_exporter.py`
+- `backend/app/shapely_converter.py`
+- `docs/Regression Testing.md`
+- `fonts/.manual_fonts.json`
+- `tests/test_font_id_migration.py`
+- `tests/test_history_store_malformed.py`
+- `tests/test_route_error_handling.py`
+
+### Implementation Details
+- **B1.1**: `font_id` now derives from a SHA1 hash of file content instead of the resolved absolute path, so re-hosting/cloning/syncing the project no longer invalidates every manual/uploaded font reference. A one-time migration on manifest load remaps any old path-hash IDs to the new content-hash IDs by filename match, rewriting `fonts/.manual_fonts.json` in place (visible in this commit's diff) and logging a warning for any ID that can't be remapped.
+- **B1.2**: `history_store.py` now wraps per-entry `HistoryEntry(**e)` construction in try/except, skipping and logging malformed entries (with a count) instead of letting one bad row 500 the whole `/api/cake-topper/history` endpoint.
+- **B2.1-B2.5**: route handlers (`cake_topper`, `fonts`, `generation`, `overlap`) and engine call sites now use a consistent exception-handling convention instead of narrow or overly-broad catches.
+- **B2.6-B2.7**: `font_loader.py` manifest reads now catch specific `(json.JSONDecodeError, OSError)` exceptions with a logged warning instead of swallowing all exceptions as "no manual fonts."
+- **B2.8-B2.9**: `shapely_converter.py` geometry operations now catch specific Shapely/value exceptions and log when geometry is dropped, instead of silently discarding it.
+- **B3.1-B3.7**: `fonts.py` duplicate-upload race, `history_store.py` write locking, `connectivity_engine.py` dead-code review, and `cake_topper_engine.py`/`outline_extractor.py` bare-except narrowing and logging were addressed per the plan's low-severity cleanup items.
+- **B3.8**: confirmed `fontStructuralScores.json` is wired into `cakeTopperFontRecommendations.ts` on the frontend (font fragility scoring is a live feature) and added a regression test pinning the integration.
+- **Deferred (documented in `docs/Regression Testing.md`)**: B2.10/B2.11 (promoting the ring `overlap_mm` 4.0mm minimum from a warning to a hard 422 rejection) was deferred per explicit instruction, since it would newly reject currently-working saved/uploaded designs.
+
+### Tests Run
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 196 tests (up from 188), 1 existing Starlette/httpx deprecation warning.
+
+### Manual Validation
+- Reviewed the `fonts/.manual_fonts.json` diff to confirm the B1.1 migration remapped every existing manual font ID by filename match with no entries dropped.
+- Reviewed route/engine diffs to confirm no behavior change beyond exception specificity and logging (no new 422/500 status changes introduced, consistent with B2.10/B2.11 being deferred).
+
+### Known Issues / Follow-Ups
+- B2.10/B2.11 and F5.5 remain deferred; see "Deferred Items" section of `docs/Regression Testing.md`.
+- Fonts renamed *and* moved simultaneously with this fix still require manual re-curation (filename match fails) — documented residual gap.
+
+### Revert Instructions
+```bash
+git revert cd24ccd
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-20 22:21:00 Europe/London] - Update Manual Fonts Manifest
 
 ### Commit
