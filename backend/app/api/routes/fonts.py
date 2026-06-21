@@ -118,9 +118,16 @@ async def upload_font(request: Request, file: UploadFile):
         raise HTTPException(status_code=500, detail="Failed to save the font file. Please try again.")
 
     # --- hot-add to live catalog ---
-    record = catalog.add_font(dest)
+    try:
+        record = catalog.add_font(dest)
+    except ValueError:
+        dest.unlink(missing_ok=True)
+        return FontUploadResponse(
+            success=False,
+            message=f'"{full_name}" could not be added to the library after upload. Please try again.',
+        )
     if record is None:
-        # Shouldn't happen after duplicate check, but handle gracefully
+        # Race: another upload of the same font landed between our duplicate check and now.
         dest.unlink(missing_ok=True)
         return FontUploadResponse(
             success=False,

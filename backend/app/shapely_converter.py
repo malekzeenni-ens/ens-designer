@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 
 from .models import GeometryPath, GlyphGeometry, PathCommand
+
+logger = logging.getLogger(__name__)
 
 _QUAD_STEPS = 8
 _CUBIC_STEPS = 12
@@ -69,8 +73,8 @@ def path_to_shapely(path: GeometryPath) -> Polygon | MultiPolygon | None:
             poly = Polygon(coords).buffer(0)
             if not poly.is_empty and poly.area > 0:
                 polys.append(poly)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("path_to_shapely: dropped one subpath (%s)", exc)
 
     if not polys:
         return None
@@ -86,11 +90,12 @@ def path_to_shapely(path: GeometryPath) -> Polygon | MultiPolygon | None:
                 result = result.difference(candidate)
             else:
                 result = result.union(candidate)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("path_to_shapely: dropped one hole/union candidate (%s)", exc)
     try:
         return result.buffer(0)
-    except Exception:
+    except Exception as exc:
+        logger.debug("path_to_shapely: final buffer(0) failed, returning unbuffered result (%s)", exc)
         return result
 
 
@@ -119,14 +124,16 @@ def glyph_to_shapely(glyph: GlyphGeometry, path_map: dict[str, GeometryPath]) ->
                 result = result.difference(candidate)
             else:
                 result = result.union(candidate)
-        except Exception:
+        except Exception as exc:
+            logger.debug("glyph_to_shapely: difference failed (%s), retrying as union", exc)
             try:
                 result = result.union(candidate)
-            except Exception:
-                pass
+            except Exception as union_exc:
+                logger.debug("glyph_to_shapely: dropped one candidate (%s)", union_exc)
     try:
         return result.buffer(0)
-    except Exception:
+    except Exception as exc:
+        logger.debug("glyph_to_shapely: final buffer(0) failed, returning unbuffered result (%s)", exc)
         return result
 
 
@@ -157,8 +164,8 @@ def count_connected_components(geometries: list, tolerance: float = _CONNECTIVIT
             try:
                 if valid[a][1].distance(valid[b][1]) <= tolerance:
                     merge(a, b)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("count_connected_components: distance check failed for a pair (%s)", exc)
 
     return len({find(i) for i in range(n)})
 

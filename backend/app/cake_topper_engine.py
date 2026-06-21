@@ -597,8 +597,9 @@ def _render_png(
     try:
         import cairosvg
         return cairosvg.svg2png(bytestring=svg.encode("utf-8"), background_color="transparent")
-    except (ImportError, OSError):
-        # Cairo native library not available — fall back to Pillow polygon renderer.
+    except Exception:
+        # Cairo unavailable or failed for any reason — fall back to Pillow polygon renderer.
+        logger.warning("cairosvg rendering failed; falling back to Pillow PNG renderer.", exc_info=True)
         return render_paths_png(groups, width_mm, height_mm)
 
 
@@ -667,7 +668,8 @@ def _apply_ring_to_base(
 
     try:
         overlap_area = ring_outer.intersection(base_geometry).area
-    except Exception:
+    except Exception as exc:
+        logger.warning("Ring/base overlap-area check failed; treating as no overlap. (%s)", exc)
         overlap_area = 0.0
     if overlap_area <= 0:
         warnings.append(
@@ -690,7 +692,8 @@ def _apply_ring_to_base(
     try:
         with_tab = unary_union([base_geometry, ring_outer]).buffer(0)
         with_hole = with_tab.difference(ring_hole).buffer(0)
-    except Exception:
+    except Exception as exc:
+        logger.warning("Ring/keyhole geometry generation failed. (%s)", exc)
         warnings.append("Ring/keyhole geometry could not be generated. Try a different position or size.")
         metadata = _ring_metadata(
             cfg.position,
@@ -711,8 +714,8 @@ def _apply_ring_to_base(
         try:
             if ring_hole.intersects(line_geometry):
                 warnings.append("Ring hole may be too close to the text. Move the ring or increase the outline offset.")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Ring/text proximity check failed; skipping the check. (%s)", exc)
 
     metadata = _ring_metadata(
         cfg.position,

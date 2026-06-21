@@ -17,3 +17,6 @@ def generate_cake_topper(payload: CakeTopperRequest, request: Request) -> CakeTo
     except ValueError as exc:
         logger.warning("Cake topper generation failed: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("Cake topper generation failed unexpectedly: %s", exc, exc_info=True)
+        raise HTTPException(status_code=400, detail="Cake topper generation failed.") from exc

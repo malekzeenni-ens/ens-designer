@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from io import BytesIO
 
 from PIL import Image, ImageDraw
 
 from .models import CanonicalGeometry, GeometryPath, PathCommand
+
+logger = logging.getLogger(__name__)
 
 PNG_SCALE = 8
 
@@ -14,7 +17,8 @@ def export_png(svg: str, geometry: CanonicalGeometry) -> bytes:
         import cairosvg
 
         return cairosvg.svg2png(bytestring=svg.encode("utf-8"), background_color="transparent")
-    except (ImportError, OSError):
+    except Exception:
+        logger.warning("cairosvg rendering failed; falling back to Pillow PNG renderer.", exc_info=True)
         return _export_png_with_pillow(geometry)
 
 

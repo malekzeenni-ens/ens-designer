@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from .models import HistoryEntry, HistoryEntryCreate
+
+logger = logging.getLogger(__name__)
 
 MAX_ENTRIES = 500
 
@@ -14,6 +20,7 @@ class HistoryStore:
 
     def __init__(self, project_root: Path) -> None:
         self._path = project_root / "backend" / "data" / "cake_topper_history.json"
+        self._lock = threading.Lock()
 
     def _read(self) -> list[dict]:
         if not self._path.exists():
@@ -35,14 +42,23 @@ class HistoryStore:
             timestamp=datetime.now(timezone.utc).isoformat(),
             **entry.model_dump(),
         )
-        entries = self._read()
-        entries.append(full_entry.model_dump())
-        if len(entries) > MAX_ENTRIES:
-            entries = entries[-MAX_ENTRIES:]
-        self._write(entries)
+        with self._lock:
+            entries = self._read()
+            entries.append(full_entry.model_dump())
+            if len(entries) > MAX_ENTRIES:
+                entries = entries[-MAX_ENTRIES:]
+            self._write(entries)
         return full_entry
 
     def list(self) -> list[HistoryEntry]:
         entries = self._read()
-        parsed = [HistoryEntry(**e) for e in entries]
+        parsed: list[HistoryEntry] = []
+        skipped = 0
+        for e in entries:
+            try:
+                parsed.append(HistoryEntry(**e))
+            except ValidationError:
+                skipped += 1
+        if skipped:
+            logger.warning("history store: skipped %d malformed entr%s", skipped, "y" if skipped == 1 else "ies")
         return list(reversed(parsed))

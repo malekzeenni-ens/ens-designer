@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from .models import FontInfo
+
+logger = logging.getLogger(__name__)
 
 FONT_EXTENSIONS = {".ttf", ".otf"}
 UPLOAD_MANIFEST = ".uploaded_manifest.json"
@@ -43,9 +46,8 @@ class FontCatalog:
         if self._records is not None:
             return self._records
 
-        records: dict[str, FontRecord] = {}
-        seen_names: dict[tuple[str, str], str] = {}
-        manual_ids = set(self._read_manifest_ids(MANUAL_FONTS_MANIFEST, "manual"))
+        parsed: list[FontRecord] = []
+        legacy_to_new: dict[str, str] = {}
         for source, directory in self._font_directories():
             if not directory.exists():
                 continue
@@ -55,30 +57,81 @@ class FontCatalog:
                 record = self._read_font(source, path)
                 if record is None:
                     continue
-                key = _font_key(record.info)
-                existing_id = seen_names.get(key)
-                if existing_id is None:
-                    seen_names[key] = record.info.id
-                    records[record.info.id] = record
-                    continue
-                if record.info.id in manual_ids and existing_id not in manual_ids:
-                    records.pop(existing_id, None)
-                    seen_names[key] = record.info.id
-                    records[record.info.id] = record
+                legacy_to_new[_legacy_font_id(path)] = record.info.id
+                parsed.append(record)
+
+        known_ids = {record.info.id for record in parsed}
+        manual_ids = set(self._migrate_manifest_ids(MANUAL_FONTS_MANIFEST, "manual", legacy_to_new, known_ids))
+        self._migrate_manifest_ids(UPLOAD_MANIFEST, "uploaded", legacy_to_new, known_ids)
+
+        records: dict[str, FontRecord] = {}
+        seen_names: dict[tuple[str, str], str] = {}
+        for record in parsed:
+            key = _font_key(record.info)
+            existing_id = seen_names.get(key)
+            if existing_id is None:
+                seen_names[key] = record.info.id
+                records[record.info.id] = record
+                continue
+            if record.info.id in manual_ids and existing_id not in manual_ids:
+                records.pop(existing_id, None)
+                seen_names[key] = record.info.id
+                records[record.info.id] = record
 
         self._records = dict(sorted(records.items(), key=lambda item: item[1].info.full_name.lower()))
         return self._records
+
+    def _migrate_manifest_ids(
+        self,
+        manifest_name: str,
+        key: str,
+        legacy_to_new: dict[str, str],
+        known_ids: set[str],
+    ) -> list[str]:
+        """Remap stale path-hash font IDs to content-hash IDs, dropping any that no longer resolve."""
+        raw_ids = self._read_manifest_ids(manifest_name, key)
+        if not raw_ids:
+            return raw_ids
+
+        migrated_ids: list[str] = []
+        dropped: list[str] = []
+        changed = False
+        for font_id in raw_ids:
+            if font_id in known_ids:
+                migrated_ids.append(font_id)
+                continue
+            remapped = legacy_to_new.get(font_id)
+            if remapped is not None:
+                migrated_ids.append(remapped)
+                changed = True
+                continue
+            dropped.append(font_id)
+            changed = True
+
+        if dropped:
+            logger.warning(
+                "%s: dropping %d font id(s) with no matching font file: %s",
+                manifest_name,
+                len(dropped),
+                ", ".join(dropped),
+            )
+
+        if changed:
+            manifest_path = self.project_root / "fonts" / manifest_name
+            manifest_path.write_text(json.dumps({key: migrated_ids}, indent=2), encoding="utf-8")
+
+        return migrated_ids
 
     def add_font(self, path: Path) -> FontRecord | None:
         """Hot-add a font to the live catalog without restarting.
 
         Returns the new FontRecord on success, or None if the font is a duplicate
-        (matched by full_name + style) or cannot be read.
+        (matched by full_name + style). Raises ValueError if the file cannot be read.
         """
         records = self._scan()
         record = self._read_font("project", path)
         if record is None:
-            return None
+            raise ValueError(f"Could not read font file: {path}")
         if _font_key(record.info) in {_font_key(r.info) for r in records.values()}:
             return None  # duplicate
         records[record.info.id] = record
@@ -99,8 +152,8 @@ class FontCatalog:
 
     def get_manual_font_ids(self) -> list[str]:
         """Return saved manual font IDs that still exist in the live catalog."""
-        raw_ids = self._read_manifest_ids(MANUAL_FONTS_MANIFEST, "manual")
         records = self._scan()
+        raw_ids = self._read_manifest_ids(MANUAL_FONTS_MANIFEST, "manual")
         valid_ids: list[str] = []
         for font_id in raw_ids:
             if font_id in records and font_id not in valid_ids:
@@ -128,9 +181,13 @@ class FontCatalog:
             return []
         try:
             data = json.loads(manifest_path.read_text(encoding="utf-8"))
-            raw_ids = data.get(key, [])
-        except Exception:
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.warning("%s: failed to read manifest (%s); treating as empty.", manifest_path, exc)
             return []
+        if not isinstance(data, dict):
+            logger.warning("%s: manifest root is not an object; treating as empty.", manifest_path)
+            return []
+        raw_ids = data.get(key, [])
         if not isinstance(raw_ids, list):
             return []
         ids: list[str] = []
@@ -152,9 +209,18 @@ class FontCatalog:
 
         family, full_name, style = _font_names_from_path(path)
 
-        font_id = hashlib.sha1(str(path.resolve()).encode("utf-8")).hexdigest()[:16]
+        font_id = _content_font_id(path)
         info = FontInfo(id=font_id, family=family, full_name=full_name, style=style, source=source)  # type: ignore[arg-type]
         return FontRecord(info=info, path=path)
+
+
+def _content_font_id(path: Path) -> str:
+    return hashlib.sha1(path.read_bytes()).hexdigest()[:16]
+
+
+def _legacy_font_id(path: Path) -> str:
+    """Old path-hash font ID scheme, kept only to remap stale manifest entries."""
+    return hashlib.sha1(str(path.resolve()).encode("utf-8")).hexdigest()[:16]
 
 
 def _font_key(font: FontInfo) -> tuple[str, str]:

@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import logging
 
-from shapely.ops import unary_union
-
 from .canonical_geometry import recalculate_geometry_bounds
 from .models import CanonicalGeometry, GeometryPath, GlyphGeometry, MaterialProfile, PathCommand, WeldingMetadata
-from .shapely_converter import count_connected_components, glyph_to_shapely, shapely_to_paths
+from .shapely_converter import count_connected_components, glyph_to_shapely
 from .welding_engine import apply_welding
 
 logger = logging.getLogger(__name__)
@@ -220,69 +218,6 @@ def _shift_paths_by_cumulative(
                     data[k] = round(data[k] - shift, 3)
             new_cmds.append(PathCommand(**data))
         result.append(GeometryPath(path_id=path.path_id, commands=new_cmds, closed=path.closed))
-    return result
-
-
-def _merge_overlapping(
-    paths: list[GeometryPath],
-    glyphs: list[GlyphGeometry],
-    geoms: list,
-) -> list[GeometryPath]:
-    """Union paths of glyphs whose Shapely geometries have interior overlap (not merely touch)."""
-    n = len(glyphs)
-    parent = list(range(n))
-
-    def find(x: int) -> int:
-        while parent[x] != x:
-            parent[x] = parent[parent[x]]
-            x = parent[x]
-        return x
-
-    def merge(x: int, y: int) -> None:
-        px, py = find(x), find(y)
-        if px != py:
-            parent[px] = py
-
-    for i in range(n):
-        for j in range(i + 1, n):
-            gi, gj = geoms[i], geoms[j]
-            if gi is None or gj is None or gi.is_empty or gj.is_empty:
-                continue
-            try:
-                if gi.intersects(gj) and not gi.touches(gj):
-                    merge(i, j)
-            except Exception:
-                pass
-
-    groups: dict[int, list[int]] = {}
-    for i in range(n):
-        groups.setdefault(find(i), []).append(i)
-
-    path_map = {p.path_id: p for p in paths}
-    result: list[GeometryPath] = []
-
-    for members in groups.values():
-        if len(members) == 1:
-            g = glyphs[members[0]]
-            for pid in g.path_ids:
-                p = path_map.get(pid)
-                if p is not None:
-                    result.append(p)
-        else:
-            group_geoms = [geoms[i] for i in members if geoms[i] is not None and not geoms[i].is_empty]
-            if not group_geoms:
-                continue
-            try:
-                merged_geom = unary_union(group_geoms).buffer(0)
-                prefix = "merged-" + "_".join(str(i) for i in sorted(members))
-                result.extend(shapely_to_paths(merged_geom, prefix))
-            except Exception:
-                for idx in members:
-                    for pid in glyphs[idx].path_ids:
-                        p = path_map.get(pid)
-                        if p is not None:
-                            result.append(p)
-
     return result
 
 
