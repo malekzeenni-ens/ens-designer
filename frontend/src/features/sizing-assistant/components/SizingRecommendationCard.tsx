@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 import { useState } from "react";
 
+import { getScaledExportDimensions } from "../engine/calculateSizingRecommendation";
 import { exportPreviewPlacementSvg, exportResizedSvg } from "../engine/exportResizedSvg";
 import { buildSizedSvgFilename } from "../engine/filenameUtils";
 import { cakeSizes, productTypeLabel } from "../engine/sizingRules";
@@ -269,25 +270,7 @@ function getExportDimensions(
   uploadedFile: UploadedDesignMetadata | null,
   recommendation: SizingRecommendation | null,
 ): { widthMm: number; heightMm: number } | null {
-  if (!uploadedFile || !recommendation) return null;
-  if (
-    uploadedFile.sizingAreaMode === "visibleArtwork" &&
-    uploadedFile.originalWidth &&
-    uploadedFile.originalHeight &&
-    uploadedFile.sizingWidth &&
-    uploadedFile.sizingHeight
-  ) {
-    const scaleFromVisibleWidth = recommendation.recommendedWidthMm / uploadedFile.sizingWidth;
-    return {
-      widthMm: roundOne(uploadedFile.originalWidth * scaleFromVisibleWidth),
-      heightMm: roundOne(uploadedFile.originalHeight * scaleFromVisibleWidth),
-    };
-  }
-
-  return {
-    widthMm: recommendation.recommendedWidthMm,
-    heightMm: recommendation.recommendedHeightMm,
-  };
+  return getScaledExportDimensions(uploadedFile, recommendation);
 }
 
 function roundOne(value: number): number {

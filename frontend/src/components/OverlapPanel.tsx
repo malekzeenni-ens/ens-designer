@@ -58,7 +58,7 @@ export function OverlapPanel({ fonts }: OverlapPanelProps) {
     if (filteredFonts.length > 0 && !filteredFonts.some((f) => f.id === fontId)) {
       setFontId(filteredFonts[0].id);
     }
-  }, [filteredFonts]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filteredFonts, fontId]);
 
   const globalMm = useMemo(() => {
     if (mode === "custom") return parseFloat(customMm) || 1.5;

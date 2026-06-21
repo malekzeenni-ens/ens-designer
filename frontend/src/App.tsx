@@ -43,7 +43,12 @@ export function App() {
     <main className="app-shell">
       <section className="workspace">
         {error ? (
-          <p className="error">{error}</p>
+          <div className="error">
+            <p>{error}</p>
+            <button type="button" onClick={() => { setError(null); reloadFonts(); }}>
+              Retry
+            </button>
+          </div>
         ) : (
           <>
             <nav className="workspace-tabs" aria-label="Workspace">

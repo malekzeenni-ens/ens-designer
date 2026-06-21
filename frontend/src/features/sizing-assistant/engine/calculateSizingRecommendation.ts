@@ -126,6 +126,37 @@ export function calculateSizingRecommendation(input: {
   };
 }
 
+/**
+ * Scales the full uploaded artwork to match the recommended width derived from
+ * its (possibly cropped) sizing area, so the export/preview reflects the same
+ * proportions used to calculate the recommendation. Shared by SizingPreviewPanel
+ * and SizingRecommendationCard so the two can't silently desync.
+ */
+export function getScaledExportDimensions(
+  uploadedFile: UploadedDesignMetadata | null,
+  recommendation: SizingRecommendation | null,
+): { widthMm: number; heightMm: number } | null {
+  if (!uploadedFile || !recommendation) return null;
+  if (
+    uploadedFile.sizingAreaMode === "visibleArtwork" &&
+    uploadedFile.originalWidth &&
+    uploadedFile.originalHeight &&
+    uploadedFile.sizingWidth &&
+    uploadedFile.sizingHeight
+  ) {
+    const scaleFromVisibleWidth = recommendation.recommendedWidthMm / uploadedFile.sizingWidth;
+    return {
+      widthMm: roundMm(uploadedFile.originalWidth * scaleFromVisibleWidth),
+      heightMm: roundMm(uploadedFile.originalHeight * scaleFromVisibleWidth),
+    };
+  }
+
+  return {
+    widthMm: recommendation.recommendedWidthMm,
+    heightMm: recommendation.recommendedHeightMm,
+  };
+}
+
 function getProductRule(productType: ProductType, cakeSize: keyof typeof cakeSizes): ProductRule {
   if (productType in topperSizingRules) {
     const rule = topperSizingRules[productType as keyof typeof topperSizingRules][cakeSize];

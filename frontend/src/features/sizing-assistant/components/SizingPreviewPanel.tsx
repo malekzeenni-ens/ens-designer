@@ -1,6 +1,7 @@
 import { Lock, RotateCcw } from "lucide-react";
 import { useRef } from "react";
 
+import { getScaledExportDimensions } from "../engine/calculateSizingRecommendation";
 import { cakeSizes } from "../engine/sizingRules";
 import { stakeApplies } from "../engine/calculateStakeRecommendation";
 import type { SizingProductConfig, SizingRecommendation, UploadedDesignMetadata } from "../engine/sizingTypes";
@@ -251,27 +252,5 @@ function getRecommendedPreviewDimensions(
   uploadedFile: UploadedDesignMetadata | null,
   recommendation: SizingRecommendation | null,
 ): { widthMm: number; heightMm: number } {
-  if (!recommendation) return { widthMm: 0, heightMm: 0 };
-  if (
-    uploadedFile?.sizingAreaMode === "visibleArtwork" &&
-    uploadedFile.originalWidth &&
-    uploadedFile.originalHeight &&
-    uploadedFile.sizingWidth &&
-    uploadedFile.sizingHeight
-  ) {
-    const scaleFromVisibleWidth = recommendation.recommendedWidthMm / uploadedFile.sizingWidth;
-    return {
-      widthMm: roundOne(uploadedFile.originalWidth * scaleFromVisibleWidth),
-      heightMm: roundOne(uploadedFile.originalHeight * scaleFromVisibleWidth),
-    };
-  }
-
-  return {
-    widthMm: recommendation.recommendedWidthMm,
-    heightMm: recommendation.recommendedHeightMm,
-  };
-}
-
-function roundOne(value: number): number {
-  return Math.round(value * 10) / 10;
+  return getScaledExportDimensions(uploadedFile, recommendation) ?? { widthMm: 0, heightMm: 0 };
 }

@@ -63,9 +63,16 @@ export function GlyphBrowserDrawer({
     setFontLoaded(false);
     const fontFace = new FontFace(fontFamily, `url(/api/fonts/${fontId}/file)`);
     document.fonts.add(fontFace);
-    fontFace.load().then(() => setFontLoaded(true)).catch(() => {
+    let cancelled = false;
+    fontFace.load().then(() => {
+      if (!cancelled) setFontLoaded(true);
+    }).catch(() => {
       // Font file failed to load — glyphs will show with system fallback
     });
+    return () => {
+      cancelled = true;
+      document.fonts.delete(fontFace);
+    };
   }, [fontId, fontFamily]);
 
   // Fetch character list from backend

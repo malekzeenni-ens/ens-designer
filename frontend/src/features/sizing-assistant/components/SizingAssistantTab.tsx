@@ -1,5 +1,5 @@
 import { Ruler } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { calculateSizingRecommendation } from "../engine/calculateSizingRecommendation";
 import type {
@@ -69,11 +69,17 @@ export function SizingAssistantTab() {
       ? recommendationUploadedFile.originalWidth / recommendationUploadedFile.originalHeight
       : null;
 
+  // Revokes the previous preview blob URL whenever it changes, and the current one on unmount
+  // (e.g. navigating away from this tab) — covers both the upload-replace and tab-navigation leak paths.
+  useEffect(() => {
+    const url = uploadedFile?.previewUrl;
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [uploadedFile?.previewUrl]);
+
   function handleUpload(metadata: UploadedDesignMetadata) {
-    setUploadedFile((previous) => {
-      if (previous?.previewUrl) URL.revokeObjectURL(previous.previewUrl);
-      return normaliseSizingArea(metadata);
-    });
+    setUploadedFile(normaliseSizingArea(metadata));
     setManualOverride(defaultManualOverride);
     setPreviewSettings(defaultPreviewSettings);
   }

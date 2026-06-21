@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, RotateCcw, Wand2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { ExportControls } from "./ExportControls";
@@ -42,6 +42,10 @@ const OVERLAP_MODES: { value: OverlapMode; label: string; mm: number | null }[] 
 ];
 
 const ALIGNMENTS: AlignmentMode[] = ["left", "center", "right", "manual"];
+
+function pickDefaultFontId(fonts: FontInfo[], manualFonts: FontInfo[]): string {
+  return manualFonts[0]?.id ?? fonts[0]?.id ?? "";
+}
 
 export const COLOR_PALETTE: { name: string; hex: string }[] = [
   { name: "Black", hex: "#000000" },
@@ -237,7 +241,8 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   const [text, setText] = useState("Happy Birthday");
   const [fontSearch, setFontSearch] = useState("");
   const [fontCategory, setFontCategory] = useState<FontFilterCategory>("all");
-  const [defaultFontId, setDefaultFontId] = useState(manualFonts[0]?.id ?? fonts[0]?.id ?? "");
+  const [defaultFontId, setDefaultFontId] = useState(() => pickDefaultFontId(fonts, manualFonts));
+  const hasUserPickedFontRef = useRef(false);
   const [defaultSize, setDefaultSize] = useState(DEFAULT_SIZE);
   const [defaultOverlap, setDefaultOverlap] = useState<OverlapMode>(DEFAULT_OVERLAP);
   const [lineStates, setLineStates] = useState<LineState[]>([]);
@@ -292,6 +297,17 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     }
   }, [defaultFontId, filteredFonts, fontGroups]);
 
+  // fonts/manualFonts can arrive asynchronously after mount (App.tsx fetches them
+  // separately) — re-derive the preferred default once they load, unless the user
+  // has already made an explicit choice.
+  useEffect(() => {
+    if (hasUserPickedFontRef.current) return;
+    const preferredId = pickDefaultFontId(fonts, manualFonts);
+    if (preferredId && preferredId !== defaultFontId) {
+      setDefaultFontId(preferredId);
+    }
+  }, [fonts, manualFonts, defaultFontId]);
+
   function buildLineConfigs(states: LineState[]): CakeTopperLineConfig[] {
     return states.map((s) => ({
       font_id: s.fontId || defaultFontId,
@@ -344,6 +360,9 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     };
   }
 
+  // All callers below rely on this function's internal try/catch (sets `error`/`loading`
+  // state) and intentionally don't await or catch it themselves — keep that contract if
+  // refactoring call sites.
   async function callApi(
     states: LineState[],
     gaps: string[],
@@ -636,10 +655,11 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   }
 
   function resetDesigner() {
+    hasUserPickedFontRef.current = false;
     setText("Happy Birthday");
     setFontSearch("");
     setFontCategory("all");
-    setDefaultFontId(manualFonts[0]?.id ?? fonts[0]?.id ?? "");
+    setDefaultFontId(pickDefaultFontId(fonts, manualFonts));
     setDefaultSize(DEFAULT_SIZE);
     setDefaultOverlap(DEFAULT_OVERLAP);
     setLineStates([]);
@@ -684,8 +704,9 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
         font_name: line.font_name,
         font_size_mm: line.font_size_mm,
       })),
-    }).catch(() => {
+    }).catch((caught) => {
       // Non-critical: history logging failure should not interrupt the download.
+      console.error("Failed to record history entry for export:", filename, caught);
     });
   }
 
@@ -862,7 +883,10 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                 </select>
                 <select
                   value={defaultFontId}
-                  onChange={(e) => setDefaultFontId(e.target.value)}
+                  onChange={(e) => {
+                    hasUserPickedFontRef.current = true;
+                    setDefaultFontId(e.target.value);
+                  }}
                   aria-label="Base font"
                 >
                   {renderFontGroups(fontGroups)}

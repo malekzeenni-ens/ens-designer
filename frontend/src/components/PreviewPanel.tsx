@@ -99,6 +99,8 @@ export function PreviewPanel({
       const activeHandle = getHandleEl();
       if (!activeHandle) return;
 
+      // Direct DOM mutation, intentionally bypassing React state/render here —
+      // keeps drag tracking at 60fps. Do not convert to state-driven updates.
       activeHandle.style.transform = `translate3d(${ev.clientX - startX}px, ${ev.clientY - startY}px, 0)`;
     }
 

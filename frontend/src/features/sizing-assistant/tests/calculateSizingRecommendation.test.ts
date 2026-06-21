@@ -74,6 +74,40 @@ describe("calculateSizingRecommendation", () => {
 
     expect(result.warnings.some((warning) => warning.code === "CUPCAKE_CHARM_TOO_LARGE")).toBe(true);
   });
+
+  it("retains a user-edited override value across a product config change (F5.6)", () => {
+    const upload = svgFile(200, 100);
+    const editedOverride: ManualOverrideState = { enabled: true, widthMm: 100, lastEditedDimension: "width" };
+
+    const beforeChange = calculateSizingRecommendation({
+      uploadedFile: upload,
+      productConfig: baseConfig,
+      manualOverride: editedOverride,
+    });
+    expect(beforeChange.recommendedWidthMm).toBe(100);
+
+    const afterProductTypeChange = calculateSizingRecommendation({
+      uploadedFile: upload,
+      productConfig: { ...baseConfig, productType: "cupcakeCharm", designUse: "cupcakeDecoration" },
+      manualOverride: editedOverride,
+    });
+
+    expect(afterProductTypeChange.recommendedWidthMm).toBe(100);
+    expect(afterProductTypeChange.recommendedHeightMm).toBe(50);
+  });
+
+  it("re-syncs to the fresh recommendation once override is disabled", () => {
+    const upload = svgFile(200, 100);
+
+    const afterDisable = calculateSizingRecommendation({
+      uploadedFile: upload,
+      productConfig: { ...baseConfig, productType: "cupcakeCharm", designUse: "cupcakeDecoration" },
+      manualOverride: { enabled: false, widthMm: 100, lastEditedDimension: "width" },
+    });
+
+    expect(afterDisable.recommendedWidthMm).not.toBe(100);
+    expect(afterDisable.isManualOverride).toBe(false);
+  });
 });
 
 function svgFile(width: number | null, height: number | null): UploadedDesignMetadata {

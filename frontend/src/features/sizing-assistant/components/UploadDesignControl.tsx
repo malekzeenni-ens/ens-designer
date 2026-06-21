@@ -23,41 +23,47 @@ export function UploadDesignControl({
 
   async function processFile(file: File) {
     setError(null);
+    // Extensionless filenames (no ".") make split(".").pop() return the whole name,
+    // which falls through to the MIME-type check below and then to the unsupported-type error.
     const extension = file.name.split(".").pop()?.toLowerCase();
 
-    if (extension === "svg" || file.type === "image/svg+xml") {
-      const rawSvgText = await file.text();
-      const parsed = parseSvgDimensions(rawSvgText);
-      onUpload({
-        name: file.name,
-        type: "svg",
-        originalWidth: parsed.width,
-        originalHeight: parsed.height,
-        originalUnit: parsed.unit,
-        viewBox: parsed.viewBox,
-        rawSvgText,
-        dimensionsDetected: parsed.dimensionsDetected,
-        errors: parsed.errors,
-      });
-      return;
-    }
+    try {
+      if (extension === "svg" || file.type === "image/svg+xml") {
+        const rawSvgText = await file.text();
+        const parsed = parseSvgDimensions(rawSvgText);
+        onUpload({
+          name: file.name,
+          type: "svg",
+          originalWidth: parsed.width,
+          originalHeight: parsed.height,
+          originalUnit: parsed.unit,
+          viewBox: parsed.viewBox,
+          rawSvgText,
+          dimensionsDetected: parsed.dimensionsDetected,
+          errors: parsed.errors,
+        });
+        return;
+      }
 
-    if (extension === "png" || file.type === "image/png") {
-      const parsed = await parsePngDimensions(file);
-      onUpload({
-        name: file.name,
-        type: "png",
-        originalWidth: parsed.width,
-        originalHeight: parsed.height,
-        originalUnit: parsed.unit,
-        previewUrl: URL.createObjectURL(file),
-        dimensionsDetected: parsed.dimensionsDetected,
-        errors: parsed.errors,
-      });
-      return;
-    }
+      if (extension === "png" || file.type === "image/png") {
+        const parsed = await parsePngDimensions(file);
+        onUpload({
+          name: file.name,
+          type: "png",
+          originalWidth: parsed.width,
+          originalHeight: parsed.height,
+          originalUnit: parsed.unit,
+          previewUrl: URL.createObjectURL(file),
+          dimensionsDetected: parsed.dimensionsDetected,
+          errors: parsed.errors,
+        });
+        return;
+      }
 
-    setError("Unsupported file type. Please upload an SVG or PNG file.");
+      setError("Unsupported file type. Please upload an SVG or PNG file.");
+    } catch {
+      setError(`"${file.name}" could not be read. Please try a different file.`);
+    }
   }
 
   function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
