@@ -15,6 +15,66 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-06-21 23:05:00 Europe/London] - Frontend Remediation: Memory Leaks, State-Sync Gaps, Silent Failures (Batches 4-6)
+
+### Commit
+- Commit hash: `0028e73`
+- Previous commit hash: `ab5ed05`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Implemented Batches 4-6 of `docs/Regression Testing.md`: frontend memory-leak fixes, state-sync/validation gaps, and silent-failure fixes from the 2026-06-20/21 full-codebase audit.
+
+### Files Changed
+- `frontend/src/App.tsx`, `frontend/src/App.retry.test.tsx`
+- `frontend/src/components/CakeTopperPanel.tsx`, `frontend/src/components/CakeTopperPanel.historyError.test.tsx`
+- `frontend/src/components/GlyphBrowserDrawer.tsx`, `frontend/src/components/GlyphBrowserDrawer.fontFace.test.tsx`
+- `frontend/src/components/OverlapPanel.tsx`, `frontend/src/components/OverlapPanel.fontResync.test.tsx`
+- `frontend/src/components/PreviewPanel.tsx`
+- `frontend/src/config/cakeTopperFontRecommendations.test.ts`
+- `frontend/src/features/sizing-assistant/components/SizingAssistantTab.tsx`, `frontend/src/features/sizing-assistant/components/SizingAssistantTab.previewUrl.test.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/features/sizing-assistant/components/SizingRecommendationCard.tsx`
+- `frontend/src/features/sizing-assistant/components/UploadDesignControl.tsx`
+- `frontend/src/features/sizing-assistant/engine/calculateSizingRecommendation.ts`
+- `frontend/src/features/sizing-assistant/tests/calculateSizingRecommendation.test.ts`
+
+### Implementation Details
+- **F4.1/F4.2**: `UploadDesignControl`/`SizingAssistantTab` now revoke the previous preview blob URL whenever it changes and on unmount, instead of leaking it on re-upload or tab navigation.
+- **F4.3**: `GlyphBrowserDrawer` now calls `document.fonts.delete()` for a loaded `FontFace` when the font selection changes or the drawer unmounts, instead of accumulating faces in `document.fonts` indefinitely.
+- **F4.4**: documented (comment-only) that `PreviewPanel`'s direct DOM mutation during drag is an intentional 60fps perf optimization, per the confirmed decision — no behavior change.
+- **F5.1/F5.2**: `CakeTopperPanel`'s default font selection now re-syncs via a dedicated effect once `fonts`/`manualFonts` arrive asynchronously, instead of locking in whichever list happened to be loaded at mount; `resetDesigner` now reuses the same shared `pickDefaultFontId` helper instead of duplicating the fallback expression.
+- **F5.3**: extracted the duplicated scale-back-out formula from `SizingPreviewPanel` and `SizingRecommendationCard` into one exported `getScaledExportDimensions` function in `engine/calculateSizingRecommendation.ts`, so preview and export can no longer silently desync.
+- **F5.4**: `UploadDesignControl.processFile` now wraps its body in try/catch, surfacing a file-read failure as the existing upload-error UI instead of an unhandled promise rejection.
+- **F5.6**: confirmed (no code change needed) that manual override fields already lock to the user-edited value once set, independent of later recommendation recalculation, since `manualOverride` state is only mutated by this component's own handlers or reset on a new upload — matches the existing "Locked" UI affordance. Added a regression test pinning this behavior.
+- **F5.7**: fixed `OverlapPanel`'s auto-select-first-visible-font effect to include `fontId` in its dependency array and removed the `eslint-disable`.
+- **F6.1**: `CakeTopperPanel`'s fire-and-forget history-record call now logs the failure via `console.error` with the export filename and error, instead of silently swallowing it.
+- **F6.2**: `App.tsx`'s font-load error screen now includes a "Retry" button that re-triggers `reloadFonts` instead of leaving a dead end.
+- **F6.3/F6.4**: documentation-only comments added (no behavior change) noting `callApi`'s internal-error-handling contract and the intentional extensionless-filename fallthrough.
+- **Deferred (documented in `docs/Regression Testing.md`)**: F5.5 (mismatched-unit dimension parsing) was deferred per explicit instruction, since it would newly block currently-working uploaded files.
+
+### Tests Run
+- `npx vitest run --environment jsdom` - Passed: 13 files, 41 tests (up from 32).
+- `npm run build` - Passed.
+
+### Manual Validation
+- Reviewed each new test to confirm it exercises the real cleanup/lock/retry path (blob URL revoke counts, `document.fonts.delete` counts, override-value persistence across a product-type change, retry button re-invoking `fetchFonts`) rather than asserting only on mocked internals.
+
+### Known Issues / Follow-Ups
+- F5.5 remains deferred; see "Deferred Items" section of `docs/Regression Testing.md`.
+- Memory-leak fixes (F4) were verified via the new revoke/delete-count regression tests, not a live Chrome DevTools heap snapshot.
+
+### Revert Instructions
+```bash
+git revert 0028e73
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-21 23:00:00 Europe/London] - Backend Remediation: Font ID Stability, History Crash, Exception Handling (Batches 1-3)
 
 ### Commit
