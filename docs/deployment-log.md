@@ -15,6 +15,47 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-06-22 13:30:00 Europe/London] - Sizing Assistant: Cake Preview Prominence and Proportion Fixes
+
+### Commit
+- Commit hash: `2b6573f`
+- Previous commit hash: `947877a`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Redesigned the Sizing Assistant cake preview canvas per user feedback ("make the cake more prominent, cleaner, more user-friendly") and fixed two correctness bugs surfaced during that work: a vertical-proportion distortion on non-square canvases, and a sticky-panel scroll overlap.
+
+### Files Changed
+- `frontend/src/features/sizing-assistant/components/SizingPreviewPanel.tsx`
+- `frontend/src/styles.css`
+
+### Implementation Details
+- Cake-to-canvas width scaling now interpolates between 60%-92% of the canvas based on cake diameter (was a flat ratio against the largest cake size, 31%-78%), so every cake size from 4in-10in renders as a visually prominent shape instead of shrinking for smaller selections.
+- Removed the redundant top-right "X mm diameter" circular chip; the on-cake width label already conveys this and is now more legible (solid border, navy text).
+- Richer cake styling: deeper cream/tan gradient, stronger inset/drop shadow, and a new grounding shadow beneath the cake; halved the background grid-line opacity and trimmed canvas height (max 500px to 420px) to reduce dead space.
+- **Proportion bug**: the design/stake overlays converted mm to a canvas-height percentage using a width-based mm-to-percent scalar, which silently distorted vertical proportions whenever the canvas wasn't square. Added a `ResizeObserver` on the scene element to track its real width/height ratio and apply that correction to every height-from-mm conversion.
+- **Scroll-overlap bug**: `.sa-preview-panel` was `position: sticky`, but it shares a single-column flow with `SizingRecommendationCard` below it (not a separate sidebar), so it was sticking and visually overlapping that card while scrolling. Removed the sticky positioning and the now-redundant mobile media-query override.
+- Removed the stake guide's gray fill background per user feedback ("the stake shadow makes no sense") - it's now a dashed outline only.
+
+### Tests Run
+- `npx vitest run --environment jsdom` - Passed: 13 files, 41 tests.
+- `npm run build` - Passed.
+
+### Manual Validation
+- Verified via code inspection (no browser/screenshot tool available in this session) that: the topper-to-cake size ratio across cake sizes matches the `topperSizingRules` bands in `sizingRules.ts` (e.g. monogram topper ~71-79% of cake diameter depending on size), stake depths match `stakeRules.depths`, and the export path (`SizingRecommendationCard.downloadSvg`) is unaffected by these preview-only changes - the user confirmed this via screenshots at all four cake sizes.
+
+### Known Issues
+- None outstanding from this change. A possible left-edge clipping of the design box at very small cake sizes was flagged to the user as worth checking live in-browser; not reproduced or fixed since it could not be confirmed as a real bug vs. a screenshot crop.
+
+### Revert Instructions
+- `git revert 2b6573f`
+
+### Snapshot Status
+Yes
+
+---
+
 ## [2026-06-21 23:05:00 Europe/London] - Frontend Remediation: Memory Leaks, State-Sync Gaps, Silent Failures (Batches 4-6)
 
 ### Commit
