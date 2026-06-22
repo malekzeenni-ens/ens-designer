@@ -1,5 +1,5 @@
 import { Lock, RotateCcw } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getScaledExportDimensions } from "../engine/calculateSizingRecommendation";
 import { cakeSizes } from "../engine/sizingRules";
@@ -7,9 +7,11 @@ import { stakeApplies } from "../engine/calculateStakeRecommendation";
 import type { SizingProductConfig, SizingRecommendation, UploadedDesignMetadata } from "../engine/sizingTypes";
 import type { SizingPreviewSettings } from "./SizingAssistantTab";
 
+const MIN_PREVIEW_CAKE_DIAMETER_MM = cakeSizes["4"].diameterMm;
 const MAX_PREVIEW_CAKE_DIAMETER_MM = cakeSizes["10"].diameterMm;
-const MAX_CAKE_WIDTH_PERCENT = 78;
-const CAKE_DEPTH_RATIO = 0.42;
+const MIN_CAKE_WIDTH_PERCENT = 60;
+const MAX_CAKE_WIDTH_PERCENT = 92;
+const CAKE_DEPTH_RATIO = 0.46;
 
 interface SizingPreviewPanelProps {
   uploadedFile: UploadedDesignMetadata | null;
@@ -27,14 +29,41 @@ export function SizingPreviewPanel({
   onPreviewSettingsChange,
 }: SizingPreviewPanelProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
+  // The scene box isn't square, so a width-based mm-to-percent scalar can't be reused
+  // directly for vertical measurements. Track the real width/height ratio so heights
+  // derived from physical mm values (design, stake guide) keep their true proportions.
+  const [sceneAspect, setSceneAspect] = useState(540 / 420);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry && entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+        setSceneAspect(entry.contentRect.width / entry.contentRect.height);
+      }
+    });
+    observer.observe(scene);
+    return () => observer.disconnect();
+  }, []);
+
   const cakeDiameter = cakeSizes[config.cakeSize].diameterMm;
   const isTopperView = stakeApplies(config.productType);
-  const cakeWidthPercent = (cakeDiameter / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT;
-  const cakeHeightPercent = Math.max(18, cakeWidthPercent * CAKE_DEPTH_RATIO);
+  const cakeSizeRatio = clamp(
+    (cakeDiameter - MIN_PREVIEW_CAKE_DIAMETER_MM) / (MAX_PREVIEW_CAKE_DIAMETER_MM - MIN_PREVIEW_CAKE_DIAMETER_MM),
+    0,
+    1,
+  );
+  const cakeWidthPercent = MIN_CAKE_WIDTH_PERCENT + cakeSizeRatio * (MAX_CAKE_WIDTH_PERCENT - MIN_CAKE_WIDTH_PERCENT);
+  const cakeHeightPercent = Math.max(22, cakeWidthPercent * CAKE_DEPTH_RATIO);
   const cakeLeftPercent = 50 - cakeWidthPercent / 2;
-  const cakeBottomPercent = 9;
+  const cakeBottomPercent = 7;
   const cakeTopPercent = cakeBottomPercent + cakeHeightPercent;
-  const cakeTopperGapPercent = 4;
+  const cakeTopperGapPercent = 3;
+  // Anchored to the currently rendered cake (not the global max size) so the design/stake
+  // overlays stay proportionally accurate to the cake at whatever scale it's drawn.
+  const percentPerMm = cakeWidthPercent / cakeDiameter;
   const sourceAspectRatio =
     uploadedFile?.originalWidth && uploadedFile.originalHeight
       ? uploadedFile.originalWidth / uploadedFile.originalHeight
@@ -44,13 +73,13 @@ export function SizingPreviewPanel({
     ? Math.min(62, Math.max(14, sourceAspectRatio >= 1 ? 38 : 38 * sourceAspectRatio))
     : 34;
   const sourceHeightPercent = sourceAspectRatio
-    ? Math.min(48, Math.max(10, sourceWidthPercent / sourceAspectRatio))
+    ? Math.min(48, Math.max(10, (sourceWidthPercent / sourceAspectRatio) * sceneAspect))
     : 22;
   const designWidthPercent = recommendation && previewSettings.previewRecommendedSize
-    ? Math.min(76, Math.max(5, (recommendedPreviewDimensions.widthMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
+    ? Math.min(88, Math.max(5, recommendedPreviewDimensions.widthMm * percentPerMm))
     : sourceWidthPercent;
   const designHeightPercent = recommendation && previewSettings.previewRecommendedSize
-    ? Math.min(58, Math.max(5, (recommendedPreviewDimensions.heightMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))
+    ? Math.min(68, Math.max(5, recommendedPreviewDimensions.heightMm * percentPerMm * sceneAspect))
     : sourceHeightPercent;
   const designTransform = `translate(-50%, 0) translate(${previewSettings.offsetXPct}%, ${previewSettings.offsetYPct}%) rotate(${previewSettings.rotationDeg}deg)`;
 
@@ -156,13 +185,6 @@ export function SizingPreviewPanel({
       <div className="sa-cake-stage">
         <div className="sa-front-scene" ref={sceneRef}>
           <span className="sa-view-label">Front view</span>
-          <div
-            className="sa-plan-reference"
-            aria-label={`Cake footprint diameter ${cakeDiameter} mm`}
-            style={{ width: `${Math.max(42, cakeWidthPercent * 0.28)}%` }}
-          >
-            <span>{cakeDiameter} mm diameter</span>
-          </div>
           {uploadedFile ? (
             <div
               className={`sa-design-preview${isTopperView ? " sa-design-preview--topper" : " sa-design-preview--charm"}`}
@@ -193,7 +215,7 @@ export function SizingPreviewPanel({
             <div
               className="sa-stake-guide"
               style={{
-                height: `${Math.min(24, Math.max(6, (recommendation.stakeDepthMm / MAX_PREVIEW_CAKE_DIAMETER_MM) * MAX_CAKE_WIDTH_PERCENT))}%`,
+                height: `${Math.min(24, Math.max(6, recommendation.stakeDepthMm * percentPerMm * sceneAspect))}%`,
                 left: "50%",
                 bottom: `${cakeTopPercent - 3}%`,
               }}

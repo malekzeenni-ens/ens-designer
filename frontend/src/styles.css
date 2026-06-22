@@ -2484,11 +2484,8 @@ h2 {
 }
 
 .sa-preview-panel {
-  position: sticky;
-  top: 16px;
   display: grid;
   gap: 12px;
-  min-height: 700px;
   padding: 14px;
 }
 
@@ -2586,23 +2583,23 @@ h2 {
 
 .sa-cake-stage {
   display: grid;
-  min-height: 540px;
+  min-height: 460px;
   place-items: center;
   border: 1px solid var(--ens-line);
   border-radius: 10px;
   background:
-    linear-gradient(90deg, rgba(124, 124, 107, 0.16) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(124, 124, 107, 0.16) 1px, transparent 1px),
-    #ffffff;
+    linear-gradient(90deg, rgba(124, 124, 107, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(124, 124, 107, 0.08) 1px, transparent 1px),
+    #fbfaf7;
   background-size: 28px 28px;
   overflow: hidden;
 }
 
 .sa-front-scene {
   position: relative;
-  width: min(86vw, 520px);
-  height: min(76vh, 500px);
-  min-height: 420px;
+  width: min(90vw, 540px);
+  height: min(64vh, 420px);
+  min-height: 360px;
 }
 
 .sa-view-label {
@@ -2618,50 +2615,40 @@ h2 {
   font-weight: 900;
 }
 
-.sa-plan-reference {
-  position: absolute;
-  top: 12px;
-  right: 10px;
-  display: grid;
-  aspect-ratio: 1;
-  min-width: 54px;
-  max-width: 86px;
-  place-items: center;
-  border: 1px solid rgba(76, 100, 124, 0.32);
-  border-radius: 50%;
-  background: rgba(255, 253, 248, 0.9);
-}
-
-.sa-plan-reference span {
-  max-width: 66px;
-  color: var(--ens-muted);
-  font-size: 0.66rem;
-  line-height: 1.15;
-  text-align: center;
-  font-weight: 900;
-}
-
 .sa-cake-front {
   position: absolute;
-  border: 2px solid rgba(76, 100, 124, 0.28);
+  border: 2.5px solid rgba(76, 100, 124, 0.38);
   border-top: none;
-  border-radius: 0 0 18px 18px;
+  border-radius: 0 0 20px 20px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(244, 229, 203, 0.62)),
+    linear-gradient(180deg, #fffefb 0%, #fbeed8 58%, #f4dfb9 100%),
     #fffdf8;
-  box-shadow: inset 0 -20px 30px rgba(221, 191, 147, 0.18);
+  box-shadow:
+    inset 0 -26px 34px rgba(221, 191, 147, 0.32),
+    0 18px 28px -12px rgba(76, 100, 124, 0.28);
 }
 
 .sa-cake-front::before {
   content: "";
   position: absolute;
-  left: -2px;
-  right: -2px;
-  top: -22px;
-  height: 44px;
-  border: 2px solid rgba(76, 100, 124, 0.32);
+  left: -2.5px;
+  right: -2.5px;
+  top: -24px;
+  height: 48px;
+  border: 2.5px solid rgba(76, 100, 124, 0.42);
   border-radius: 50%;
-  background: radial-gradient(ellipse, #fffdf8 0%, #f8ecd8 74%);
+  background: radial-gradient(ellipse, #fffefb 0%, #fbeed8 70%);
+}
+
+.sa-cake-front::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(76, 100, 124, 0.22) 0%, transparent 72%);
 }
 
 .sa-cake-width-label {
@@ -2669,11 +2656,12 @@ h2 {
   left: 50%;
   bottom: 14px;
   transform: translateX(-50%);
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--ens-muted);
-  font-size: 0.76rem;
+  border: 1px solid rgba(76, 100, 124, 0.2);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ens-navy);
+  font-size: 0.78rem;
   font-weight: 900;
   white-space: nowrap;
 }
@@ -2721,7 +2709,7 @@ h2 {
   transform: translateX(-50%);
   border: 1px dashed rgba(76, 100, 124, 0.58);
   border-radius: 0 0 999px 999px;
-  background: rgba(76, 100, 124, 0.08);
+  background: transparent;
   z-index: 1;
 }
 
@@ -2997,11 +2985,6 @@ h2 {
 @media (max-width: 1180px) {
   .sa-workspace {
     grid-template-columns: 1fr;
-  }
-
-  .sa-preview-panel {
-    position: static;
-    max-height: none;
   }
 }
 
