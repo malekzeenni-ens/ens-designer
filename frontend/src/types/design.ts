@@ -14,6 +14,7 @@ export interface CakeTopperLineConfig {
   manual_x_offset_mm: number;
   manual_y_offset_mm: number;
   color: string;
+  stroke_buffer_mm: number;
 }
 
 export interface CakeTopperStakeOffset {

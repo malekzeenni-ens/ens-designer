@@ -175,6 +175,7 @@ class CakeTopperLineConfig(BaseModel):
     manual_x_offset_mm: float = 0.0
     manual_y_offset_mm: float = 0.0
     color: str = Field(default="#000000", pattern=HEX_COLOR_PATTERN)
+    stroke_buffer_mm: float = Field(default=0.0, ge=0.0, le=0.6)
 
 
 class CakeTopperRequest(BaseModel):

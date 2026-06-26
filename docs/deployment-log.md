@@ -15,6 +15,55 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-06-26 20:45:00 Europe/London] - Cake Topper: Per-Line Stroke Buffer
+
+### Commit
+- Commit hash: (pending — see git log)
+- Previous commit hash: `4e42cb5`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Added a per-line "stroke buffer" control that thickens thin strokes (e.g. script fonts) before cutting, to reduce font fragility. Wired end-to-end: backend model field → engine geometry buffering → frontend line state → API payload → UI control. Also hardened the engine's buffering fallback so failures surface as response warnings instead of failing silently.
+
+### Files Changed
+- `backend/app/models.py`
+- `backend/app/cake_topper_engine.py`
+- `frontend/src/components/CakeTopperPanel.tsx`
+- `frontend/src/types/design.ts`
+- `tests/test_cake_topper.py`
+
+### Implementation Details
+- `CakeTopperLineConfig.stroke_buffer_mm: float` added with `ge=0.0, le=0.6` validation.
+- `_buffer_line_paths` unions a line's closed glyph paths and grows them outward by `buffer_mm` via Shapely; applied after floating-offset application and before bounds recalculation, so floating-component detection (dots/accents) runs on the un-buffered geometry as before.
+- **Hardening**: `_buffer_line_paths` now returns `(paths, warning | None)` instead of silently falling back to unbuffered paths on failure (no closed shapes, union/buffer exception, empty result, or unconvertible result). The caller appends any warning to the line's `warnings` list (same pattern as missing-glyph warnings) so the user sees it in the response instead of only in server logs.
+- Frontend: `LineState.strokeBufferMm` added alongside a `clampStrokeBufferMm` helper (clamps to `[0, 0.6]`, matching the backend range) used both on blur and when building the API payload, so out-of-range or non-numeric input can never reach the backend unclamped.
+- Reviewed downstream consumers of `geometry.glyphs[].path_ids` (bridge overrides, connectivity engine) and confirmed they're only used by the separate `generation_service.py` flow, not by `cake_topper_engine.py` — so the buffered geometry's new path IDs (which don't match the original glyph `path_ids`) can't cause stale-reference bugs in this feature.
+
+### Tests Run
+- `.\.venv313\Scripts\python.exe -m pytest tests/test_cake_topper.py -q` - Passed: 74 tests (7 stroke-buffer-specific, including a new unit test for the no-closed-paths warning path and a regression test asserting no spurious warning on the normal buffered path).
+- `npx tsc --noEmit` (frontend) - Passed.
+- `npm run build` (frontend) - Passed.
+- `npx vitest run` (frontend) - 31 passed / 10 failed; failures confirmed pre-existing on unmodified `main` (jsdom/`DOMParser`/`document` not configured in those test files) via `git stash` comparison, unrelated to this change.
+
+### Manual Validation
+- Verified via code reading that the buffer step runs after manual per-glyph floating offsets and before bounds recalculation, and that no other code path in `cake_topper_engine.py` relies on the pre-buffer glyph `path_ids` once buffering has replaced a line's paths.
+- Did not exercise the UI in a browser this session (no dev server launch requested); typecheck, build, and backend tests are the verification basis for the frontend change.
+
+### Known Issues / Follow-Ups
+- A sufficiently large stroke buffer can merge separate letterforms or close letter counters (e.g. "o", "e") into a solid blob — this is expected/intended (it's literally what "reinforce thin strokes" requires), but isn't covered by an automated regression test; the 0.6mm cap keeps this within a reasonable range for typical font weights.
+- Pre-existing frontend test environment gaps (jsdom not wired up for several test files) remain unaddressed; out of scope for this change.
+
+### Revert Instructions
+```bash
+git revert <commit-hash-once-committed>
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-22 13:30:00 Europe/London] - Sizing Assistant: Cake Preview Prominence and Proportion Fixes
 
 ### Commit

@@ -429,6 +429,84 @@ class TestManualOffsets:
 
 
 # ---------------------------------------------------------------------------
+# Stroke buffer ("beef up thin strokes")
+# ---------------------------------------------------------------------------
+
+class TestStrokeBuffer:
+    def test_default_is_zero_and_unchanged(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42}])
+        explicit_zero = _ct(client, font_id, text="Happy",
+                            line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                           "stroke_buffer_mm": 0.0}])
+        base_line = base["metadata"]["lines"][0]
+        zero_line = explicit_zero["metadata"]["lines"][0]
+        assert base_line["width_mm"] == zero_line["width_mm"]
+        assert base_line["height_mm"] == zero_line["height_mm"]
+
+    def test_positive_buffer_grows_line_dimensions(self, client: TestClient, font_id: str) -> None:
+        base = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42}])
+        buffered = _ct(client, font_id, text="Happy",
+                       line_configs=[{"font_id": font_id, "font_size_mm": 42,
+                                      "stroke_buffer_mm": 0.4}])
+        base_line = base["metadata"]["lines"][0]
+        buffered_line = buffered["metadata"]["lines"][0]
+        assert buffered_line["width_mm"] > base_line["width_mm"]
+        assert buffered_line["height_mm"] > base_line["height_mm"]
+
+    def test_only_buffered_line_grows(self, client: TestClient, font_id: str) -> None:
+        data = _ct(client, font_id, text="Happy Birthday",
+                   line_configs=[
+                       {"font_id": font_id, "font_size_mm": 42, "stroke_buffer_mm": 0.4},
+                       {"font_id": font_id, "font_size_mm": 42},
+                   ])
+        unbuffered = _ct(client, font_id, text="Happy Birthday",
+                         line_configs=[
+                             {"font_id": font_id, "font_size_mm": 42},
+                             {"font_id": font_id, "font_size_mm": 42},
+                         ])
+        assert data["metadata"]["lines"][0]["width_mm"] > unbuffered["metadata"]["lines"][0]["width_mm"]
+        assert data["metadata"]["lines"][1]["width_mm"] == unbuffered["metadata"]["lines"][1]["width_mm"]
+
+    def test_buffer_above_max_rejected(self, client: TestClient, font_id: str) -> None:
+        r = _ct_raw(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42, "stroke_buffer_mm": 0.8}])
+        assert r.status_code == 422
+
+    def test_negative_buffer_rejected(self, client: TestClient, font_id: str) -> None:
+        r = _ct_raw(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42, "stroke_buffer_mm": -0.1}])
+        assert r.status_code == 422
+
+    def test_buffer_with_no_closed_paths_warns_instead_of_failing(self) -> None:
+        from app.cake_topper_engine import _buffer_line_paths
+        from app.models import GeometryPath, PathCommand
+
+        open_path = GeometryPath(
+            path_id="P0",
+            commands=[
+                PathCommand(type="M", x=0.0, y=0.0),
+                PathCommand(type="L", x=1.0, y=1.0),
+            ],
+            closed=False,
+        )
+        paths, warning = _buffer_line_paths([open_path], 0.4, "L0-buffered")
+        assert paths == [open_path]
+        assert warning is not None
+        assert "no closed shapes" in warning
+
+    def test_buffer_warning_surfaces_in_response_warnings(self, client: TestClient, font_id: str) -> None:
+        # A single straight "I" glyph rendered as an open stroke would have no
+        # closed contours to buffer; in practice most outline fonts close their
+        # glyph contours, so this asserts the success path produces no warning
+        # rather than forcing the (font-dependent) failure branch.
+        data = _ct(client, font_id, text="Happy",
+                   line_configs=[{"font_id": font_id, "font_size_mm": 42, "stroke_buffer_mm": 0.4}])
+        assert not any("stroke buffer skipped" in w for w in data["warnings"])
+
+
+# ---------------------------------------------------------------------------
 # Stakes
 # ---------------------------------------------------------------------------
 

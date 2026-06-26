@@ -319,6 +319,14 @@ class CakeTopperService:
             )
 
         geometry = geometry.model_copy(update={"paths": shifted_paths}, deep=True)
+        if cfg.stroke_buffer_mm > 0:
+            buffered_paths, buffer_warning = _buffer_line_paths(
+                geometry.paths, cfg.stroke_buffer_mm, f"L{line_index}-buffered"
+            )
+            geometry = geometry.model_copy(update={"paths": buffered_paths}, deep=True)
+            if buffer_warning:
+                line_warnings.append(f'Line {line_index + 1} ("{word}"): {buffer_warning}')
+                logger.warning("Line %d (%r): %s", line_index + 1, word, buffer_warning)
         geometry = recalculate_geometry_bounds(geometry)
         floating_components = [
             FloatingComponentInfo(glyph_index=f["glyph_index"], char=f["char"])
@@ -607,6 +615,38 @@ def _generate_outline(paths: list[GeometryPath], width_mm: float) -> list[Geomet
     """Union all closed line paths into one silhouette, then grow it outward by width_mm."""
     grown = _generate_outline_geometry(paths, width_mm)
     return shapely_to_paths(grown, "OUTLINE")
+
+
+def _buffer_line_paths(
+    paths: list[GeometryPath], buffer_mm: float, prefix: str
+) -> tuple[list[GeometryPath], str | None]:
+    """Union one line's glyph paths and grow them outward by buffer_mm, to reinforce
+    thin strokes (e.g. script fonts) before cutting. Falls back to the original
+    paths if the geometry can't be combined or the result is empty, returning a
+    warning message describing why the buffer had no effect."""
+    polygons = []
+    for path in paths:
+        if not path.closed:
+            continue
+        poly = path_to_shapely(path)
+        if poly is not None and not poly.is_empty and poly.area > 0:
+            polygons.append(poly)
+    if not polygons:
+        return paths, "stroke buffer skipped: no closed shapes to buffer."
+
+    try:
+        combined = unary_union(polygons)
+        grown = combined.buffer(buffer_mm, join_style="round")
+    except Exception:
+        logger.warning("Stroke buffer failed for line; keeping unbuffered strokes.", exc_info=True)
+        return paths, "stroke buffer skipped: geometry could not be combined."
+    if grown.is_empty:
+        return paths, "stroke buffer skipped: result was empty."
+
+    buffered = _compound_paths_from_shapely(grown, prefix)
+    if not buffered:
+        return paths, "stroke buffer skipped: result could not be converted to paths."
+    return buffered, None
 
 
 def _generate_outline_geometry(paths: list[GeometryPath], width_mm: float):

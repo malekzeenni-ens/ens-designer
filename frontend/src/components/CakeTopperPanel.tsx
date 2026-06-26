@@ -61,6 +61,13 @@ export const COLOR_PALETTE: { name: string; hex: string }[] = [
 ];
 const DEFAULT_COLOR = COLOR_PALETTE[0].hex;
 const DEFAULT_OUTLINE_WIDTH_MM = "3";
+const STROKE_BUFFER_MIN_MM = 0;
+const STROKE_BUFFER_MAX_MM = 0.6;
+
+function clampStrokeBufferMm(value: number): number {
+  if (!Number.isFinite(value)) return STROKE_BUFFER_MIN_MM;
+  return Math.min(STROKE_BUFFER_MAX_MM, Math.max(STROKE_BUFFER_MIN_MM, value));
+}
 
 type GapState = { enabled: boolean; overlapMm: string };
 type InspectorSectionId = "create" | "layout" | "lines";
@@ -80,6 +87,7 @@ type LineState = {
   manualXOffsetMm: string;
   manualYOffsetMm: string;
   color: string;
+  strokeBufferMm: string;
   expanded: boolean;
 };
 
@@ -138,6 +146,7 @@ function initLine(fontId: string, overlapMm: string, numGaps: number): LineState
     manualXOffsetMm: "0",
     manualYOffsetMm: "0",
     color: DEFAULT_COLOR,
+    strokeBufferMm: "0",
     expanded: true,
   };
 }
@@ -325,6 +334,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
       manual_x_offset_mm: parseFloat(s.manualXOffsetMm) || 0,
       manual_y_offset_mm: parseFloat(s.manualYOffsetMm) || 0,
       color: s.color || DEFAULT_COLOR,
+      stroke_buffer_mm: clampStrokeBufferMm(parseFloat(s.strokeBufferMm)),
     }));
   }
 
@@ -1365,6 +1375,32 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                             />
                           ))}
                         </div>
+                      </div>
+
+                      <div className="ct-subsection">
+                        <div className="ct-subsection-copy">
+                          <span className="ct-subsection-title">Stroke buffer</span>
+                          <p>Thickens thin strokes (e.g. script fonts) before cutting, to reduce fragility.</p>
+                        </div>
+                        <label className="ct-card-field ct-card-field--sm">
+                          <span>Buffer width</span>
+                          <span className="ct-unit-input ct-unit-input--compact">
+                            <input
+                              type="number"
+                              min={STROKE_BUFFER_MIN_MM}
+                              max={STROKE_BUFFER_MAX_MM}
+                              step="0.05"
+                              value={ls.strokeBufferMm}
+                              onChange={(e) => patchLine(li, { strokeBufferMm: e.target.value })}
+                              onBlur={(e) =>
+                                patchLine(li, {
+                                  strokeBufferMm: String(clampStrokeBufferMm(parseFloat(e.target.value))),
+                                })
+                              }
+                            />
+                            <span>mm</span>
+                          </span>
+                        </label>
                       </div>
 
                       <div className="ct-position-section">
