@@ -18,7 +18,7 @@ Each completed phase or meaningful code change must include:
 ## [2026-06-26 20:45:00 Europe/London] - Cake Topper: Per-Line Stroke Buffer
 
 ### Commit
-- Commit hash: (pending — see git log)
+- Commit hash: `e2675b6`
 - Previous commit hash: `4e42cb5`
 - Branch: `main`
 - Deployment target: `main`
@@ -56,7 +56,7 @@ Each completed phase or meaningful code change must include:
 
 ### Revert Instructions
 ```bash
-git revert <commit-hash-once-committed>
+git revert e2675b6
 ```
 
 ### Snapshot Status
