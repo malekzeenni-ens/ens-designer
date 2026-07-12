@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 FONT_EXTENSIONS = {".ttf", ".otf"}
 UPLOAD_MANIFEST = ".uploaded_manifest.json"
 MANUAL_FONTS_MANIFEST = ".manual_fonts.json"
+EXCLUDED_FONTS_MANIFEST = ".excluded_fonts.json"
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,8 @@ class FontCatalog:
                 legacy_to_new[_legacy_font_id(path)] = record.info.id
                 parsed.append(record)
 
+        excluded_ids = set(self._read_manifest_ids(EXCLUDED_FONTS_MANIFEST, "excluded"))
+        parsed = [record for record in parsed if record.info.id not in excluded_ids]
         known_ids = {record.info.id for record in parsed}
         manual_ids = set(self._migrate_manifest_ids(MANUAL_FONTS_MANIFEST, "manual", legacy_to_new, known_ids))
         self._migrate_manifest_ids(UPLOAD_MANIFEST, "uploaded", legacy_to_new, known_ids)
@@ -135,6 +138,14 @@ class FontCatalog:
         if _font_key(record.info) in {_font_key(r.info) for r in records.values()}:
             return None  # duplicate
         records[record.info.id] = record
+        excluded_ids = [
+            font_id
+            for font_id in self._read_manifest_ids(EXCLUDED_FONTS_MANIFEST, "excluded")
+            if font_id != record.info.id
+        ]
+        excluded_path = self.project_root / "fonts" / EXCLUDED_FONTS_MANIFEST
+        if excluded_path.exists():
+            excluded_path.write_text(json.dumps({"excluded": excluded_ids}, indent=2), encoding="utf-8")
         self._records = dict(sorted(records.items(), key=lambda item: item[1].info.full_name.lower()))
         return record
 
@@ -174,6 +185,37 @@ class FontCatalog:
         manifest_path = self.project_root / "fonts" / MANUAL_FONTS_MANIFEST
         manifest_path.write_text(json.dumps({"manual": valid_ids}, indent=2), encoding="utf-8")
         return valid_ids
+
+    def exclude_font_ids(self, font_ids: list[str]) -> list[str]:
+        """Hide fonts from this app without deleting project or operating-system files."""
+        records = self._scan()
+        removed_ids = [font_id for font_id in dict.fromkeys(font_ids) if font_id in records]
+        if not removed_ids:
+            return []
+
+        excluded_ids = self._read_manifest_ids(EXCLUDED_FONTS_MANIFEST, "excluded")
+        excluded_ids.extend(font_id for font_id in removed_ids if font_id not in excluded_ids)
+        fonts_dir = self.project_root / "fonts"
+        fonts_dir.mkdir(exist_ok=True)
+        (fonts_dir / EXCLUDED_FONTS_MANIFEST).write_text(
+            json.dumps({"excluded": excluded_ids}, indent=2), encoding="utf-8"
+        )
+
+        self.save_manual_font_ids(
+            [font_id for font_id in self.get_manual_font_ids() if font_id not in removed_ids]
+        )
+        uploaded_ids = [
+            font_id
+            for font_id in self._read_manifest_ids(UPLOAD_MANIFEST, "uploaded")
+            if font_id not in removed_ids
+        ]
+        (fonts_dir / UPLOAD_MANIFEST).write_text(
+            json.dumps({"uploaded": uploaded_ids}, indent=2), encoding="utf-8"
+        )
+        self._records = {
+            font_id: record for font_id, record in records.items() if font_id not in removed_ids
+        }
+        return removed_ids
 
     def _read_manifest_ids(self, manifest_name: str, key: str) -> list[str]:
         manifest_path = self.project_root / "fonts" / manifest_name

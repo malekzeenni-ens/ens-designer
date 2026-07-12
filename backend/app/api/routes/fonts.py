@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from fontTools.ttLib import TTFont
 
-from ...models import FontUploadResponse, ManualFontsRequest, ManualFontsResponse
+from ...models import DeleteFontsRequest, FontUploadResponse, ManualFontsRequest, ManualFontsResponse
 
 router = APIRouter(prefix="/api/fonts", tags=["fonts"])
 
@@ -50,6 +50,12 @@ def update_manual_fonts(payload: ManualFontsRequest, request: Request):
         font_ids=font_ids,
         fonts=[records[font_id].info for font_id in font_ids],
     )
+
+
+@router.delete("")
+def delete_fonts(payload: DeleteFontsRequest, request: Request):
+    removed_ids = request.app.state.font_catalog.exclude_font_ids(payload.font_ids)
+    return {"removed_ids": removed_ids, "removed_count": len(removed_ids)}
 
 
 @router.post("/upload", response_model=FontUploadResponse)

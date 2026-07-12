@@ -86,6 +86,17 @@ export async function saveManualFonts(fontIds: string[]): Promise<FontInfo[]> {
   return body.fonts;
 }
 
+export async function deleteFonts(fontIds: string[]): Promise<string[]> {
+  const r = await fetch("/api/fonts", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ font_ids: fontIds }),
+  });
+  if (!r.ok) return _readError(r, "Could not delete fonts.");
+  const body = await r.json();
+  return body.removed_ids;
+}
+
 export async function uploadFont(file: File): Promise<FontUploadResponse> {
   const form = new FormData();
   form.append("file", file);

@@ -6,7 +6,7 @@ import { FontAdvisorPanel } from "./components/FontAdvisorPanel";
 import { FontsPanel } from "./components/FontsPanel";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { SizingAssistantTab } from "./features/sizing-assistant/components/SizingAssistantTab";
-import { fetchFonts, fetchManualFonts, fetchUploadedFonts, saveManualFonts } from "./services/generationApi";
+import { deleteFonts, fetchFonts, fetchManualFonts, fetchUploadedFonts, saveManualFonts } from "./services/generationApi";
 import type { FontInfo } from "./types/design";
 
 type WorkspaceTab = "designer" | "sizingAssistant" | "advisor" | "fonts" | "configuration" | "history";
@@ -34,6 +34,11 @@ export function App() {
     const manual = await saveManualFonts(fontIds);
     setManualFonts(manual);
   }, []);
+
+  const removeFonts = useCallback(async (fontIds: string[]) => {
+    await deleteFonts(fontIds);
+    await reloadFonts();
+  }, [reloadFonts]);
 
   useEffect(() => {
     reloadFonts();
@@ -108,6 +113,7 @@ export function App() {
                 fonts={fonts}
                 manualFonts={manualFonts}
                 onManualFontsChange={updateManualFonts}
+                onDeleteFonts={removeFonts}
               />
             )}
             {activeTab === "history" && <HistoryPanel />}

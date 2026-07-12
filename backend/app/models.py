@@ -26,6 +26,10 @@ class ManualFontsRequest(BaseModel):
     font_ids: list[str] = Field(default_factory=list)
 
 
+class DeleteFontsRequest(BaseModel):
+    font_ids: list[str] = Field(default_factory=list)
+
+
 class ManualFontsResponse(BaseModel):
     font_ids: list[str]
     fonts: list[FontInfo]
