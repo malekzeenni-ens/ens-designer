@@ -15,6 +15,56 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-07-12 22:26:00 Europe/London] - Configuration: Font Management and Font Library Additions
+
+### Commits
+- Font library commit: `861f409`
+- Font management feature commit: `7a57330`
+- Previous known-good commit: `b5f945b`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Converted the Configuration page's Manual Fonts section into an accessible accordion while preserving its add, search, and remove controls.
+- Added a Font Management accordion with library search, 12-item pagination, per-font selection, select-current-page, and confirmed multi-select deletion.
+- Added a bulk font deletion API. Deletion persists an app-level exclusion instead of deleting project or Windows system font files, removes deleted IDs from manual/upload manifests, and allows a later upload to restore an excluded font.
+- Added Clarendon Regular, Old English Text MT, and Snell Roundhand Black/Bold font files; added Clarendon to the saved Manual Fonts list.
+
+### Files Changed
+- `backend/app/api/routes/fonts.py`
+- `backend/app/font_loader.py`
+- `backend/app/models.py`
+- `frontend/src/App.tsx`
+- `frontend/src/components/ConfigurationPanel.tsx`
+- `frontend/src/services/generationApi.ts`
+- `frontend/src/styles.css`
+- `tests/test_font_management.py`
+- `fonts/.manual_fonts.json`
+- `fonts/Clarendon Regular.otf`
+- `fonts/oldenglishtextmt.ttf`
+- `fonts/snellroundhand_black.otf`
+- `fonts/snellroundhand_bold.otf`
+
+### Tests Run
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 205 tests, 1 third-party Starlette deprecation warning.
+- `npm.cmd run build` (frontend) - Passed: TypeScript and Vite production build.
+- `npm.cmd test` (frontend) - Passed: 13 files, 41 tests.
+
+### Manual Validation
+- Confirmed the deletion design never removes underlying font binaries, including Windows system font files.
+- Confirmed deletion cleans Manual Fonts and uploaded-font manifest references, persists excluded IDs, ignores unknown/duplicate IDs safely, and supports restoring an excluded font through a later upload.
+
+### Revert Instructions
+```bash
+git revert 7a57330
+git revert 861f409
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-06-26 20:45:00 Europe/London] - Cake Topper: Per-Line Stroke Buffer
 
 ### Commit
@@ -786,4 +836,3 @@ git revert 03eaa4a26b534b908b1523f2ac0b1ac8b6bed36e
 
 ### Snapshot Status
 - Known-good snapshot: Yes
-
