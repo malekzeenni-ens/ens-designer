@@ -1,11 +1,13 @@
 # Application Startup Guide
 
-Last updated: 2026-06-14 21:59:49 +01:00
+Last updated: 2026-07-14
 
-This guide explains how to start the EnS Designer application locally, including
-both the backend API and frontend Vite server.
+EnS Designer normally runs as one local Python/FastAPI process. FastAPI serves
+both the compiled React application and the API on the same local address. Node
+and Vite are needed to build or develop the frontend, but they do not run during
+normal use.
 
-Run all commands from the repository root:
+Run commands from the repository root:
 
 ```powershell
 C:\Users\malek\Dropbox\_Etch_n_Shine\AI-Custom-Apps\EnS Designer
@@ -13,132 +15,128 @@ C:\Users\malek\Dropbox\_Etch_n_Shine\AI-Custom-Apps\EnS Designer
 
 ## URLs
 
-- Frontend application: `http://127.0.0.1:5174`
-- Backend API docs: `http://127.0.0.1:8001/docs`
-- Backend health checks:
-  - `http://127.0.0.1:8001/api/fonts`
-  - `http://127.0.0.1:8001/api/fonts/manual`
+- Application: `http://127.0.0.1:8010`
+- Health check: `http://127.0.0.1:8010/healthz`
+- API documentation: `http://127.0.0.1:8010/docs`
+- Development frontend only: `http://127.0.0.1:5174`
 
-## First-Time Setup
+## First-time setup
 
-Install Python dependencies with the Python 3.13 environment:
+Create the supported Python 3.13 environment and install backend dependencies:
 
 ```powershell
 uv venv .venv313 --python cpython-3.13.12-windows-x86_64-none
 uv pip install --python .venv313\Scripts\python.exe -r backend\requirements.txt
 ```
 
-Do not use the older `.venv` for backend startup. It was created with Python
-3.14 and can hang while importing FastAPI in this project.
-
-Install frontend dependencies:
+Install frontend dependencies and create the production build:
 
 ```powershell
 cd frontend
 npm.cmd install
+npm.cmd run build
 cd ..
 ```
 
-## Start Both Servers
+Repeat `npm.cmd run build` after changing frontend source. The generated
+`frontend/dist` directory is intentionally not committed to Git.
 
-The preferred launcher is:
+## Normal startup
+
+Double-click `Start EnS Designer.vbs`, or run:
 
 ```powershell
 .\ens_launch.ps1
 ```
 
-The launcher starts:
+The launcher:
 
-- Backend: `.venv313\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001`
-- Frontend: `npm.cmd run dev` on Vite port `5174`
-- Browser: `http://127.0.0.1:5174`
+1. verifies `.venv313` and `frontend/dist/index.html`;
+2. reuses an existing healthy EnS Designer process when available;
+3. otherwise starts one hidden FastAPI process on port `8010`;
+4. waits for the application-specific health response;
+5. opens the application only after startup succeeds.
 
-Manual background start commands:
+Startup failures are shown in a Windows message and recorded in
+`logs/app-error.log`. Normal server output is written to `logs/app.log`.
 
-```powershell
-$root = "C:\Users\malek\Dropbox\_Etch_n_Shine\AI-Custom-Apps\EnS Designer"
-New-Item -ItemType Directory -Force "$root\logs" | Out-Null
-
-# Backend
-Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\backend'; ..\.venv313\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001 *> '$root\logs\backend.log'"
-
-# Frontend
-Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\frontend'; npm.cmd run dev *> '$root\logs\frontend.log'"
-```
-
-## Verify Startup
-
-Check the backend log:
+## Verify startup
 
 ```powershell
-Get-Content logs\backend.log -Tail 20
+Invoke-RestMethod http://127.0.0.1:8010/healthz
+Invoke-WebRequest http://127.0.0.1:8010/api/presets -UseBasicParsing
 ```
 
-Expected backend output:
+The health response must identify this application:
 
 ```text
-INFO:     Uvicorn running on http://127.0.0.1:8001
-INFO:     Application startup complete.
+status app
+------ ---
+ok     ens-designer
 ```
 
-Check the frontend log:
+## Stop the application
 
 ```powershell
-Get-Content logs\frontend.log -Tail 20
+.\ens_stop.ps1
 ```
 
-Expected frontend output:
+The stop script targets only this project's Uvicorn and Vite processes. It does
+not broadly terminate unrelated Python or Node applications.
 
-```text
-VITE v7.x.x ready in Xms
-Local: http://127.0.0.1:5174/
-```
+## Frontend development
 
-Check the listening ports:
+Stop the normal application before starting development mode:
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8001,5174 -State Listen -ErrorAction SilentlyContinue |
-  Select-Object LocalAddress,LocalPort,OwningProcess
+.\ens_stop.ps1
+.\ens_launch_dev.ps1
 ```
 
-Check the frontend proxy reaches the backend:
+Development mode starts:
 
-```powershell
-Invoke-WebRequest -Uri http://127.0.0.1:5174/api/fonts/manual -UseBasicParsing
-```
+- FastAPI with reload on `http://127.0.0.1:8010`;
+- Vite with hot reload on `http://127.0.0.1:5174`;
+- the browser at the Vite address.
 
-Open the app in the browser:
-
-```text
-http://127.0.0.1:5174
-```
-
-## Stop the Servers
-
-Stop only EnS backend processes:
-
-```powershell
-Get-CimInstance Win32_Process |
-  Where-Object { $_.CommandLine -like "*EnS Designer*.venv313*uvicorn*app.main:app*" } |
-  ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-```
-
-Stop only EnS frontend processes:
-
-```powershell
-Get-CimInstance Win32_Process |
-  Where-Object { $_.CommandLine -like "*EnS Designer*frontend*" -and ($_.CommandLine -like "*vite*" -or $_.CommandLine -like "*npm.cmd run dev*") } |
-  ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-```
-
-Avoid broad `Stop-Process -Name python,node` unless you intentionally want to
-stop unrelated local projects too.
+Vite proxies `/api` to FastAPI. After frontend work, run `npm.cmd run build`
+again so normal startup serves the latest compiled interface.
 
 ## Troubleshooting
 
-### Backend Hangs During Import
+### Production frontend is missing or stale
 
-Use `.venv313`, not `.venv`.
+```powershell
+cd frontend
+npm.cmd run build
+cd ..
+```
+
+Refresh the browser after rebuilding. Restarting FastAPI is not required for
+ordinary static-file changes, although a restart provides the cleanest smoke
+test.
+
+### Port 8010 is already in use
+
+First try the project-specific stop command:
+
+```powershell
+.\ens_stop.ps1
+```
+
+Then inspect the owner of the port without terminating unrelated processes:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8010 -ErrorAction SilentlyContinue |
+  Select-Object State,LocalAddress,LocalPort,OwningProcess
+```
+
+If another application owns the port, stop that application or change the EnS
+Designer port consistently in the launcher and Vite proxy.
+
+### Backend import hangs
+
+Use `.venv313`, not the older Python 3.14 `.venv`:
 
 ```powershell
 .\.venv313\Scripts\python.exe -c "import fastapi; print('fastapi ok')"
@@ -146,50 +144,9 @@ $env:PYTHONPATH = "backend"
 .\.venv313\Scripts\python.exe -c "import app.main; print('app ok')"
 ```
 
-### Backend Fails With `python-multipart`
+### Vite cache errors in development
 
-`python-multipart==0.0.20` is listed in `backend\requirements.txt`. Reinstall
-requirements into `.venv313`:
-
-```powershell
-uv pip install --python .venv313\Scripts\python.exe -r backend\requirements.txt
-```
-
-### Frontend Shows API Proxy Errors
-
-If the frontend log shows `connect ECONNREFUSED`, confirm the proxy target and
-backend port:
-
-- `frontend/vite.config.ts` should proxy `/api` to `http://127.0.0.1:8001`.
-- Backend should listen on `127.0.0.1:8001`.
-
-### Port Already In Use Or Stuck In `Bound`
-
-Check all TCP states, not only listeners:
-
-```powershell
-Get-NetTCPConnection -LocalPort 8000,8001,5173,5174 -ErrorAction SilentlyContinue |
-  Select-Object State,LocalAddress,LocalPort,OwningProcess
-```
-
-This project moved away from `8000` and `5173` because another local process
-held those ports during development.
-
-### Vite Hangs Before Ready
-
-This project currently uses `vite@7.3.5` and `@vitejs/plugin-react@5.2.0`.
-Vite 8 hung during startup/import on the current Windows/Node setup.
-
-If Vite shows cache or dependency optimisation problems, delete the project
-cache and restart the frontend:
-
-```powershell
-Remove-Item -Recurse -Force "C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer" -ErrorAction SilentlyContinue
-```
-
-### Font Catalog Is Slow
-
-The catalog intentionally derives dropdown metadata from font file paths during
-`/api/fonts` scans. This avoids opening more than 1,300 font binaries on
-startup. Font binaries are still opened when needed for generation, glyph
-browsing, and upload validation.
+Vite's cache is outside Dropbox at
+`C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer`. If development
+mode reports `EBUSY` or `504 Outdated Optimize Dep`, remove that cache and
+restart `ens_launch_dev.ps1`.

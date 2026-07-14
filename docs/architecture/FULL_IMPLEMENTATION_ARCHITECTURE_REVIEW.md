@@ -81,9 +81,9 @@ authentication, cloud storage, or queueing layer in the current implementation.
 
 Current local runtime configuration:
 
-- Backend: `http://127.0.0.1:8001`.
+- Backend: `http://127.0.0.1:8010`.
 - Frontend: `http://127.0.0.1:5174`.
-- Frontend proxy: `/api` -> `http://127.0.0.1:8001`.
+- Frontend proxy: `/api` -> `http://127.0.0.1:8010`.
 - Backend Python environment: `.venv313`.
 - Frontend tooling: Vite 7.3.5 with React plugin 5.2.0.
 - Launcher: `ens_launch.ps1`.

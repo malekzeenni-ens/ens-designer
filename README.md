@@ -6,6 +6,8 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Latest Updates
 
+- 2026-07-14 - Moved the consolidated application and backend API to `http://127.0.0.1:8010`.
+- 2026-07-14 - Consolidated normal startup into one production FastAPI process. FastAPI serves the compiled React interface and API from one local origin; `ens_launch_dev.ps1` retains the two-server Vite workflow for development.
 - 2026-06-14 21:59:49 +01:00 - Added persistent Manual Fonts configuration with a seeded 25-font list. Manual fonts are stored in `fonts/.manual_fonts.json`, managed from the Configuration tab, and shown first in Designer font dropdowns.
 - 2026-06-14 21:59:49 +01:00 - Updated local runtime ports after Windows held `127.0.0.1:8000` in a stale bound state. Backend now runs on `http://127.0.0.1:8001`; frontend now runs on `http://127.0.0.1:5174`.
 - 2026-06-14 21:59:49 +01:00 - Added Python 3.13 backend environment `.venv313` and updated `ens_launch.ps1` to use it. The previous Python 3.14 `.venv` could hang while importing FastAPI.
@@ -166,6 +168,34 @@ Download SVG  /  Download PNG
 
 # Running Locally
 
+## Normal production-style startup
+
+Build the React frontend on first setup and after changing React or CSS:
+
+```powershell
+cd frontend
+npm.cmd install
+npm.cmd run build
+cd ..
+```
+
+Then double-click `Start EnS Designer.vbs`, or run:
+
+```powershell
+.\ens_launch.ps1
+```
+
+The launcher starts one hidden Python/FastAPI process, waits for the application
+health check, and opens `http://127.0.0.1:8010`. If EnS Designer is already
+healthy, the running instance is reused. Node and Vite do not run during normal
+use. Logs are written to `logs/app.log` and `logs/app-error.log`.
+
+Stop only the production EnS Designer process with:
+
+```powershell
+.\ens_stop.ps1
+```
+
 ## Install Python dependencies
 
 ```powershell
@@ -175,16 +205,17 @@ uv pip install --python .venv313\Scripts\python.exe -r backend\requirements.txt
 
 Use `.venv313` for backend startup. The older `.venv` was created with Python 3.14 and can hang while importing FastAPI in this project.
 
-## Start the servers (background — no terminal windows)
+## Development startup (Vite hot reload)
 
-Both servers must always be started as hidden background processes. Run this block from the repo root:
+For frontend development, run `.\ens_stop.ps1` and then
+`.\ens_launch_dev.ps1`. The equivalent manual commands are shown below:
 
 ```powershell
 $root = "C:\Users\malek\Dropbox\_Etch_n_Shine\AI-Custom-Apps\EnS Designer"
 New-Item -ItemType Directory -Force "$root\logs" | Out-Null
 
 # Backend
-Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\backend'; ..\.venv313\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001 *> '$root\logs\backend.log'"
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\backend'; ..\.venv313\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8010 *> '$root\logs\backend.log'"
 
 # Frontend
 Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd '$root\frontend'; npm.cmd run dev *> '$root\logs\frontend.log'"
@@ -201,10 +232,10 @@ Expected output when healthy:
 - Backend: `INFO: Application startup complete.`
 - Frontend: `VITE v7.x.x  ready in Xms`
 
-## Stop the servers
+## Stop development servers
 
 ```powershell
-Stop-Process -Name "python","node" -Force -ErrorAction SilentlyContinue
+.\ens_stop.ps1
 ```
 
 ## Install frontend dependencies (first time only)
@@ -214,7 +245,7 @@ cd frontend
 npm.cmd install
 ```
 
-## Vite cache
+## Vite cache (development only)
 
 Vite stores its optimized dependency cache at `C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer`
 (outside Dropbox). This prevents Windows/Dropbox file-locking (`EBUSY`) errors.
@@ -222,7 +253,7 @@ Vite stores its optimized dependency cache at `C:\Users\malek\AppData\Local\Temp
 > **If Vite shows `EBUSY` or `504 Outdated Optimize Dep`:** delete
 > `C:\Users\malek\AppData\Local\Temp\vite-cache\ens-designer` and restart the frontend.
 
-## Open in browser
+## Development URL
 
 ```
 http://127.0.0.1:5174
@@ -236,7 +267,7 @@ http://127.0.0.1:5174
 .\.venv313\Scripts\python.exe -m pytest
 ```
 
-97 tests — 0 failures (2 skipped when Lobster/Oswald are not installed).
+209 backend tests and 41 frontend tests pass on the current supported environment.
 
 Frontend build check:
 
