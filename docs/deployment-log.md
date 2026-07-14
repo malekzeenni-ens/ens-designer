@@ -15,6 +15,63 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-07-14 23:40:00 Europe/London] - Consolidated Local Runtime on Port 8010
+
+### Commit
+- Commit hash: `126357c96213e7fe160ed37b764be56a4525f23a`
+- Previous commit hash: `c11e7ed65fd219beb5e5de5efa57dcaa1b41fc66`
+- Branch: `main`
+- Deployment target: `main`
+
+### Summary
+- Consolidated normal EnS Designer startup from separate Vite and FastAPI development servers into one production-style FastAPI process.
+- FastAPI now serves both the compiled React application and API from `http://127.0.0.1:8010`.
+- Preserved the two-server Vite workflow in a separate development launcher.
+
+### Files Changed
+- `README.md`
+- `backend/app/main.py`
+- `docs/STARTUP.md`
+- `docs/architecture/FULL_IMPLEMENTATION_ARCHITECTURE_REVIEW.md`
+- `ens_launch.ps1`
+- `ens_launch_dev.ps1`
+- `ens_stop.ps1`
+- `frontend/vite.config.ts`
+- `tests/test_production_hosting.py`
+
+### Implementation Details
+- Added an application-specific `/healthz` response and mounted `frontend/dist` only after all API routes, preserving `/api` precedence.
+- Added an actionable HTTP 503 response when the compiled frontend is absent.
+- Replaced the fixed-delay launcher with Python/build preflight checks, health-based readiness, duplicate-instance reuse, hidden startup, scoped logs, and visible startup-error reporting.
+- Added a project-specific stop command for production Uvicorn and development Vite processes.
+- Changed production startup, development backend startup, the Vite proxy, and current runtime documentation from port `8001` to `8010`.
+
+### Tests Run
+- `.\.venv313\Scripts\python.exe -m pytest -q` - Passed: 209 tests; one existing third-party Starlette/httpx deprecation warning.
+- `npm.cmd run test` (frontend) - Passed: 13 files, 41 tests.
+- `npm.cmd run build` (frontend) - Passed: TypeScript and Vite production build.
+- PowerShell parser validation - Passed for `ens_launch.ps1`, `ens_launch_dev.ps1`, and `ens_stop.ps1`.
+
+### Manual Validation
+- Started the production launcher without opening a browser and confirmed UI, compiled asset, health, and API responses returned HTTP 200 from port `8010`.
+- Confirmed port `8010` was listening and old port `8001` was not listening.
+- Confirmed a repeated launch reused one Uvicorn process.
+- Confirmed `ens_stop.ps1` stopped the process and left the runtime ports clear.
+
+### Known Issues / Follow-Ups
+- `frontend/dist` remains intentionally ignored by Git and must be rebuilt after frontend source changes or on first setup.
+- The existing third-party Starlette/httpx test deprecation warning remains unchanged.
+
+### Revert Instructions
+```bash
+git revert 126357c96213e7fe160ed37b764be56a4525f23a
+```
+
+### Snapshot Status
+- Known-good snapshot: Yes
+
+---
+
 ## [2026-07-12 22:26:00 Europe/London] - Configuration: Font Management and Font Library Additions
 
 ### Commits
