@@ -117,7 +117,7 @@ export function SizingAssistantTab() {
         <div className="ct-brand-lockup">
           <img className="ct-brand-logo" src="/brand/etch-n-shine-logo.png" alt="Etch N Shine" />
           <div>
-            <p>Etch N Shine</p>
+            <p>Production tool</p>
             <h1>Sizing Assistant</h1>
           </div>
         </div>

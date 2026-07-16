@@ -1,19 +1,76 @@
 :root {
-  --ens-navy: #07131e;
-  --ens-blue: #4c647c;
-  --ens-olive: #7c7c6b;
-  --ens-warm-olive: #5e584a;
-  --ens-gold: #ddbf93;
-  --ens-gold-soft: #f4e5cb;
-  --ens-ink: #07131e;
-  --ens-muted: #5e584a;
-  --ens-line: #ddd2c0;
-  --ens-surface: #fffdf8;
-  --ens-shell: #f7f4ee;
-  color: var(--ens-ink);
-  background: var(--ens-shell);
+  color-scheme: dark;
+
+  --ens-app-background: #07131e;
+  --ens-surface-1: #0d1d2a;
+  --ens-surface-2: #142838;
+  --ens-surface-3: #1a3042;
+  --ens-surface-hover: rgba(76, 100, 124, 0.24);
+  --ens-surface-selected: rgba(76, 100, 124, 0.46);
+  --ens-surface-disabled: rgba(124, 124, 107, 0.14);
+
+  --ens-border-subtle: rgba(221, 191, 147, 0.12);
+  --ens-border-default: rgba(221, 191, 147, 0.22);
+  --ens-border-strong: rgba(221, 191, 147, 0.38);
+  --ens-border-active: #ddbf93;
+
+  --ens-text-primary: #f5f3ee;
+  --ens-text-secondary: #bbc5cd;
+  --ens-text-muted: #85939e;
+  --ens-text-accent: #ddbf93;
+  --ens-text-on-accent: #07131e;
+
+  --ens-action-primary: #ddbf93;
+  --ens-action-primary-hover: #e5c99e;
+  --ens-action-primary-pressed: #c9aa78;
+  --ens-action-secondary: #4c647c;
+
+  --ens-success: #76a98c;
+  --ens-warning: #d4a85c;
+  --ens-error: #cf7777;
+  --ens-info: #73a2c5;
+  --ens-overlay: rgba(2, 9, 15, 0.72);
+
+  --ens-space-1: 4px;
+  --ens-space-2: 8px;
+  --ens-space-3: 12px;
+  --ens-space-4: 16px;
+  --ens-space-5: 20px;
+  --ens-space-6: 24px;
+  --ens-space-8: 32px;
+  --ens-space-10: 40px;
+  --ens-space-12: 48px;
+
+  --ens-radius-sm: 6px;
+  --ens-radius-md: 8px;
+  --ens-radius-lg: 10px;
+  --ens-radius-xl: 12px;
+  --ens-control-height-sm: 32px;
+  --ens-control-height-md: 38px;
+  --ens-control-height-lg: 44px;
+  --ens-sidebar-expanded: 224px;
+  --ens-sidebar-collapsed: 76px;
+  --ens-properties-panel-width: 400px;
+  --ens-transition-fast: 140ms;
+  --ens-transition-standard: 200ms;
+
+  /* Compatibility aliases for the existing feature styles. */
+  --ens-navy: var(--ens-app-background);
+  --ens-blue: var(--ens-action-secondary);
+  --ens-olive: var(--ens-text-muted);
+  --ens-warm-olive: var(--ens-text-secondary);
+  --ens-gold: var(--ens-action-primary);
+  --ens-gold-soft: var(--ens-text-accent);
+  --ens-ink: var(--ens-text-primary);
+  --ens-muted: var(--ens-text-muted);
+  --ens-line: var(--ens-border-default);
+  --ens-surface: var(--ens-surface-1);
+  --ens-shell: var(--ens-app-background);
+
+  color: var(--ens-text-primary);
+  background: var(--ens-app-background);
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    "Segoe UI", Inter, Geist, "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }

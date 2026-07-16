@@ -136,8 +136,8 @@ export function FontAdvisorPanel({ fonts, uploadedFonts }: FontAdvisorPanelProps
             alt="Etch N Shine"
           />
           <div>
-            <p>Etch N Shine</p>
-            <h1>Font Adviser</h1>
+            <p>Production guidance</p>
+            <h1>Font Advisor</h1>
           </div>
         </div>
         <div className="ct-header-actions">

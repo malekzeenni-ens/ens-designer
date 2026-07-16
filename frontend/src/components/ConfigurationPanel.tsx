@@ -105,7 +105,7 @@ export function ConfigurationPanel({
       <header className="ct-app-header">
         <div className="ct-brand-lockup">
           <img className="ct-brand-logo" src="/brand/etch-n-shine-logo.png" alt="Etch N Shine" />
-          <div><p>Etch N Shine</p><h1>Configuration</h1></div>
+          <div><p>Application settings</p><h1>Configuration</h1></div>
         </div>
         <div className="ct-header-actions"><div className="fa-header-stats"><span><strong>{fonts.length}</strong> fonts</span></div></div>
       </header>

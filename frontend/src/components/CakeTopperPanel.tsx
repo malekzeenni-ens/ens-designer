@@ -741,7 +741,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
             alt="Etch N Shine"
           />
           <div>
-            <p>Etch N Shine</p>
+            <p>Design workspace</p>
             <h1>Cake Topper Designer</h1>
           </div>
         </div>

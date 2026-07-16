@@ -100,7 +100,7 @@ export function FontsPanel({ uploadedFonts, onUploadComplete }: FontsPanelProps)
         <div className="ct-brand-lockup">
           <img className="ct-brand-logo" src="/brand/etch-n-shine-logo.png" alt="Etch N Shine" />
           <div>
-            <p>Etch N Shine</p>
+            <p>Asset library</p>
             <h1>Font Library</h1>
           </div>
         </div>

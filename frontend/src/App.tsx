@@ -1,3 +1,11 @@
+import {
+  BadgeCheck,
+  Clock3,
+  PenTool,
+  Ruler,
+  Settings2,
+  Type,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { CakeTopperPanel } from "./components/CakeTopperPanel";
@@ -10,6 +18,20 @@ import { deleteFonts, fetchFonts, fetchManualFonts, fetchUploadedFonts, saveManu
 import type { FontInfo } from "./types/design";
 
 type WorkspaceTab = "designer" | "sizingAssistant" | "advisor" | "fonts" | "configuration" | "history";
+
+const WORKSPACES = [
+  { id: "designer", label: "Designer", icon: PenTool },
+  { id: "sizingAssistant", label: "Sizing", fullLabel: "Sizing Assistant", icon: Ruler },
+  { id: "advisor", label: "Advisor", fullLabel: "Font Advisor", icon: BadgeCheck },
+  { id: "fonts", label: "Fonts", icon: Type },
+  { id: "configuration", label: "Settings", fullLabel: "Configuration", icon: Settings2 },
+  { id: "history", label: "History", icon: Clock3 },
+] satisfies Array<{
+  id: WorkspaceTab;
+  label: string;
+  fullLabel?: string;
+  icon: typeof PenTool;
+}>;
 
 export function App() {
   const [fonts, setFonts] = useState<FontInfo[]>([]);
@@ -46,7 +68,55 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <section className="workspace">
+      <header className="app-header">
+        <div className="app-brand">
+          <img
+            className="app-brand-logo"
+            src="/brand/etch-n-shine-logo.png"
+            alt=""
+            aria-hidden="true"
+          />
+          <div className="app-brand-copy">
+            <span>Etch N Shine</span>
+            <strong>Designer</strong>
+          </div>
+        </div>
+        <div className="app-context" aria-live="polite">
+          <span>Workspace</span>
+          <strong>
+            {WORKSPACES.find((workspace) => workspace.id === activeTab)?.fullLabel
+              ?? WORKSPACES.find((workspace) => workspace.id === activeTab)?.label}
+          </strong>
+        </div>
+        <div className="app-local-status" title="This application is running locally">
+          <span aria-hidden="true" />
+          Local workspace
+        </div>
+      </header>
+
+      <div className="app-body">
+        <nav className="workspace-tabs" aria-label="Workspace">
+          {WORKSPACES.map((workspace) => {
+            const Icon = workspace.icon;
+            const accessibleLabel = workspace.fullLabel ?? workspace.label;
+
+            return (
+              <button
+                key={workspace.id}
+                type="button"
+                className={activeTab === workspace.id ? "workspace-tab workspace-tab--active" : "workspace-tab"}
+                onClick={() => setActiveTab(workspace.id)}
+                aria-current={activeTab === workspace.id ? "page" : undefined}
+                title={accessibleLabel}
+              >
+                <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
+                <span>{workspace.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <section className="workspace">
         {error ? (
           <div className="error">
             <p>{error}</p>
@@ -56,50 +126,6 @@ export function App() {
           </div>
         ) : (
           <>
-            <nav className="workspace-tabs" aria-label="Workspace">
-              <button
-                type="button"
-                className={activeTab === "designer" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-                onClick={() => setActiveTab("designer")}
-              >
-                Designer
-              </button>
-              <button
-                type="button"
-                className={activeTab === "sizingAssistant" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-                onClick={() => setActiveTab("sizingAssistant")}
-              >
-                Sizing Assistant
-              </button>
-              <button
-                type="button"
-                className={activeTab === "advisor" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-                onClick={() => setActiveTab("advisor")}
-              >
-                Font Advisor
-              </button>
-              <button
-                type="button"
-                className={activeTab === "fonts" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-                onClick={() => setActiveTab("fonts")}
-              >
-                Fonts
-              </button>
-              <button
-                type="button"
-                className={activeTab === "configuration" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-                onClick={() => setActiveTab("configuration")}
-              >
-                Configuration
-              </button>
-              <button
-                type="button"
-                className={activeTab === "history" ? "workspace-tab workspace-tab--active" : "workspace-tab"}
-                onClick={() => setActiveTab("history")}
-              >
-                History
-              </button>
-            </nav>
             {activeTab === "designer" && <CakeTopperPanel fonts={fonts} manualFonts={manualFonts} />}
             {activeTab === "sizingAssistant" && <SizingAssistantTab />}
             {activeTab === "advisor" && (
@@ -119,7 +145,8 @@ export function App() {
             {activeTab === "history" && <HistoryPanel />}
           </>
         )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
