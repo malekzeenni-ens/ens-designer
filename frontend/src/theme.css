@@ -886,6 +886,19 @@ h2,
   grid-column: 1 / -1;
 }
 
+.ct-outline-toggle > span {
+  color: var(--ens-text-primary);
+  font-weight: 600;
+}
+
+.ct-outline-toggle input[type="checkbox"] {
+  accent-color: var(--ens-action-primary);
+}
+
+.ct-spacing-row {
+  color: var(--ens-text-secondary);
+}
+
 .ct-card-title strong,
 .ct-position-field,
 .ct-position-reset,
