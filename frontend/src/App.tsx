@@ -6,9 +6,11 @@ import {
   Settings2,
   Type,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Activity, useCallback, useEffect, useState } from "react";
 
 import { CakeTopperPanel } from "./components/CakeTopperPanel";
+import { AppearanceSwitch } from "./components/AppearanceSwitch";
+import { readAppearance, saveAppearance, type Appearance } from "./appearance";
 import { ConfigurationPanel } from "./components/ConfigurationPanel";
 import { FontAdvisorPanel } from "./components/FontAdvisorPanel";
 import { FontsPanel } from "./components/FontsPanel";
@@ -34,11 +36,18 @@ const WORKSPACES = [
 }>;
 
 export function App() {
+  const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
   const [fonts, setFonts] = useState<FontInfo[]>([]);
   const [uploadedFonts, setUploadedFonts] = useState<FontInfo[]>([]);
   const [manualFonts, setManualFonts] = useState<FontInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("designer");
+  const [appearance, setAppearance] = useState<Appearance>(readAppearance);
+
+  const changeAppearance = useCallback((next: Appearance) => {
+    saveAppearance(next);
+    setAppearance(next);
+  }, []);
 
   const reloadFonts = useCallback(async () => {
     try {
@@ -67,8 +76,8 @@ export function App() {
   }, [reloadFonts]);
 
   return (
-    <main className="app-shell">
-      <header className="app-header">
+    <main className={activeTab === "designer" ? "app-shell app-shell--designer" : "app-shell"}>
+      <header className={activeTab === "designer" ? "app-header app-header--designer" : "app-header"}>
         <div className="app-brand">
           <img
             className="app-brand-logo"
@@ -78,23 +87,9 @@ export function App() {
           />
           <div className="app-brand-copy">
             <span>Etch N Shine</span>
-            <strong>Designer</strong>
+            <strong>EnS Designer</strong>
           </div>
         </div>
-        <div className="app-context" aria-live="polite">
-          <span>Workspace</span>
-          <strong>
-            {WORKSPACES.find((workspace) => workspace.id === activeTab)?.fullLabel
-              ?? WORKSPACES.find((workspace) => workspace.id === activeTab)?.label}
-          </strong>
-        </div>
-        <div className="app-local-status" title="This application is running locally">
-          <span aria-hidden="true" />
-          Local workspace
-        </div>
-      </header>
-
-      <div className="app-body">
         <nav className="workspace-tabs" aria-label="Workspace">
           {WORKSPACES.map((workspace) => {
             const Icon = workspace.icon;
@@ -107,6 +102,7 @@ export function App() {
                 className={activeTab === workspace.id ? "workspace-tab workspace-tab--active" : "workspace-tab"}
                 onClick={() => setActiveTab(workspace.id)}
                 aria-current={activeTab === workspace.id ? "page" : undefined}
+                aria-label={accessibleLabel}
                 title={accessibleLabel}
               >
                 <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
@@ -115,6 +111,15 @@ export function App() {
             );
           })}
         </nav>
+        <div className="app-design-tools" ref={setToolbarHost} hidden={activeTab !== "designer"} />
+        <div className="app-header-utilities">
+          <AppearanceSwitch appearance={appearance} onChange={changeAppearance} />
+
+        </div>
+      </header>
+
+      <div className="app-body">
+
 
         <section className="workspace">
         {error ? (
@@ -126,7 +131,7 @@ export function App() {
           </div>
         ) : (
           <>
-            {activeTab === "designer" && <CakeTopperPanel fonts={fonts} manualFonts={manualFonts} />}
+            <Activity mode={activeTab === "designer" ? "visible" : "hidden"}><CakeTopperPanel fonts={fonts} manualFonts={manualFonts} toolbarHost={toolbarHost} active={activeTab === "designer"} /></Activity>
             {activeTab === "sizingAssistant" && <SizingAssistantTab />}
             {activeTab === "advisor" && (
               <FontAdvisorPanel fonts={fonts} uploadedFonts={uploadedFonts} />
@@ -135,12 +140,18 @@ export function App() {
               <FontsPanel uploadedFonts={uploadedFonts} onUploadComplete={reloadFonts} />
             )}
             {activeTab === "configuration" && (
+              <div className="configuration-workspace">
+                <section className="appearance-settings" aria-labelledby="appearance-settings-title">
+                  <div><h2 id="appearance-settings-title">Appearance</h2><p>Choose Dark or Bright. Your choice is remembered on this browser.</p></div>
+                  <AppearanceSwitch appearance={appearance} onChange={changeAppearance} />
+                </section>
               <ConfigurationPanel
                 fonts={fonts}
                 manualFonts={manualFonts}
                 onManualFontsChange={updateManualFonts}
                 onDeleteFonts={removeFonts}
               />
+              </div>
             )}
             {activeTab === "history" && <HistoryPanel />}
           </>

@@ -11,13 +11,49 @@ import type { FloatingComponentInfo, FloatingComponentOffset } from "../types/de
 export type FloatingOffsetMap = Record<number, { xMm: string; yMm: string }>;
 
 interface FloatingControlsProps {
+  compact?: boolean;
   floatingComponents: FloatingComponentInfo[];
   offsets: FloatingOffsetMap;
   onChange: (glyphIndex: number, axis: "x" | "y", value: string) => void;
 }
 
-export function FloatingControls({ floatingComponents, offsets, onChange }: FloatingControlsProps) {
+export function FloatingControls({ floatingComponents, offsets, onChange, compact = false }: FloatingControlsProps) {
   if (floatingComponents.length === 0) return null;
+
+  if (compact) {
+    return (
+      <div className="floating-controls floating-controls--compact">
+        <div className="ct-subsection-copy">
+          <span className="ct-subsection-title">Detached dots & accents</span>
+          <p>Move marks to connect or position them before export.</p>
+        </div>
+        <table className="ct-floating-table" aria-label="Detached dots and accents offsets">
+          <thead><tr><th scope="col">Mark</th><th scope="col">X (mm)</th><th scope="col">Y (mm)</th></tr></thead>
+          <tbody>{floatingComponents.map((fc) => {
+            const off = offsets[fc.glyph_index] ?? { xMm: "0", yMm: "0" };
+            return (
+              <tr key={fc.glyph_index}>
+                <th scope="row" title={`Glyph index ${fc.glyph_index}`}>
+                  <span className="ct-floating-mark">{fc.char}</span>
+                  <small>#{fc.glyph_index + 1}</small>
+                </th>
+                {(["x", "y"] as const).map((axis) => (
+                  <td key={axis}>
+                    <input type="number" min="-20" max="20" step="0.1"
+                      value={off[axis === "x" ? "xMm" : "yMm"]}
+                      className="floating-input"
+                      aria-label={`'${fc.char}' dot ${axis === "x" ? "left/right" : "up/down"} offset`}
+                      title={axis === "x" ? "Negative moves left; positive moves right." : "Negative moves up; positive moves down."}
+                      onChange={(event) => onChange(fc.glyph_index, axis, event.target.value)} />
+                  </td>
+                ))}
+              </tr>
+            );
+          })}</tbody>
+        </table>
+      </div>
+    );
+  }
 
   return (
     <div className="floating-controls">

@@ -95,4 +95,26 @@ describe("GlyphBrowserDrawer FontFace lifecycle (F4.3)", () => {
     expect(fontsApi.delete).toHaveBeenCalledTimes(2);
     expect(addedFaces.size).toBe(0);
   });
+
+  it("contains keyboard focus, closes on Escape and restores its opener", async () => {
+    const opener = document.createElement("button"); document.body.append(opener); opener.focus();
+    const close = vi.fn();
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<GlyphBrowserDrawer lineIndex={0} lineName="Happy" fontId="font-a" fontName="Font A" currentLineText="Happy" onApply={() => {}} onClose={close} />);
+    });
+    const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    const controls = Array.from(dialog.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]'));
+    controls[0].focus();
+    await act(async () => controls[0].dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true })));
+    expect(document.activeElement).toBe(controls[controls.length - 1]);
+    await act(async () => document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true })));
+    expect(document.activeElement).toBe(controls[0]);
+    await act(async () => document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(close).toHaveBeenCalledTimes(1);
+    await act(async () => root.unmount());
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { fetchFontCharacters } from "../services/generationApi";
 import type { CharacterInfo } from "../types/design";
@@ -48,6 +48,9 @@ export function GlyphBrowserDrawer({
   onApply,
   onClose,
 }: GlyphBrowserDrawerProps) {
+  const drawerRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   const [characters, setCharacters] = useState<CharacterInfo[]>([]);
   const [loadingChars, setLoadingChars] = useState(true);
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -90,14 +93,24 @@ export function GlyphBrowserDrawer({
       });
   }, [fontId]);
 
-  // Close on Escape
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const drawer = drawerRef.current;
+    const focusables = () => Array.from(drawer?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]') ?? []).filter((element) => !element.hidden);
+    (focusables()[0] ?? drawer)?.focus();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onCloseRef.current(); }
+      if (event.key === "Tab") {
+        const items = focusables();
+        const first = items[0]; const last = items[items.length - 1];
+        if (!first) { event.preventDefault(); drawer?.focus(); }
+        else if (event.shiftKey && (document.activeElement === first || !drawer?.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && (document.activeElement === last || !drawer?.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+      }
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    document.addEventListener("keydown", onKey, true);
+    return () => { document.removeEventListener("keydown", onKey, true); if (opener?.isConnected) opener.focus(); };
+  }, []);
 
   const availableCategories = useMemo(() => {
     const present = new Set(characters.map((c) => c.category));
@@ -140,6 +153,8 @@ export function GlyphBrowserDrawer({
       />
       <aside
         className="ct-glyph-drawer"
+        ref={drawerRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Glyph Browser"

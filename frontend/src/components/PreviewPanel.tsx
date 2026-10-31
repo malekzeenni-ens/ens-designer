@@ -212,7 +212,7 @@ export function PreviewPanel({
           </div>
         </div>
       ) : (
-        <div className="preview-empty">Preview</div>
+        <div className="preview-empty">Generate a design to start your preview.</div>
       )}
     </section>
   );

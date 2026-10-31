@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 
 interface ExportControlsProps {
+  compact?: boolean;
   svg: string | null;
   pngBase64: string | null;
   svgFilename: string;
@@ -8,13 +9,15 @@ interface ExportControlsProps {
   onExport?: (type: "svg" | "png") => void;
 }
 
-export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExport }: ExportControlsProps) {
+export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExport, compact = false }: ExportControlsProps) {
   const disabled = !svg || !pngBase64;
 
   return (
     <div className="export-controls">
       <button
         type="button"
+        aria-label="Download SVG"
+        title="Download SVG"
         disabled={disabled}
         onClick={() => {
           if (!svg) return;
@@ -23,10 +26,12 @@ export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExp
         }}
       >
         <Download size={18} aria-hidden="true" />
-        Download SVG
+        {compact ? "SVG" : "Download SVG"}
       </button>
       <button
         type="button"
+        aria-label="Download PNG"
+        title="Download PNG"
         disabled={disabled}
         onClick={() => {
           if (!pngBase64) return;
@@ -35,7 +40,7 @@ export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExp
         }}
       >
         <Download size={18} aria-hidden="true" />
-        Download PNG
+        {compact ? "PNG" : "Download PNG"}
       </button>
     </div>
   );

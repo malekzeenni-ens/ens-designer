@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Apply saved appearance before the stylesheet/app paints. Keep the key in sync with appearance.ts.
+      (function () {
+        var theme = "dark";
+        try { if (localStorage.getItem("ens:designer:appearance") === "bright") theme = "bright"; } catch (_) {}
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme === "bright" ? "light" : "dark";
+      })();
+    </script>
     <title>Etch N Shine Designer</title>
   </head>
   <body>

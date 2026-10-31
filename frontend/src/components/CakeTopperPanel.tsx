@@ -1,6 +1,7 @@
-import { ChevronDown, ChevronRight, RotateCcw, Wand2 } from "lucide-react";
+import { RotateCcw, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { ExportControls } from "./ExportControls";
 import { FloatingControls, toFloatingOffsets } from "./FloatingControls";
@@ -30,6 +31,8 @@ import type {
 } from "../types/design";
 
 interface CakeTopperPanelProps {
+  toolbarHost?: HTMLElement | null;
+  active?: boolean;
   fonts: FontInfo[];
   manualFonts: FontInfo[];
 }
@@ -70,7 +73,7 @@ function clampStrokeBufferMm(value: number): number {
 }
 
 type GapState = { enabled: boolean; overlapMm: string };
-type InspectorSectionId = "create" | "layout" | "lines";
+type InspectorTab = "design" | "lines" | "structure";
 type StakeCount = 0 | 1 | 2;
 type StakeOffsetState = { xMm: string; yMm: string };
 type RingOffsetState = { xMm: string; yMm: string };
@@ -88,7 +91,6 @@ type LineState = {
   manualYOffsetMm: string;
   color: string;
   strokeBufferMm: string;
-  expanded: boolean;
 };
 
 const DEFAULT_SIZE = "42";
@@ -117,22 +119,6 @@ const FONT_FILTERS: { value: FontFilterCategory; label: string }[] = [
   { value: "use_with_caution", label: "Caution" },
 ];
 
-const DEFAULT_OPEN_SECTIONS: Record<InspectorSectionId, boolean> = {
-  create: true,
-  layout: true,
-  lines: true,
-};
-
-interface InspectorAccordionProps {
-  id: InspectorSectionId;
-  title: string;
-  description: string;
-  open: boolean;
-  onToggle: (id: InspectorSectionId) => void;
-  className?: string;
-  children: ReactNode;
-}
-
 function initLine(fontId: string, overlapMm: string, numGaps: number): LineState {
   return {
     fontId,
@@ -147,39 +133,38 @@ function initLine(fontId: string, overlapMm: string, numGaps: number): LineState
     manualYOffsetMm: "0",
     color: DEFAULT_COLOR,
     strokeBufferMm: "0",
-    expanded: true,
   };
 }
 
-function InspectorAccordion({
-  id,
-  title,
-  description,
-  open,
-  onToggle,
-  className = "",
-  children,
-}: InspectorAccordionProps) {
+function InspectorPage({ id, active, children }: { id: InspectorTab; active: InspectorTab; children: ReactNode }) {
   return (
-    <section className={`ct-inspector-section ct-accordion-section${className ? ` ${className}` : ""}`}>
-      <button
-        type="button"
-        className="ct-inspector-section-header"
-        onClick={() => onToggle(id)}
-        aria-expanded={open}
-      >
-        <div className="ct-section-heading">
-          <div>
-            <h2>{title}</h2>
-            <p>{description}</p>
-          </div>
-        </div>
-        <span className="ct-section-chevron" aria-hidden="true">
-          {open ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
-        </span>
-      </button>
-      {open && <div className="ct-inspector-section-body">{children}</div>}
+    <section id={`inspector-${id}`} role="tabpanel" aria-labelledby={`inspector-tab-${id}`}
+      hidden={active !== id} tabIndex={0} className="ct-inspector-page">
+      {children}
     </section>
+  );
+}
+
+function ColourPicker({ label, value, onChange }: { label: string; value: string; onChange: (hex: string) => void }) {
+  const colour = COLOR_PALETTE.find((item) => item.hex === value);
+  return (
+    <details className="ct-colour-picker">
+      <summary aria-label={`${label}: ${colour?.name ?? value}`}>
+        <i style={{ background: value }} aria-hidden="true" />
+        {colour?.name ?? value}<span>Change</span>
+      </summary>
+      <div className="ct-color-swatches" role="group" aria-label={label}>
+        {COLOR_PALETTE.map((item) => (
+          <button type="button" key={item.hex} aria-label={item.name} aria-pressed={value === item.hex}
+            title={item.name} style={{ backgroundColor: item.hex }} className="ct-color-swatch"
+            onClick={(event) => {
+              onChange(item.hex);
+              const details = event.currentTarget.closest("details");
+              if (details) { details.open = false; details.querySelector("summary")?.focus(); }
+            }} />
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -246,7 +231,7 @@ function renderFontGroups(groups: { label: string; fonts: FontInfo[] }[]) {
   ));
 }
 
-export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
+export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active = true }: CakeTopperPanelProps) {
   const [text, setText] = useState("Happy Birthday");
   const [fontSearch, setFontSearch] = useState("");
   const [fontCategory, setFontCategory] = useState<FontFilterCategory>("all");
@@ -273,8 +258,15 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   const [ringOffset, setRingOffset] = useState<RingOffsetState>({ xMm: "0", yMm: "0" });
   const [selectedRing, setSelectedRing] = useState(false);
   const [glyphBrowserLineIndex, setGlyphBrowserLineIndex] = useState<number | null>(null);
-  const [openSections, setOpenSections] =
-    useState<Record<InspectorSectionId, boolean>>(DEFAULT_OPEN_SECTIONS);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("design");
+
+  useEffect(() => {
+    if (!defaultFontId || typeof FontFace === "undefined") return;
+    const face = new FontFace("ens-base-specimen", `url(/api/fonts/${encodeURIComponent(defaultFontId)}/file)`);
+    let cancelled = false;
+    face.load().then((loaded) => { if (!cancelled) document.fonts.add(loaded); }).catch(() => {});
+    return () => { cancelled = true; document.fonts.delete(face); };
+  }, [defaultFontId]);
 
   const words = useMemo(
     () => text.trim().split(/\s+/).filter(Boolean).slice(0, 4),
@@ -425,6 +417,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   }
 
   function handleGenerate() {
+    setSelectedLine(null);
     setLineStates([]);
     setInterLineGaps([]);
     callApi([], [], stakeCount, stakeOffsets, undefined, false);
@@ -433,7 +426,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   function patchLine(i: number, patch: Partial<LineState>) {
     const updated = lineStates.map((s, idx) => (idx === i ? { ...s, ...patch } : s));
     setLineStates(updated);
-    if (!("expanded" in patch)) callApi(updated, interLineGaps, stakeCount, stakeOffsets);
+    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
   }
 
   function toggleGap(li: number, gi: number) {
@@ -524,6 +517,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     setStakeOffsets(nextOffsets);
     setSelectedLine(null);
     setSelectedStake(stakeIndex);
+    setInspectorTab("structure");
     callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
   }
 
@@ -610,6 +604,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     setSelectedLine(null);
     setSelectedStake(null);
     setSelectedRing(true);
+    setInspectorTab("structure");
     setRingOffsetAndRegenerate(nextOffset);
   }
 
@@ -644,24 +639,23 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
 
   function selectLine(lineIndex: number) {
     setSelectedLine(lineIndex);
+    setInspectorTab("lines");
     setSelectedStake(null);
     setSelectedRing(false);
   }
 
   function selectStake(stakeIndex: number) {
     setSelectedStake(stakeIndex);
+    setInspectorTab("structure");
     setSelectedLine(null);
     setSelectedRing(false);
   }
 
   function selectRing() {
     setSelectedRing(true);
+    setInspectorTab("structure");
     setSelectedLine(null);
     setSelectedStake(null);
-  }
-
-  function toggleInspectorSection(id: InspectorSectionId) {
-    setOpenSections((current) => ({ ...current, [id]: !current[id] }));
   }
 
   function resetDesigner() {
@@ -690,7 +684,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
     setOutlineEnabled(false);
     setOutlineWidthMm(DEFAULT_OUTLINE_WIDTH_MM);
     setOutlineColor(DEFAULT_COLOR);
-    setOpenSections(DEFAULT_OPEN_SECTIONS);
+    setInspectorTab("design");
   }
 
   function applyGlyphBrowserText(lineIndex: number, newLineText: string) {
@@ -721,7 +715,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
   }
 
   const meta = result?.metadata;
-  const exportSizeText = meta ? `${meta.canvas_width_mm}mm x ${meta.canvas_height_mm}mm` : "Ready";
+  const exportSizeText = meta ? `${meta.canvas_width_mm.toFixed(1)} × ${meta.canvas_height_mm.toFixed(1)} mm` : "Not generated";
   const ringMeta = meta?.ring ?? null;
   const ringStatus = !ringEnabled
     ? "Off"
@@ -731,22 +725,32 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
         ? "Warning"
         : "Pending";
 
-  return (
-    <div className="ct-panel">
-      <header className="ct-app-header">
-        <div className="ct-brand-lockup">
-          <img
-            className="ct-brand-logo"
-            src="/brand/etch-n-shine-logo.png"
-            alt="Etch N Shine"
-          />
-          <div>
-            <p>Design workspace</p>
-            <h1>Cake Topper Designer</h1>
+  const toolbar = (
+      <div className="ct-studio-toolbar">
+        <div className="ct-document-heading">
+          <h1>Design Studio</h1>
+          <div className="ct-composition-summary" aria-label="Composition">
+            <span>Composition</span>
+            <div className="ct-composition-lines" aria-label="Design lines">
+              {words.map((word, index) => (
+                <div key={index}>
+                  <button type="button" className="ct-composition-line"
+                    aria-label={`Edit line ${index + 1}: ${word}`}
+                    aria-pressed={selectedLine === index}
+                    disabled={!meta?.lines[index]}
+                    title={meta?.lines[index] ? `Edit line ${index + 1}: ${word}` : "Generate to edit this line"}
+                    onClick={() => selectLine(index)}>
+                    <span>{String(index + 1).padStart(2, "0")}</span><strong>{word}</strong>
+                  </button>
+                  {index < words.length - 1 && <label className="ct-layer-gap ct-legacy-controls" hidden>Gap to line {index + 2}<input type="number" value={interLineGaps[index] ?? DEFAULT_INTER_GAP} onChange={(event) => setInterGap(index, event.target.value)} /></label>}
+                </div>
+              ))}
+              {words.length === 0 && <span className="ct-composition-empty">Add wording to create lines</span>}
+            </div>
           </div>
         </div>
         <div className="ct-header-actions">
-          <span>{meta ? "Ready to export" : "Create a design to export"}</span>
+          <span className="ct-export-status" aria-live="polite">{meta ? "Ready to export" : "Create a design to export"}</span>
           <button
             type="button"
             className="ct-reset-action"
@@ -757,6 +761,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
             Reset
           </button>
           <ExportControls
+            compact={Boolean(toolbarHost)}
             svg={result?.svg ?? null}
             pngBase64={result?.png_base64 ?? null}
             svgFilename={result?.svg_filename ?? "cake-topper.svg"}
@@ -764,7 +769,12 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
             onExport={handleExport}
           />
         </div>
-      </header>
+      </div>
+  );
+
+  return (
+    <div className={`ct-panel${toolbarHost ? " ct-panel--header-integrated" : ""}`}>
+      {toolbarHost ? (active ? createPortal(toolbar, toolbarHost) : null) : <header className="ct-app-header">{toolbar}</header>}
 
       <div className="ct-workspace">
         <section className="ct-preview-column" aria-label="Preview and export">
@@ -780,7 +790,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
               <div className="ct-size-chip">
                 <span>Final cut size</span>
                 <strong>
-                  {meta ? `${meta.canvas_width_mm} x ${meta.canvas_height_mm} mm` : "Not generated"}
+                  {exportSizeText}
                 </strong>
               </div>
             </div>
@@ -845,13 +855,15 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
         </section>
 
         <aside className="ct-inspector" aria-label="Design controls">
-          <InspectorAccordion
-            id="create"
-            title="Create design"
-            description="Enter the topper wording and base text style."
-            open={openSections.create}
-            onToggle={toggleInspectorSection}
-          >
+          <div className="ct-inspector-heading"><strong>Design properties</strong><span>{words.length} / 4 lines</span></div>
+          <div className="ct-inspector-tabs" role="tablist" aria-label="Design properties">
+            {(["design", "lines", "structure"] as InspectorTab[]).map((tab, index, tabs) => <button key={tab} id={`inspector-tab-${tab}`} type="button" role="tab" aria-selected={inspectorTab === tab} aria-controls={`inspector-${tab}`} tabIndex={inspectorTab === tab ? 0 : -1} onClick={() => setInspectorTab(tab)} onKeyDown={(event) => {
+              const next = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : -1;
+              if (next >= 0) { event.preventDefault(); setInspectorTab(tabs[next]); document.getElementById(`inspector-tab-${tabs[next]}`)?.focus(); }
+            }}>{tab[0].toUpperCase() + tab.slice(1)}</button>)}
+          </div>
+          <div className="ct-inspector-scroll">
+          <InspectorPage id="design" active={inspectorTab}>
             <label className="ct-field" htmlFor="ct-text">
               <span>Topper text</span>
               <input
@@ -865,10 +877,12 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                   setLineStates([]);
                   setInterLineGaps([]);
                   setResult(null);
+                  setSelectedLine(null);
                 }}
               />
             </label>
 
+            <div className="ct-font-specimen" aria-hidden="true">{words.join(" ") || "Your design"}</div>
             <div className="ct-field">
               <span>Font</span>
               <div className="ct-font-combo">
@@ -920,34 +934,13 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                 </span>
               </label>
 
-              <button
-                className="ct-primary-action"
-                type="button"
-                onClick={handleGenerate}
-                disabled={loading || !defaultFontId || words.length === 0}
-              >
-                <Wand2 size={18} aria-hidden="true" />
-                {loading ? "Generating..." : "Generate design"}
-              </button>
+
             </div>
 
-            <div className="ct-create-subsection">
-              <span className="ct-subsection-title">Default letter overlap</span>
-              <div className="ct-overlap-btns" role="group" aria-label="Default letter overlap">
-                {OVERLAP_MODES.map((m) => (
-                  <button
-                    key={m.value}
-                    type="button"
-                    className={`ct-overlap-btn${defaultOverlap === m.value ? " ct-overlap-btn--active" : ""}`}
-                    onClick={() => applyGlobalOverlap(m.value)}
-                  >
-                    <span>{m.label}</span>
-                    {m.mm != null && <small>{m.mm.toFixed(1)}mm</small>}
-                  </button>
-                ))}
-              </div>
-            </div>
+          </InspectorPage>
 
+
+          <InspectorPage id="structure" active={inspectorTab}>
             <div className="ct-create-subsection">
               <span className="ct-subsection-title">Stakes</span>
               <div className="ct-stake-count-btns" role="group" aria-label="Stake count">
@@ -956,6 +949,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                     key={count}
                     type="button"
                     className={`ct-stake-btn${stakeCount === count ? " ct-stake-btn--active" : ""}`}
+                    aria-pressed={stakeCount === count}
                     onClick={() => handleStakeCountChange(count)}
                   >
                     {count} {count === 1 ? "stake" : "stakes"}
@@ -1025,63 +1019,6 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
               )}
             </div>
 
-          </InspectorAccordion>
-
-          {error && (
-            <div className="ct-error" role="alert">
-              <span><strong>Error:</strong> {error}</span>
-              <button
-                type="button"
-                className="ct-error-dismiss"
-                onClick={() => setError(null)}
-                aria-label="Dismiss error"
-              >
-                ×
-              </button>
-            </div>
-          )}
-
-          {result?.warnings && result.warnings.length > 0 && (
-            <div className="ct-warnings" role="alert">
-              <strong>Warning{result.warnings.length > 1 ? "s" : ""}:</strong>
-              <ul className="ct-warnings-list">
-                {result.warnings.map((w, i) => (
-                  <li key={i}>{w}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <InspectorAccordion
-            id="layout"
-            title="Layout"
-            description="Set spacing between generated lines."
-            open={openSections.layout}
-            onToggle={toggleInspectorSection}
-          >
-            {lineStates.length > 1 ? (
-              <div className="ct-line-spacing-list">
-                {lineStates.slice(0, words.length - 1).map((_, li) => (
-                  <label key={li} className="ct-spacing-row">
-                    <span>Line spacing: Line {li + 1} to Line {li + 2}</span>
-                    <span className="ct-unit-input ct-unit-input--compact">
-                      <input
-                        type="number"
-                        min="-200"
-                        max="200"
-                        step="0.5"
-                        value={interLineGaps[li] ?? DEFAULT_INTER_GAP}
-                        onChange={(e) => setInterGap(li, e.target.value)}
-                      />
-                      <span>mm</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-            ) : (
-              <p className="ct-muted">Generate two or more lines to adjust line spacing.</p>
-            )}
-
             <div className="ct-position-section">
               <div className="ct-subsection-copy">
                 <span className="ct-subsection-title">Combined outline / offset</span>
@@ -1114,20 +1051,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                       <span>mm</span>
                     </span>
                   </label>
-                  <div className="ct-color-swatches" role="group" aria-label="Outline colour">
-                    {COLOR_PALETTE.map((c) => (
-                      <button
-                        key={c.hex}
-                        type="button"
-                        className={`ct-color-swatch${outlineColor === c.hex ? " ct-color-swatch--active" : ""}`}
-                        style={{ backgroundColor: c.hex }}
-                        title={c.name}
-                        aria-label={c.name}
-                        aria-pressed={outlineColor === c.hex}
-                        onClick={() => setOutlineColorAndRegenerate(c.hex)}
-                      />
-                    ))}
-                  </div>
+                  <ColourPicker label="Outline colour" value={outlineColor} onChange={setOutlineColorAndRegenerate} />
                 </>
               )}
             </div>
@@ -1241,16 +1165,42 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                 </div>
               )}
             </div>
-          </InspectorAccordion>
+          </InspectorPage>
 
-          <InspectorAccordion
-            id="lines"
-            title="Lines"
-            description="Fine-tune each line's font, position, letter overlap, and detached dots."
-            open={openSections.lines}
-            onToggle={toggleInspectorSection}
-            className="ct-lines-section"
-          >
+          <InspectorPage id="lines" active={inspectorTab}>
+            <div className="ct-create-subsection">
+              <span className="ct-subsection-title">Default letter overlap</span>
+              <div className="ct-overlap-btns" role="group" aria-label="Default letter overlap">
+                {OVERLAP_MODES.map((m) => (
+                  <button
+                    key={m.value}
+                    type="button"
+                    className={`ct-overlap-btn${defaultOverlap === m.value ? " ct-overlap-btn--active" : ""}`}
+                    aria-pressed={defaultOverlap === m.value}
+                    onClick={() => applyGlobalOverlap(m.value)}
+                  >
+                    <span>{m.label}</span>
+                    {m.mm != null && <small>{m.mm.toFixed(1)}mm</small>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+
+            {lineStates.length > 0 && meta && (
+              <div className="ct-line-switcher" role="group" aria-label="Choose a line to edit">
+                {meta.lines.slice(0, words.length).map((line, index) => (
+                  <button key={index} type="button"
+                    aria-label={`Select line ${index + 1}: ${line.text}`}
+                    title={`Select line ${index + 1}: ${line.text}`}
+                    aria-pressed={(selectedLine ?? 0) === index}
+                    onClick={() => selectLine(index)}>
+                    <span>Line {index + 1}</span><strong>{line.text}</strong>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {lineStates.length === 0 && (
               <div className="two-col-empty">
                 Generate a design to see per-line controls.
@@ -1258,43 +1208,24 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
             )}
 
             {lineStates.length > 0 && meta && lineStates.slice(0, words.length).map((ls, li) => {
+              if (li !== (selectedLine ?? 0)) return null;
               const lineMeta = meta.lines[li];
               if (!lineMeta) return null;
               const fontName = fonts.find((f) => f.id === (ls.fontId || defaultFontId))?.full_name ?? "—";
               const pairLabels = (lineMeta.glyph_chars ?? []).slice(0, -1).map(
                 (ch, i) => `${ch} → ${(lineMeta.glyph_chars ?? [])[i + 1]}`,
               );
-              const activeGaps = ls.gapStates.filter((g) => g.enabled).length;
 
               return (
                 <article key={li} className={`ct-card${selectedLine === li ? " ct-card--selected" : ""}`}>
-                  <button
-                    type="button"
-                    className="ct-card-header"
-                    onClick={() => patchLine(li, { expanded: !ls.expanded })}
-                    aria-expanded={ls.expanded}
-                  >
-                    <span className="ct-card-chevron">
-                      {ls.expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    </span>
-                    <span className="ct-card-title">
-                      <span>Line {li + 1}</span>
-                      <strong>{lineMeta.text}</strong>
-                    </span>
-                    <span className="ct-card-meta">
-                      {fontName} · {ls.fontSizeMm}mm · {ls.alignment}
-                      {activeGaps > 0 && <span className="ct-card-gaps-badge">{activeGaps} gaps</span>}
-                    </span>
-                    <span className="ct-card-dims">{lineMeta.width_mm.toFixed(1)} x {lineMeta.height_mm.toFixed(1)} mm</span>
-                  </button>
-
-                  {ls.expanded && (
-                    <div className="ct-card-body">
+                  <div className="ct-line-editor-heading"><strong>Line {li + 1} · {lineMeta.text}</strong><span>{fontName}</span><small>{lineMeta.width_mm.toFixed(1)} × {lineMeta.height_mm.toFixed(1)} mm</small></div>
+                  <div className="ct-card-body">
                       <div className="ct-card-controls">
                         <div className="ct-card-field">
                           <span>Line font</span>
                           <div className="ct-font-select-row">
                             <select
+                              aria-label={`Line ${li + 1} font`}
                               value={ls.fontId || defaultFontId}
                               onChange={(e) => patchLine(li, { fontId: e.target.value })}
                             >
@@ -1310,23 +1241,11 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                             </button>
                           </div>
                         </div>
-                        <label className="ct-card-field ct-card-field--sm">
-                          <span>Size</span>
-                          <span className="ct-unit-input ct-unit-input--compact">
-                            <input
-                              type="number"
-                              min="5"
-                              max="300"
-                              step="1"
-                              value={ls.fontSizeMm}
-                              onChange={(e) => patchLine(li, { fontSizeMm: e.target.value })}
-                            />
-                            <span>mm</span>
-                          </span>
-                        </label>
+
                       </div>
 
-                      <div className="ct-subsection">
+                      {/* Legacy settings stay in the recipe; canvas dragging remains available. */}
+                      <div className="ct-subsection ct-legacy-controls" hidden>
                         <span className="ct-subsection-title">Alignment</span>
                         <div className="ct-align-btns" role="group" aria-label={`Line ${li + 1} alignment`}>
                           {ALIGNMENTS.map((a) => (
@@ -1334,6 +1253,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                               key={a}
                               type="button"
                               className={`ct-align-btn${ls.alignment === a ? " ct-align-btn--active" : ""}`}
+                              aria-pressed={ls.alignment === a}
                               onClick={() => patchLine(li, { alignment: a })}
                               title={a}
                             >
@@ -1359,33 +1279,31 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                         )}
                       </div>
 
-                      <div className="ct-subsection">
-                        <span className="ct-subsection-title">Colour</span>
-                        <div className="ct-color-swatches" role="group" aria-label={`Line ${li + 1} colour`}>
-                          {COLOR_PALETTE.map((c) => (
-                            <button
-                              key={c.hex}
-                              type="button"
-                              className={`ct-color-swatch${ls.color === c.hex ? " ct-color-swatch--active" : ""}`}
-                              style={{ backgroundColor: c.hex }}
-                              title={c.name}
-                              aria-label={c.name}
-                              aria-pressed={ls.color === c.hex}
-                              onClick={() => patchLine(li, { color: c.hex })}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="ct-subsection">
-                        <div className="ct-subsection-copy">
-                          <span className="ct-subsection-title">Stroke buffer</span>
-                          <p>Thickens thin strokes (e.g. script fonts) before cutting, to reduce fragility.</p>
-                        </div>
+                      <div className="ct-line-appearance-row">
                         <label className="ct-card-field ct-card-field--sm">
-                          <span>Buffer width</span>
+                          <span>Size</span>
                           <span className="ct-unit-input ct-unit-input--compact">
                             <input
+                              type="number"
+                              min="5"
+                              max="300"
+                              step="1"
+                              value={ls.fontSizeMm}
+                              onChange={(e) => patchLine(li, { fontSizeMm: e.target.value })}
+                            />
+                            <span>mm</span>
+                          </span>
+                        </label>
+                      <div className="ct-subsection">
+                        <span className="ct-subsection-title">Colour</span>
+                        <ColourPicker label={`Line ${li + 1} colour`} value={ls.color} onChange={(hex) => patchLine(li, { color: hex })} />
+                      </div>
+                        <label className="ct-card-field ct-card-field--sm">
+                          <span title="Thickens thin strokes before cutting to reduce fragility.">Stroke buffer</span>
+                          <span className="ct-unit-input ct-unit-input--compact">
+                            <input
+                              aria-label="Stroke buffer width"
+                              title="Thickens thin strokes before cutting to reduce fragility."
                               type="number"
                               min={STROKE_BUFFER_MIN_MM}
                               max={STROKE_BUFFER_MAX_MM}
@@ -1403,7 +1321,7 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                         </label>
                       </div>
 
-                      <div className="ct-position-section">
+                      <div className="ct-position-section ct-legacy-controls" hidden>
                         <div className="ct-subsection-copy">
                           <span className="ct-subsection-title">Move design on canvas</span>
                           <p>Use X/Y offsets to reposition this line inside the exported SVG canvas.</p>
@@ -1455,38 +1373,39 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                         <div className="ct-gaps-section">
                           <div className="ct-subsection-copy">
                             <span className="ct-subsection-title">Letter overlap</span>
-                            <p>Increase overlap to bring letters closer together. Reduce it if letters become unreadable. Pairs marked "(natural)" are already touching from the font's connected strokes and won't change.</p>
+                            <p>“Natural” pairs already overlap in the font.</p>
                           </div>
-                          <div className="ct-gap-pills">
-                            {ls.gapStates.map((gs, gi) => (
-                              <div
+                          <table className="ct-gap-table" aria-label={`Line ${li + 1} letter overlap`}>
+                            <thead><tr><th scope="col">Pair</th><th scope="col">Overlap (mm)</th><th scope="col">Actual (mm)</th></tr></thead>
+                            <tbody>{ls.gapStates.map((gs, gi) => (
+                              <tr
                                 key={gi}
                                 className={`ct-gap-pill${gs.enabled ? " ct-gap-pill--on" : " ct-gap-pill--off"}`}
                               >
-                                <button
+                                <th scope="row"><button
                                   type="button"
                                   className="ct-gap-pill-toggle"
+                                  aria-pressed={gs.enabled}
                                   onClick={() => toggleGap(li, gi)}
                                   title={gs.enabled ? "Click to disable" : "Click to enable"}
                                 >
                                   {pairLabels[gi] ?? `Gap ${gi + 1}`}
-                                </button>
-                                {gs.enabled && (
-                                  <>
+                                </button></th>
+                                <td>
                                     <input
                                       type="number"
                                       min="0.1"
                                       max="30"
                                       step="0.1"
                                       value={gs.overlapMm}
+                                      disabled={!gs.enabled}
                                       className="ct-gap-pill-input"
                                       onChange={(e) => setGapMm(li, gi, e.target.value)}
                                       onClick={(e) => e.stopPropagation()}
                                       aria-label={`Overlap for ${pairLabels[gi] ?? `gap ${gi + 1}`}`}
                                     />
-                                    <span className="ct-gap-pill-unit">mm</span>
-                                  </>
-                                )}
+                                </td>
+                                <td>
                                 {lineMeta && gs.enabled && (() => {
                                   const actual = lineMeta.gaps_after_mm[gi];
                                   const requested = parseFloat(gs.overlapMm) || 0;
@@ -1500,18 +1419,21 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                                           : undefined
                                       }
                                     >
-                                      Actual {actual?.toFixed(1)}{isNatural ? " (natural)" : ""}
+                                      <span>{actual?.toFixed(1) ?? "—"}</span>{isNatural && <small>Natural</small>}
                                     </span>
                                   );
                                 })()}
-                              </div>
-                            ))}
-                          </div>
+                                {!gs.enabled && <span className="ct-gap-pill-result">—</span>}
+                                </td>
+                              </tr>
+                            ))}</tbody>
+                          </table>
                         </div>
                       )}
 
                       {(lineMeta.floating_components?.length ?? 0) > 0 && (
                         <FloatingControls
+                          compact
                           floatingComponents={lineMeta.floating_components ?? []}
                           offsets={ls.floatingOffsets}
                           onChange={(glyphIndex, axis, value) => {
@@ -1535,28 +1457,50 @@ export function CakeTopperPanel({ fonts, manualFonts }: CakeTopperPanelProps) {
                         />
                       )}
                     </div>
-                  )}
                 </article>
               );
             })}
-          </InspectorAccordion>
+          </InspectorPage>
+          </div>
+          <footer className="ct-inspector-footer">
+          {error && (
+            <div className="ct-error" role="alert">
+              <span><strong>Error:</strong> {error}</span>
+              <button
+                type="button"
+                className="ct-error-dismiss"
+                onClick={() => setError(null)}
+                aria-label="Dismiss error"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {result?.warnings && result.warnings.length > 0 && (
+            <div className="ct-warnings" role="alert">
+              <strong>Warning{result.warnings.length > 1 ? "s" : ""}:</strong>
+              <ul className="ct-warnings-list">
+                {result.warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+            <div className="ct-final-size"><span>Final cut size</span><strong>{exportSizeText}</strong></div>
+              <button
+                className="ct-primary-action"
+                type="button"
+                onClick={handleGenerate}
+                disabled={loading || !defaultFontId || words.length === 0}
+              >
+                <Wand2 size={18} aria-hidden="true" />
+                {loading ? "Generating..." : "Generate design"}
+              </button>
+          </footer>
         </aside>
       </div>
-
-      <div className="ct-export-bar">
-        <div className="ct-export-summary">
-          <span>SVG export size</span>
-          <strong>{exportSizeText}</strong>
-        </div>
-        <ExportControls
-          svg={result?.svg ?? null}
-          pngBase64={result?.png_base64 ?? null}
-          svgFilename={result?.svg_filename ?? "cake-topper.svg"}
-          pngFilename={result?.png_filename ?? "cake-topper.png"}
-          onExport={handleExport}
-        />
-      </div>
-
 
       {glyphBrowserLineIndex !== null && (
         <GlyphBrowserDrawer
