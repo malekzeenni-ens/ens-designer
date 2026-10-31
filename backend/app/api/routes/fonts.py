@@ -85,11 +85,10 @@ async def upload_font(request: Request, file: UploadFile):
         tmp_path.write_bytes(content)
 
     try:
-        tt = TTFont(tmp_path, lazy=True)
-        names = tt["name"]
-        full_name = names.getBestFullName() or tmp_path.stem
-        style = names.getBestSubFamilyName() or "Regular"
-        tt.close()
+        from ...font_loader import _font_names
+        with TTFont(tmp_path, lazy=True) as tt:
+            tt["name"]  # Validate before the metadata reader's filename fallback.
+        family, full_name, style = _font_names(tmp_path, fallback_path=Path(file.filename or "font.ttf"))
     except Exception:
         tmp_path.unlink(missing_ok=True)
         return FontUploadResponse(
@@ -98,18 +97,17 @@ async def upload_font(request: Request, file: UploadFile):
         )
 
     # --- duplicate check (by full_name + style against live catalog) ---
-    from ...font_loader import _font_key, _normalise_name
+    from ...font_loader import _font_key
     from ...models import FontInfo as _FI
-    probe = _FI(id="", family="", full_name=full_name, style=style, source="project")  # type: ignore[arg-type]
-    existing_records = catalog._scan()
-    for rec in existing_records.values():
-        if _font_key(rec.info) == _font_key(probe):
+    probe = _FI(id="", family=family, full_name=full_name, style=style, source="project")  # type: ignore[arg-type]
+    for info in catalog.list_fonts():
+        if _font_key(info) == _font_key(probe):
             tmp_path.unlink(missing_ok=True)
             return FontUploadResponse(
                 success=False,
                 is_duplicate=True,
-                font=rec.info,
-                message=f'"{rec.info.full_name}" is already in the library — no upload needed.',
+                font=info,
+                message=f'"{info.full_name}" is already in the library — no upload needed.',
             )
 
     # --- save atomically: write to temp then rename into fonts/ ---

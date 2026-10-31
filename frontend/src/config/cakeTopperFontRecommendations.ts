@@ -1,4 +1,5 @@
 import type { FontInfo } from "../types/design";
+import { fontDisplayName } from "../utils/fontIdentity";
 import structuralScoresData from "./fontStructuralScores.json";
 
 /**
@@ -827,7 +828,8 @@ export function normaliseFontName(value: string): string {
 }
 
 export function getManualFontClassification(font: FontInfo): CakeTopperFontClassification | undefined {
-  return manualByName.get(normaliseFontName(font.full_name)) ?? manualByName.get(normaliseFontName(font.family));
+  return [font.full_name, ...(font.aliases ?? []), font.family]
+    .map((name) => manualByName.get(normaliseFontName(name))).find((value) => value !== undefined);
 }
 
 export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassification {
@@ -941,9 +943,8 @@ export function classifyFontHeuristically(font: FontInfo): CakeTopperFontClassif
 }
 
 export function getStructuralScore(font: FontInfo): number | undefined {
-  return (
-    STRUCTURAL_SCORES[normaliseFontName(font.full_name)] ?? STRUCTURAL_SCORES[normaliseFontName(font.family)]
-  );
+  return [font.full_name, ...(font.aliases ?? []), font.family]
+    .map((name) => STRUCTURAL_SCORES[normaliseFontName(name)]).find((value) => value !== undefined);
 }
 
 function riskLevelFromStructuralScore(score: number): CakeTopperRiskLevel {
@@ -997,7 +998,7 @@ export function getFontClassification(font: FontInfo): CakeTopperFontClassificat
 export function getFontOptionLabel(font: FontInfo): string {
   const classification = getFontClassification(font);
   const badge = FONT_CATEGORY_LABELS[classification.category];
-  return `${font.full_name} (${badge} - ${classification.score})`;
+  return `${fontDisplayName(font)} (${badge} - ${classification.score})`;
 }
 
 export function fontMatchesCategory(font: FontInfo, category: CakeTopperFontCategory | "all"): boolean {

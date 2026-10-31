@@ -5,7 +5,10 @@ import json
 import logging
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
+
+from fontTools.ttLib import TTFont
 
 from .models import FontInfo
 
@@ -29,7 +32,28 @@ class FontCatalog:
         self._records: dict[str, FontRecord] | None = None
 
     def list_fonts(self) -> list[FontInfo]:
-        return [record.info for record in self._scan().values()]
+        records = self._scan()
+        representatives = self._representatives()
+        aliases: dict[str, list[str]] = {}
+        for font_id, canonical in representatives.items():
+            aliases.setdefault(canonical, []).extend(records[font_id].info.aliases)
+        return [records[font_id].info.model_copy(update={"aliases": list(dict.fromkeys(aliases[font_id]))})
+                for font_id in dict.fromkeys(representatives.values())]
+
+    def _representatives(self) -> dict[str, str]:
+        """Visible faces are consolidated; original IDs remain available to saved recipes."""
+        records = self._scan()
+        manual = self._read_manifest_ids(MANUAL_FONTS_MANIFEST, "manual")
+        uploaded = set(self._read_manifest_ids(UPLOAD_MANIFEST, "uploaded"))
+        priority = {font_id: index for index, font_id in enumerate(manual)}
+        ordered = sorted(records.values(), key=lambda r: (
+            priority.get(r.info.id, len(manual)), r.info.id not in uploaded,
+            r.info.source != "project", str(r.path).casefold(),
+        ))
+        chosen: dict[tuple[str, str], str] = {}
+        for record in ordered:
+            chosen.setdefault(_font_key(record.info), record.info.id)
+        return {font_id: chosen[_font_key(record.info)] for font_id, record in records.items()}
 
     def get_font_path(self, font_id: str) -> Path:
         records = self._scan()
@@ -64,23 +88,11 @@ class FontCatalog:
         excluded_ids = set(self._read_manifest_ids(EXCLUDED_FONTS_MANIFEST, "excluded"))
         parsed = [record for record in parsed if record.info.id not in excluded_ids]
         known_ids = {record.info.id for record in parsed}
-        manual_ids = set(self._migrate_manifest_ids(MANUAL_FONTS_MANIFEST, "manual", legacy_to_new, known_ids))
+        self._migrate_manifest_ids(MANUAL_FONTS_MANIFEST, "manual", legacy_to_new, known_ids)
         self._migrate_manifest_ids(UPLOAD_MANIFEST, "uploaded", legacy_to_new, known_ids)
 
-        records: dict[str, FontRecord] = {}
-        seen_names: dict[tuple[str, str], str] = {}
-        for record in parsed:
-            key = _font_key(record.info)
-            existing_id = seen_names.get(key)
-            if existing_id is None:
-                seen_names[key] = record.info.id
-                records[record.info.id] = record
-                continue
-            if record.info.id in manual_ids and existing_id not in manual_ids:
-                records.pop(existing_id, None)
-                seen_names[key] = record.info.id
-                records[record.info.id] = record
-
+        # Keep aliases addressable: historical designs may reference any file copy.
+        records = {record.info.id: record for record in reversed(parsed)}
         self._records = dict(sorted(records.items(), key=lambda item: item[1].info.full_name.lower()))
         return self._records
 
@@ -151,7 +163,8 @@ class FontCatalog:
 
     def get_uploaded_font_ids(self) -> list[str]:
         """Return font IDs recorded in the upload manifest."""
-        return self._read_manifest_ids(UPLOAD_MANIFEST, "uploaded")
+        aliases = self._representatives()
+        return list(dict.fromkeys(aliases[fid] for fid in self._read_manifest_ids(UPLOAD_MANIFEST, "uploaded") if fid in aliases))
 
     def record_upload(self, font_id: str) -> None:
         """Persist a font ID to the upload manifest."""
@@ -163,12 +176,13 @@ class FontCatalog:
 
     def get_manual_font_ids(self) -> list[str]:
         """Return saved manual font IDs that still exist in the live catalog."""
-        records = self._scan()
+        aliases = self._representatives()
         raw_ids = self._read_manifest_ids(MANUAL_FONTS_MANIFEST, "manual")
         valid_ids: list[str] = []
         for font_id in raw_ids:
-            if font_id in records and font_id not in valid_ids:
-                valid_ids.append(font_id)
+            canonical = aliases.get(font_id)
+            if canonical is not None and canonical not in valid_ids:
+                valid_ids.append(canonical)
         return valid_ids
 
     def list_manual_fonts(self) -> list[FontInfo]:
@@ -189,7 +203,10 @@ class FontCatalog:
     def exclude_font_ids(self, font_ids: list[str]) -> list[str]:
         """Hide fonts from this app without deleting project or operating-system files."""
         records = self._scan()
+        aliases = self._representatives()
         removed_ids = [font_id for font_id in dict.fromkeys(font_ids) if font_id in records]
+        removed_faces = {aliases[font_id] for font_id in removed_ids}
+        removed_ids = [font_id for font_id in records if aliases[font_id] in removed_faces]
         if not removed_ids:
             return []
 
@@ -249,10 +266,12 @@ class FontCatalog:
         if path.suffix.lower() not in FONT_EXTENSIONS or not path.is_file():
             return None
 
-        family, full_name, style = _font_names_from_path(path)
+        family, full_name, style = _font_names(path)
+        legacy_family, legacy_name, _ = _font_names_from_path(path)
 
         font_id = _content_font_id(path)
-        info = FontInfo(id=font_id, family=family, full_name=full_name, style=style, source=source)  # type: ignore[arg-type]
+        info = FontInfo(id=font_id, family=family, full_name=full_name, style=style, source=source,
+                        aliases=list(dict.fromkeys([legacy_name, legacy_family, path.stem])))  # type: ignore[arg-type]
         return FontRecord(info=info, path=path)
 
 
@@ -311,3 +330,22 @@ def _font_names_from_path(path: Path) -> tuple[str, str, str]:
         full_name = cleaned or path.stem
     family = full_name
     return family, full_name, style
+
+
+def _font_names(path: Path, *, fallback_path: Path | None = None) -> tuple[str, str, str]:
+    """Prefer the font's own identity over arbitrary download filenames."""
+    stat = path.stat()
+    return _cached_font_names(path, stat.st_mtime_ns, stat.st_size, _font_names_from_path(fallback_path or path))
+
+
+@lru_cache(maxsize=4096)
+def _cached_font_names(path: Path, modified_ns: int, size: int, fallback: tuple[str, str, str]) -> tuple[str, str, str]:
+    try:
+        with TTFont(path, lazy=True) as font:
+            names = font["name"]
+            family = names.getBestFamilyName() or fallback[0]
+            style = names.getBestSubFamilyName() or fallback[2]
+            full_name = names.getBestFullName() or family
+            return family.strip(), full_name.strip(), style.strip()
+    except Exception:
+        return fallback

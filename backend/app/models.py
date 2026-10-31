@@ -13,6 +13,7 @@ class FontInfo(BaseModel):
     full_name: str
     style: str
     source: Literal["project", "system"]
+    aliases: list[str] = Field(default_factory=list)
 
 
 class FontUploadResponse(BaseModel):

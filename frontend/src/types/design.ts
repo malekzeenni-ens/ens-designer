@@ -181,6 +181,7 @@ export interface FontInfo {
   full_name: string;
   style: string;
   source: "project" | "system";
+  aliases?: string[];
 }
 
 export interface CharacterInfo {

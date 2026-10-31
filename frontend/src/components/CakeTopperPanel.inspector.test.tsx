@@ -21,6 +21,19 @@ beforeEach(async () => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 const button = (text: string) => Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find((element) => element.textContent?.includes(text))!;
 
+it("does not change the design font when the external search has no results", async () => {
+  const search = container.querySelector<HTMLInputElement>('[aria-label="Search fonts"]')!;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(search, "missing font");
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(container.querySelector('[aria-label="Base font"]')?.textContent).toContain("Lato");
+  await act(async () => button("Generate design").click());
+  const request = vi.mocked(generateCakeTopper).mock.calls.at(-1)!;
+  expect(request[1]).toBe("lato");
+  expect(request[4].every((line) => line.font_id === "lato")).toBe(true);
+});
+
 it("navigates inspector tabs by keyboard without generating or hiding the action", async () => {
   const design = container.querySelector<HTMLButtonElement>('#inspector-tab-design')!;
   expect(container.querySelectorAll('.ct-inspector-tabs [role="tab"]')).toHaveLength(3);

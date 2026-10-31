@@ -1,0 +1,20 @@
+.font-picker { min-width: 0; width: 100%; }
+.ct-font-combo > .font-picker { grid-column: 1 / -1; }
+.font-picker-trigger { display: flex; width: 100%; min-height: 64px; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: 1px solid var(--ens-border-default); border-radius: 6px; text-align: left; background: var(--ens-surface-2); color: var(--ens-text-primary); }
+.font-picker-trigger:hover, .font-picker-trigger[aria-expanded=true] { border-color: var(--ens-border-active); }
+.font-name-preview-wrap { display: grid; min-width: 0; gap: 3px; }
+.font-name-preview { font-size: 25px; line-height: 1.5; font-weight: 400; overflow-wrap: anywhere; color: var(--ens-text-primary); }
+.font-preview-status { font-family: var(--ens-font-body, inherit); font-size: 11px; line-height: 1.4; font-weight: 400; color: var(--ens-text-secondary); overflow-wrap: anywhere; }
+.font-picker-popup { position: fixed; z-index: 10000; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--ens-border-active); border-radius: 8px; box-shadow: var(--ens-shadow-raised); color: var(--ens-text-primary); background: var(--ens-surface-1); font-size: 13px; }
+.font-picker-search { padding: 10px 12px; display: grid; gap: 6px; border-bottom: 1px solid var(--ens-border-default); }
+.font-picker-search input { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid var(--ens-border-default); border-radius: 5px; background: var(--ens-surface-2); color: var(--ens-text-primary); }
+.font-picker-search [role=status] { color: var(--ens-text-muted); font-size: 11px; }
+.font-picker-list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 5px 5px; }
+.font-picker-group { position: sticky; top: 0; z-index: 1; padding: 10px 9px 7px; font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--ens-text-accent); background: var(--ens-surface-1); border-bottom: 1px solid var(--ens-border-subtle); }
+.font-picker-option { margin-top: 4px; padding: 9px 10px; border-radius: 5px; border: 1px solid transparent; cursor: pointer; scroll-margin: 36px; }
+.font-picker-option.is-active { background: var(--ens-surface-hover); border-color: var(--ens-border-default); }
+.font-picker-option[aria-selected=true] { background: var(--ens-surface-selected); border-color: var(--ens-border-active); }
+.font-picker-detail { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--ens-text-muted); font-size: 11px; line-height: 1.6; margin-top: 4px; }
+.font-picker-detail svg { color: var(--ens-text-accent); flex-shrink: 0; }
+.font-picker-empty { padding: 24px 12px; text-align: center; color: var(--ens-text-muted); }
+.font-picker-trigger:focus-visible, .font-picker-search input:focus-visible { outline: 2px solid var(--ens-border-active); outline-offset: 2px; }

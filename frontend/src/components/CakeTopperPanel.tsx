@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import { FontPicker } from "./FontPicker";
+import { fontSearchText } from "../utils/fontIdentity";
 import { ExportControls } from "./ExportControls";
 import { FloatingControls, toFloatingOffsets } from "./FloatingControls";
 import { GlyphBrowserDrawer } from "./GlyphBrowserDrawer";
@@ -12,7 +14,6 @@ import {
   FONT_CATEGORY_LABELS,
   fontMatchesCategory,
   getFontClassification,
-  getFontOptionLabel,
   sortFontsForCakeTopper,
 } from "../config/cakeTopperFontRecommendations";
 import type { CakeTopperFontCategory } from "../config/cakeTopperFontRecommendations";
@@ -219,18 +220,6 @@ function makeFontGroups(fonts: FontInfo[], category: FontFilterCategory, manualF
   return groups;
 }
 
-function renderFontGroups(groups: { label: string; fonts: FontInfo[] }[]) {
-  return groups.map((group) => (
-    <optgroup key={group.label} label={group.label}>
-      {group.fonts.map((font) => (
-        <option key={font.id} value={font.id}>
-          {getFontOptionLabel(font)}
-        </option>
-      ))}
-    </optgroup>
-  ));
-}
-
 export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active = true }: CakeTopperPanelProps) {
   const [text, setText] = useState("Happy Birthday");
   const [fontSearch, setFontSearch] = useState("");
@@ -276,7 +265,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
   const filteredFonts = useMemo(() => {
     const q = fontSearch.trim().toLowerCase();
     return sortFontsForCakeTopper(fonts).filter((f) => {
-      const searchMatches = !q || `${f.full_name} ${f.family} ${f.style}`.toLowerCase().includes(q);
+      const searchMatches = !q || fontSearchText(f).includes(q);
       return searchMatches && fontMatchesCategory(f, fontCategory);
     });
   }, [fonts, fontCategory, fontSearch]);
@@ -291,18 +280,11 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
     [fonts, manualFonts],
   );
 
-  useEffect(() => {
-    const firstGroupedFontId = fontGroups[0]?.fonts[0]?.id;
-    if (firstGroupedFontId && !filteredFonts.some((f) => f.id === defaultFontId)) {
-      setDefaultFontId(firstGroupedFontId);
-    }
-  }, [defaultFontId, filteredFonts, fontGroups]);
-
   // fonts/manualFonts can arrive asynchronously after mount (App.tsx fetches them
   // separately) — re-derive the preferred default once they load, unless the user
   // has already made an explicit choice.
   useEffect(() => {
-    if (hasUserPickedFontRef.current) return;
+    if (hasUserPickedFontRef.current && fonts.some((font) => font.id === defaultFontId)) return;
     const preferredId = pickDefaultFontId(fonts, manualFonts);
     if (preferredId && preferredId !== defaultFontId) {
       setDefaultFontId(preferredId);
@@ -905,16 +887,9 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                     </option>
                   ))}
                 </select>
-                <select
-                  value={defaultFontId}
-                  onChange={(e) => {
-                    hasUserPickedFontRef.current = true;
-                    setDefaultFontId(e.target.value);
-                  }}
-                  aria-label="Base font"
-                >
-                  {renderFontGroups(fontGroups)}
-                </select>
+                <FontPicker groups={fontGroups} value={defaultFontId}
+                  selectedFont={fonts.find((font) => font.id === defaultFontId)} label="Base font"
+                  onChange={(fontId) => { hasUserPickedFontRef.current = true; setDefaultFontId(fontId); }} />
               </div>
             </div>
 
@@ -1224,13 +1199,8 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                         <div className="ct-card-field">
                           <span>Line font</span>
                           <div className="ct-font-select-row">
-                            <select
-                              aria-label={`Line ${li + 1} font`}
-                              value={ls.fontId || defaultFontId}
-                              onChange={(e) => patchLine(li, { fontId: e.target.value })}
-                            >
-                              {renderFontGroups(allFontGroups)}
-                            </select>
+                            <FontPicker groups={allFontGroups} value={ls.fontId || defaultFontId}
+                              label={`Line ${li + 1} font`} onChange={(fontId) => patchLine(li, { fontId })} />
                             <button
                               type="button"
                               className="ct-browse-btn"
