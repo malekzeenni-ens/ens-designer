@@ -1,5 +1,7 @@
 # Keychain Designer K5 — Testing and hardening
 
+R1 correction (9 November 2026): this historical handoff's “no P0” conclusion was superseded by the Layered cut-overlap finding F1. R1 welds `CUT_TEXT` and adds actual contour-overlap validation. The regenerated Layered samples replace the earlier acceptance artifacts. See [R1 handoff](code-review-fixes-r1-handoff.md) for current verification and the open performance gate; no manufacturing acceptance is claimed.
+
 Date: 2026-11-09 (Europe/London). Executed from `docs/handoffs/keychain-designer-k5-agent-brief.md`.
 
 ## 1. Executive summary

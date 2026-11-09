@@ -4,6 +4,8 @@ Date: 2026-11-09 (Europe/London). Implementation commit `57ae14f` on `main` (bas
 
 **Verdict: Implementation and automated checks complete. Browser validation is largely complete with listed gaps. LightBurn and physical-cut validation are pending.** Not "K5 fully verified".
 
+**R1 correction:** This is a historical K5 report. The later review found a missed P0: overlapping Layered per-glyph cut paths. R1 welds `CUT_TEXT` into compound polylines and checks actual cut-contour overlap; engraved `ENGRAVE_TEXT` alone retains the unbuffered Q/C contract. The Layered “Q/C kept” observation below describes the old output, not the accepted R1 contract. All six regenerated sample sets pass the stronger validator. R1 has 374 backend / 134 frontend tests passing, but its warm-preview performance gate remains open. See [R1 register](CODE_REVIEW_R1_REGISTER.md) and [handoff](../handoffs/code-review-fixes-r1-handoff.md). No new LightBurn or physical acceptance is claimed.
+
 ## 1. Environment
 
 | Item | Value |

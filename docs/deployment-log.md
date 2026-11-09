@@ -1,5 +1,17 @@
 # Deployment Log
 
+## [2026-11-09 23:31 Europe/London] - R1 verification and handoff completion
+
+- Branch: `main`; implementation commits `2bf7406`, `eec09d1`, `b2f5e63`, `2e15880`, `2fb95a0`. Documentation snapshot: `docs: complete R1 verification and handoff` (hash in Git history).
+- Summary: completed the interrupted R1 phase 6. F1–F13 correctness fixes and E1–E3 improvements were already committed. Recorded the missed K5 Layered cut-overlap P0, D1 welded output contract and stronger validation.
+- Files changed in this continuation: README, R1 plan/register/handoff, two R1 benchmark reports, QA matrix, K5 defect/validation corrections, LightBurn specification and this log. No application code or owner data changes.
+- Verification: recovered final full runs 374 backend / 134 frontend passing (baseline 332/115); TypeScript/Vite build passed. Fresh 41 targeted backend tests passed; fresh six export sets passed with every CUT layer overlap 0.0 mm²; golden SVGs 3/3 byte-identical. Regenerated sample evidence matches tracked bytes. `git diff --check` passed.
+- Performance: recovered gate FAIL (warm API p95 285.784 ms). Fresh sequential gate also FAIL: warm API p95 291.972 ms (>150), cold 315.815 ms (<800), export 443.038 ms (<1500); 22/22 converged, zero production errors. Open R1-PERF-01; no threshold relaxed. E1 before/after timings are commit-recorded evidence, detailed in handoff.
+- Manual validation: no new browser/OS-save/LightBurn/physical checks; prior K5 gaps remain. Cairo parity and K5-013/014 remain open. Use regenerated Layered samples for operator acceptance.
+- Deployment: none. No push/tag; owner servers 8010/8011 and LightBurn left alone. This record is a local implementation snapshot, not a runtime release.
+- Revert if later authorized: implementation commits newest-first, rebuild and rerun tests/goldens; keep history/evidence. No rollback performed.
+- Details: [R1 handoff](handoffs/code-review-fixes-r1-handoff.md), [register](qa/CODE_REVIEW_R1_REGISTER.md).
+
 This file records timestamped implementation snapshots for ENS Designer.
 
 Each completed phase or meaningful code change must include:

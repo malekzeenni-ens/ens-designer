@@ -24,7 +24,7 @@ Severity: P0 wrong manufacturing output / corruption · P1 core workflow failure
 | K5-013 | Export notice shifts the layout under the pointer | Reproduced defect (Chrome) | P3 | Open — documented |
 | K5-014 | Chrome download folder is a customer order folder | Environment / validation blocker | — | Pending operator action |
 
-No P0 manufacturing-output defect was found. Exported cut contours, hole diameters, layers and canvas margins all measured correct (see validation report).
+K5 originally reported no P0 manufacturing-output defect. The subsequent R1 review found F1: overlapping per-glyph Layered cut contours, which the original validator did not check. R1 commit `2bf7406` welds the cut text and adds overlap checks on every CUT layer; regenerated samples pass. The earlier size/hole/layer/margin checks alone did not establish safe Layered cutting. See [R1 register](CODE_REVIEW_R1_REGISTER.md). LightBurn and physical acceptance remain pending for the regenerated samples.
 
 ## Detailed entries
 

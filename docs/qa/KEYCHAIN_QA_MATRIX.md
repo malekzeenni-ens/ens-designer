@@ -1,6 +1,6 @@
 # Keychain QA matrix
 
-Date: 2026-11-09. Status: K0–K5 implemented (K5 commit `57ae14f`): 332 backend / 115 frontend tests. Chrome browser validation largely complete; LightBurn and physical cuts pending. See [K5 validation report](KEYCHAIN_K5_VALIDATION_REPORT.md) and [defect register](KEYCHAIN_K5_DEFECT_REGISTER.md). This matrix does not claim manufacturing acceptance.
+Date: 2026-11-09. Status: K0–K5 and R1 correctness fixes implemented (code HEAD `2fb95a0`): 374 backend / 134 frontend tests. Chrome K5 validation largely complete; R1 adds automated coverage. LightBurn, physical cuts and the R1 warm-preview performance gate remain pending. See [R1 register](CODE_REVIEW_R1_REGISTER.md), [K5 validation report](KEYCHAIN_K5_VALIDATION_REPORT.md) and [defect register](KEYCHAIN_K5_DEFECT_REGISTER.md). This matrix does not claim manufacturing acceptance.
 
 | ID | Scenario | Expected result | Evidence / status |
 |---|---|---|---|
@@ -25,11 +25,11 @@ Date: 2026-11-09. Status: K0–K5 implemented (K5 commit `57ae14f`): 332 backend
 | KC-19 | User text includes XML syntax or control chars | Comments/metadata remain valid XML; illegal control chars rejected with 422 | Automated |
 | KC-20 | Export/history append/reload | One automatic entry per export; explicit import endpoint; newest first; Cake Topper file unchanged | Automated |
 | KC-21 | Malformed history | Invalid rows skipped; valid recipes returned | Automated |
-| KC-22 | Bad ranges, missing font, internal exception | 422 input ranges, clear 400 font/index error, generic 400 unexpected errors | Automated |
+| KC-22 | Bad ranges, missing font, internal exception, unavailable history | 422 input ranges, clear 400 font/index error, generic 500 unexpected engine errors, history 503 | Automated, including `test_history_r1.py` |
 | KC-23 | Existing compiled frontend mounted | New API routes take precedence over static mount | Automated |
 | KC-24 | Eight concurrent requests | Deterministic SVG and dimensions; shared glyph/font caches remain safe | Automated |
 | KC-25 | 22-case preview/export corpus | Preview API p95 <=150 ms, cold <=800 ms, export <=1500 ms; convergence | K5: `keychain-k5-benchmark.json` gate PASS (worst API p95 100.2 ms, cold 138.0 ms, export 122.9 ms). Browser timings not measured |
-| KC-26 | Existing Cake Topper | Three golden SVGs byte-identical; existing full regression suite passes | K5: golden 3/3 byte-identical; 332 backend / 115 frontend tests |
+| KC-26 | Existing Cake Topper | Three golden SVGs byte-identical; existing full regression suite passes | R1: golden 3/3 byte-identical; 374 backend / 134 frontend tests |
 | KC-27 | Keychain tab, state preservation, keyboard, live request ordering | Complete operator journey | Chrome 156: defaults, live preview, export gating, real ring/letter drags (100% narrow, 200%), dark/bright, 1000/390 px layouts verified. Mid-drag cancel/tab switch, font listbox hover, DPI/browser zoom not browser-verified |
 | KC-28 | LightBurn import and colour mapping | Separate physical layers, selected geometry size within 0.1 mm, no repairs | **Pending**: LightBurn open with owner's unsaved document; samples + checklist in `keychain-k5-evidence/` |
 | KC-29 | Actual material cut | Neck strength, minimum-feature quality and assembled Layered product | **Pending** operator results; automated warnings are not physical certification |
@@ -39,6 +39,11 @@ Date: 2026-11-09. Status: K0–K5 implemented (K5 commit `57ae14f`): 332 backend
 | KC-33 | Export-only errors and duplicates | Newly returned errors hold the result; Download anyway uses it without a second export; double-click → one export | Automated only for divergent errors; Chrome: one history row per export |
 | KC-34 | Snapped ring drag | Move follows the actual centre; no jump/drift | Engine harness + regression test (exact 3/−3/6 mm travel) |
 | KC-35 | Unit drafts / no-op commits | Blur on unchanged cm/inch value does not change mm or invalidate export | Automated regression |
-| KC-36 | Written export files (6 labelled cases) | Measured size, 2 mm margins, exact hole, winding, groups, curves, alignment, recipe round-trip, PNG transparency | `scripts/keychain_validate_exports.py`: 6/6 PASS (Pillow renderer) |
+| KC-36 | Written export files (6 labelled cases) | Measured size, 2 mm margins, exact hole, winding, groups, engraved curves, alignment, recipe round-trip, PNG transparency; every CUT layer has overlap <=1e-6 mm² | R1 `scripts/keychain_validate_exports.py`: 6/6 PASS (Pillow renderer) |
+| KC-37 | D1 Layered cut text | Combined/separate welded union, no overlapping cut contours, equivalent area within 0.5%, outline deviation <=0.05 mm at 30/60/90 mm; per-glyph preview targets retained | `test_keychain_r1.py` PASS; engraved Q/C contract retained |
+| KC-38 | History failures and corrupt files | Atomic replacement, corrupt bytes preserved, unreadable history not overwritten; successful export survives failed history save with warning | `test_history_r1.py`, `r1History.test.tsx` PASS |
+| KC-39 | Designer request and input ordering | Older requests cannot replace current output; 60 mm base size preserved; base changes regenerate; stale export disabled; cancellation discards drag | `CakeTopperPanel.r1.test.tsx`, `PreviewPanel.drag.test.tsx` PASS |
+
+R1 performance supersedes the historical K5 KC-25 timings: recovered R1 gate FAIL, worst warm API p95 285.784 ms (>150), cold 307.602 ms (<800), export 494.415 ms (<1500). All 22 cases converge with zero production errors. Follow-up measurements and acceptance limits are in the R1 handoff; the budget has not been changed.
 
 Performance evidence is local FastAPI/TestClient and service measurement, not browser/network latency. Cairo native libraries are unavailable; exports use the existing Pillow drawing functions with K2 layer compositing. K3/K4 implement the HTML workspace; native browser verification stopped because Chrome's current URL could not be confidently verified by Computer Use. Samples under `keychain-k2-samples/` are review artifacts, not replacements for the K0 golden fixtures. K5 completed Fix buttons/highlights, modal focus and Chrome drag/appearance checks. Remaining browser gaps, LightBurn and material validation are listed in the K5 validation report.
