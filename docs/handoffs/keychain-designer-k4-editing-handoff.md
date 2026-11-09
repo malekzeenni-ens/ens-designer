@@ -81,7 +81,7 @@ README, architecture overview, phase plan/index, QA matrix, K3/K4 handoffs and d
 
 ## 15. Git information
 
-Branch: main. K3 commit: `193764c7f621519780df85a26c8d138a6d1a05a3`. K4 subject: `feat(keychain): add letter editing undo and recipe history`. No remote push or release tag.
+Branch: main. K3 commit: `193764c7f621519780df85a26c8d138a6d1a05a3`. K4 commit: `0ffab508079ad58aa8fe96b5479ac89c15cbcf3f` (`feat(keychain): add letter editing undo and recipe history`). No remote push or release tag.
 
 ## 16. Deployment information
 

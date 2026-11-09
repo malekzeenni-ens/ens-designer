@@ -15,6 +15,36 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-11-09 21:32:58 Europe/London] - Keychain Designer K4 Editing Workflow
+
+### Commit
+- Commit hash: `0ffab508079ad58aa8fe96b5479ac89c15cbcf3f`
+- Previous implementation: `193764c7f621519780df85a26c8d138a6d1a05a3` (K3).
+- Branch: `main`; no push or release tag.
+- K3/K4 implementation complete. User explicitly deferred K5 testing/hardening.
+
+### Summary
+- Added glyph-cluster selection, physical canvas/keyboard moves, letter scale/rotation and dot/mark offsets, with per-letter reset.
+- Added a complete 100-step design timeline, coalesced typing/sliders/nudges, gesture boundaries, undo/redo shortcuts, Next name and unchanged-export Enter shortcut.
+- Added on-demand history, automatic refresh after export, undoable recipe reload, cancellation and missing-font handling. Export still writes one server history entry only.
+- Kept current input controls mounted during pending previews for the same text/font; stale glyphs cannot be selected. Actual SVG hit paths select letters, with overlay keyboard targets and a DOM-only drag ghost.
+- Updated README, architecture overview, phase plan/index, K3/K4 handoffs and QA matrix. No backend, CakeTopperPanel or PreviewPanel code changed.
+
+### Validation
+- Frontend: 22 files / 91 tests passed. Backend regression: 325 passed, including all three byte-identical K0 golden SVGs; existing Starlette/httpx warning only.
+- TypeScript/Vite production build passed: ~408 kB JS (~124 kB gzip), no new runtime dependencies.
+- Automated tests cover timeline cap/coalescing/branching, Ctrl+Z, Next name/focus/settings retention, glyph-cluster editing/reset, dots with auto-join, repeated nudges, history reload/undo, missing fonts, Activity state, stale-response handling and export confirmation.
+- Local 8011 HTTP smoke: latest compiled asset paths served; preview returned 60 mm finished width / 64 mm canvas, request ID 34, no PNG/files. This is an HTTP/API check, not browser UI sign-off.
+- A hidden local review instance remains available at `http://127.0.0.1:8011`; PID is recorded in `logs/keychain-k34-server.pid`. Existing production 8010 was not restarted.
+- Browser verification remains pending: Computer Use stopped because it could not confidently verify Chrome's current URL. No workaround browser automation was attempted.
+
+### Remaining Work / Revert
+- K5: actual browser journey, responsive/appearance and drag/focus verification, production-check Fix actions/highlights, accessibility/edge cases, LightBurn and material testing. No final manufacturing acceptance claimed.
+- Revert K4 (and K3 if needed) and rebuild to roll back the frontend. No data migration was introduced.
+- Handoff: `docs/handoffs/keychain-designer-k4-editing-handoff.md`.
+
+---
+
 ## [2026-11-09 21:17 Europe/London] - Keychain Designer K3 Workspace
 
 ### Commit
