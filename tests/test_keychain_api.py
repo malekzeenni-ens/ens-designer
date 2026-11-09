@@ -140,7 +140,9 @@ def test_missing_font_and_bad_glyph_index_are_clear_400s(context):
     assert response.status_code == 400 and "glyph" in response.json()["detail"]
 
 
-def test_unexpected_engine_error_is_generic_400(context, monkeypatch):
+def test_unexpected_engine_error_is_generic_500(context, monkeypatch):
+    # R1 F10: unexpected faults are server errors (500), not client errors;
+    # the message stays generic. ValueError remains 400.
     client, app, _, payload = context
 
     def fail(*args):
@@ -148,7 +150,7 @@ def test_unexpected_engine_error_is_generic_400(context, monkeypatch):
 
     monkeypatch.setattr(app.state.keychain_service, "generate", fail)
     response = client.post("/api/keychain/preview", json=payload)
-    assert response.status_code == 400
+    assert response.status_code == 500
     assert response.json()["detail"] == "Keychain generation failed."
 
 

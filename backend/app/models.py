@@ -518,6 +518,10 @@ class KeychainResponse(KeychainModel):
     checks: list[KeychainCheck]
     recipe: dict
     timings_ms: dict[str, float]
+    # R1 (additive): an export is returned even when its history entry could
+    # not be saved; the client tells the user the file still downloaded.
+    history_saved: bool = True
+    warnings: list[str] = Field(default_factory=list)
 
 
 class KeychainHistoryCreate(KeychainModel):

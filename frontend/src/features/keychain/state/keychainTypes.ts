@@ -32,6 +32,8 @@ export interface KeychainResult {
     wall_thickness_mm: number; neck_width_mm: number; snapped: boolean; touching: boolean; hole_clearance_mm: number;
     requested_center_x_mm?: number | null; requested_center_y_mm?: number | null } | null;
   checks: ProductionCheck[]; recipe: KeychainRequest & { app_version: string }; timings_ms: Record<string, number>;
+  /** R1: false when the export succeeded but its history entry could not be saved. */
+  history_saved?: boolean; warnings?: string[];
 }
 export interface KeychainHistoryEntry { recipe: KeychainRequest & { app_version: string }; filename: string; width_mm: number; height_mm: number; timestamp: string }
 

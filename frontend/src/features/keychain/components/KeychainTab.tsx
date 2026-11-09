@@ -143,7 +143,11 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
     try {
       if (kind === "png") downloadPng(result);
       else if (result.files.length === 1) downloadBlob(new Blob([result.files[0].svg], { type: "image/svg+xml" }), result.files[0].filename);
-      setNotice(result.files.length > 1 && kind === "svg" ? `${result.recipe.text}: aligned SVGs are ready below. Download each layer.` : `${result.recipe.text} exported and saved to Keychain history.`);
+      const unsaved = result.history_saved === false;
+      setNotice(result.files.length > 1 && kind === "svg"
+        ? `${result.recipe.text}: aligned SVGs are ready below. Download each layer.${unsaved ? " They could not be saved to Keychain history." : ""}`
+        : unsaved ? `${result.recipe.text} downloaded, but it could not be saved to Keychain history.`
+        : `${result.recipe.text} exported and saved to Keychain history.`);
     } catch (caught) { setExportError(caught instanceof Error ? caught.message : "Could not download this keychain."); }
   }
   async function runExport(kind: "svg" | "png", request: KeychainRequest, confirmed: string[]) {
@@ -177,7 +181,7 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
     else void runExport(kind, request, errors.map(check => check.id));
   }
   function cancelExport() {
-    if (confirmation?.held) setNotice(`Export of ${confirmation.held.recipe.text} cancelled. Nothing was downloaded; the export is still listed in Keychain history.`);
+    if (confirmation?.held) setNotice(`Export of ${confirmation.held.recipe.text} cancelled. Nothing was downloaded${confirmation.held.history_saved === false ? "." : "; the export is still listed in Keychain history."}`);
     setConfirmation(null);
   }
   function applyFix(check: ProductionCheck) {

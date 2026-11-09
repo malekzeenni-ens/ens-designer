@@ -6,29 +6,26 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .history_store import HistoryStore, MAX_ENTRIES
+from .history_store import HistoryStore
 from .models import KeychainHistoryCreate, KeychainHistoryEntry
 
 logger = logging.getLogger(__name__)
 
 
 class KeychainHistoryStore(HistoryStore):
+    """Keychain history: same atomic, corruption-safe, locked file handling."""
+
     def __init__(self, project_root: Path):
         super().__init__(project_root, filename="keychain_history.json")
 
     def add(self, entry: KeychainHistoryCreate) -> KeychainHistoryEntry:
         saved = KeychainHistoryEntry(timestamp=datetime.now(timezone.utc).isoformat(), **entry.model_dump())
-        with self._lock:
-            entries = self._read()
-            entries.append(saved.model_dump())
-            self._write(entries[-MAX_ENTRIES:])
+        self._append(saved.model_dump())
         return saved
 
     def list(self) -> list[KeychainHistoryEntry]:
-        with self._lock:
-            entries = self._read()
         parsed = []
-        for entry in reversed(entries):
+        for entry in reversed(self._entries()):
             try:
                 parsed.append(KeychainHistoryEntry.model_validate(entry))
             except (ValidationError, TypeError):
