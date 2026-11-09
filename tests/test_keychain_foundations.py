@@ -191,3 +191,28 @@ def test_extracted_ring_helpers_match_k0_geometry_and_metadata(case):
     assert hashlib.sha256(to_wkt(geometry, rounding_precision=6).encode()).hexdigest() == case["wkt_sha256"]
     assert metadata.model_dump() == case["metadata"]
     assert warnings == case["warnings"]
+
+
+def test_two_cold_fonts_parse_in_parallel_and_each_once(monkeypatch):
+    """R1 E2: parsing happens outside the global cache lock, with one parse per font."""
+    lora = ROOT / "fonts/Anton,League_Spartan,Lora,Quicksand,Satisfy/Lora/static/Lora-Regular.ttf"
+    both_parsing = threading.Barrier(2, timeout=5)
+    real = font_cache.TTFont
+    parsed = []
+
+    def slow_parse(*args, **kwargs):
+        parsed.append(threading.get_ident())
+        both_parsing.wait()  # breaks (timeout) if the second parse is blocked by the lock
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(font_cache, "TTFont", slow_parse)
+    start = threading.Barrier(4)
+
+    def load(path):
+        start.wait()
+        return get_loaded_font(path)
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(load, [FONT, lora, FONT, lora]))
+    assert results[0] is results[2] and results[1] is results[3] and results[0] is not results[1]
+    assert len(parsed) == 2

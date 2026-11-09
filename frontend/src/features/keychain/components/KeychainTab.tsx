@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Clock3, Download, KeyRound, LoaderCircle, Redo2, Shapes, Undo2 } from "lucide-react";
 import type { FontInfo } from "../../../types/design";
 import { designFromRecipe, designReducer, type DesignAction } from "../state/keychainReducer";
@@ -114,32 +114,38 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
     change({ type: "replace", value: designFromRecipe(entry.recipe) });
     setSelection(null); setHoverFont(null); setHighlight(null); setFixStatus(null); setHistoryOpen(false); setNotice(`Loaded ${entry.recipe.text} from history.`); nameInput.current?.focus();
   }
-  useEffect(() => {
-    if (!active) return;
-    function keyboard(event: KeyboardEvent) {
-      const target = event.target instanceof Element ? event.target : document.body;
-      if (confirmation) return; // The modal dialog handles its own keys.
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && !target.closest(".font-picker-popup")) {
-        const key = event.key.toLowerCase();
-        if (key === "z" || key === "y") {
-          const redo = key === "y" || event.shiftKey;
-          if (redo ? history.canRedo : history.canUndo) { event.preventDefault(); undoRedo(redo); }
-          return;
-        }
-      }
-      if (target.closest("input, textarea, select, [contenteditable=true]")) return;
-      if (event.key === "Escape") { setSelection(null); setHighlight(null); setHistoryOpen(false); return; }
-      // Arrow edits need a layout for the current name/font that contains the target.
-      const targetExists = selection === "ring" ? Boolean(layoutResult?.ring) : layoutResult?.glyphs.some(glyph => glyph.glyph_index === selection);
-      if (selection !== null && targetExists && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-        event.preventDefault(); const step = event.shiftKey ? 1 : .1;
-        move(selection, event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0,
-          event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0, `nudge-${selection}`);
+  // R1 E3: the listener is registered once per activation and always calls
+  // the latest handler, instead of re-registering on every render.
+  const keyboardRef = useRef<(event: KeyboardEvent) => void>(() => {});
+  function keyboard(event: KeyboardEvent) {
+    const target = event.target instanceof Element ? event.target : document.body;
+    if (confirmation) return; // The modal dialog handles its own keys.
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && !target.closest(".font-picker-popup")) {
+      const key = event.key.toLowerCase();
+      if (key === "z" || key === "y") {
+        const redo = key === "y" || event.shiftKey;
+        if (redo ? history.canRedo : history.canUndo) { event.preventDefault(); undoRedo(redo); }
+        return;
       }
     }
-    window.addEventListener("keydown", keyboard);
-    return () => window.removeEventListener("keydown", keyboard);
-  });
+    if (target.closest("input, textarea, select, [contenteditable=true]")) return;
+    if (event.key === "Escape") { setSelection(null); setHighlight(null); setHistoryOpen(false); return; }
+    // Arrow edits need a layout for the current name/font that contains the target.
+    const targetExists = selection === "ring" ? Boolean(layoutResult?.ring) : layoutResult?.glyphs.some(glyph => glyph.glyph_index === selection);
+    if (selection !== null && targetExists && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+      event.preventDefault(); const step = event.shiftKey ? 1 : .1;
+      move(selection, event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0,
+        event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0, `nudge-${selection}`);
+    }
+  }
+  // Point at the committed render's handler (cheap; no listener churn).
+  useLayoutEffect(() => { keyboardRef.current = keyboard; });
+  useEffect(() => {
+    if (!active) return;
+    const listener = (event: KeyboardEvent) => keyboardRef.current(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, [active]);
   const canExport = Boolean(design.text.trim() && preview.current && !exporting && !previewingFont);
   function deliver(kind: "svg" | "png", result: KeychainResult) {
     setLastExport(result);

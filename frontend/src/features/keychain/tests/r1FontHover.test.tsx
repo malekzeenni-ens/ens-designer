@@ -56,3 +56,19 @@ it("R1 F7: a fix cannot be applied to the result of a hovered (uncommitted) font
   expect(vi.mocked(previewKeychain).mock.calls.slice(calls).every(([payload]) => payload.backing.offset_mm !== 4.5)).toBe(true);
   expect(container.querySelector(".kc-fix-status")).toBeNull();
 });
+
+it("R1 E3: the window keyboard listener is registered once while active, not on every render", async () => {
+  const add = vi.spyOn(window, "addEventListener");
+  await act(async () => root.render(<Activity mode="visible"><KeychainTab active fonts={fonts} manualFonts={fonts} /></Activity>));
+  await tick();
+  const input = container.querySelector<HTMLInputElement>("#kc-name")!;
+  for (const value of ["S", "Sa", "Sar"]) {
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await tick();
+  }
+  expect(add.mock.calls.filter(([type]) => type === "keydown")).toHaveLength(1);
+  add.mockRestore();
+});

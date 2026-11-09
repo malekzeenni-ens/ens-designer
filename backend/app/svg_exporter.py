@@ -10,7 +10,8 @@ def export_svg(geometry: CanonicalGeometry, fill_rule: str = "evenodd") -> str:
     height = geometry.dimensions.height
     min_x = geometry.bounds.min_x
     min_y = geometry.bounds.min_y
-    drawing = svgwrite.Drawing(size=(f"{width}mm", f"{height}mm"), profile="tiny")
+    # R1 E1: skip svgwrite's per-attribute debug validation (output unchanged).
+    drawing = svgwrite.Drawing(size=(f"{width}mm", f"{height}mm"), profile="tiny", debug=False)
     drawing.viewbox(min_x, min_y, width, height)
     drawing.attribs["xmlns"] = "http://www.w3.org/2000/svg"
     drawing.attribs["version"] = "1.1"

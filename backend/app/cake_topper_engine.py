@@ -556,9 +556,12 @@ def _assemble_svg(
 ) -> str:
     import svgwrite
     from datetime import date
+    # R1 E1: svgwrite's debug mode validates every attribute and coordinate;
+    # the output is byte-identical without it (golden SVGs verify this).
     drawing = svgwrite.Drawing(
         size=(f"{round(width, 3)}mm", f"{round(height, 3)}mm"),
         profile="tiny",
+        debug=False,
     )
     drawing.viewbox(0, 0, round(width, 3), round(height, 3))
     drawing.attribs["xmlns"] = "http://www.w3.org/2000/svg"
