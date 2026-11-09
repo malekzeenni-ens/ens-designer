@@ -20,6 +20,8 @@ export interface KeychainRequest extends KeychainDesign { quality: "preview" | "
 export interface ProductionCheck {
   id: string; severity: "error" | "warning" | "info" | "pass"; message: string;
   fix: { action: string; field?: string; value?: unknown } | null; highlight_bbox_mm: BBox | null;
+  /** Why no automatic fix is offered, or what a fix cannot guarantee. Older backends omit it. */
+  fix_note?: string | null;
 }
 export interface KeychainResult {
   request_id: number | null; preview_svg: string; files: { filename: string; svg: string }[]; png_base64: string | null;
@@ -27,7 +29,8 @@ export interface KeychainResult {
   scale_applied: number; size_solve_converged: boolean;
   glyphs: { glyph_index: number; cluster_text: string; bbox_mm: BBox; has_floating_component: boolean }[];
   ring: { center_x_mm: number; center_y_mm: number; outer_diameter_mm: number; hole_diameter_mm: number;
-    wall_thickness_mm: number; neck_width_mm: number; snapped: boolean; touching: boolean; hole_clearance_mm: number } | null;
+    wall_thickness_mm: number; neck_width_mm: number; snapped: boolean; touching: boolean; hole_clearance_mm: number;
+    requested_center_x_mm?: number | null; requested_center_y_mm?: number | null } | null;
   checks: ProductionCheck[]; recipe: KeychainRequest & { app_version: string }; timings_ms: Record<string, number>;
 }
 export interface KeychainHistoryEntry { recipe: KeychainRequest & { app_version: string }; filename: string; width_mm: number; height_mm: number; timestamp: string }

@@ -6,10 +6,10 @@ import { NumberField, Section, Toggle } from "./Fields";
 import { FontSection } from "./FontSection";
 
 export type ChangeDesign = (action: DesignAction, delay?: number, group?: string) => void;
-export function KeychainControls({ design: d, change, fonts, manualFonts, unit, setUnit, onFont, onFontPreview, result }: {
+export function KeychainControls({ design: d, change, fonts, manualFonts, unit, setUnit, onFont, onFontPreview, result, supportRequest = 0 }: {
   design: KeychainDesign; change: ChangeDesign; fonts: FontInfo[]; manualFonts: FontInfo[];
   unit: Unit; setUnit: (unit: Unit) => void; onFont: (id: string) => void; onFontPreview: (id: string | null) => void;
-  result: KeychainResult | null;
+  result: KeychainResult | null; supportRequest?: number;
 }) {
   function number(label: string, value: number, min: number, max: number, update: (value: number) => Partial<KeychainDesign>, slider = false) {
     return <NumberField label={label} value={fromMm(value, unit)} min={fromMm(min, unit)} max={fromMm(max, unit)}
@@ -19,7 +19,7 @@ export function KeychainControls({ design: d, change, fonts, manualFonts, unit, 
   }
   return <>
     <Section title="Font" open><FontSection fonts={fonts} manualFonts={manualFonts} value={d.font_id} text={d.text}
-      onChange={onFont} onPreview={onFontPreview} /></Section>
+      onChange={onFont} onPreview={onFontPreview} supportRequest={supportRequest} /></Section>
     <Section title="Finished size" open>
       <div className="kc-two-col"><label className="kc-field">Measure<select value={d.size.mode} onChange={event => {
         const mode = event.target.value as "width" | "height";

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FontPicker } from "../../../components/FontPicker";
 import { getFontClassification } from "../../../config/cakeTopperFontRecommendations";
 import { fetchFontCharacters } from "../../../services/generationApi";
@@ -24,12 +24,23 @@ export function matchesFontStyle(font: FontInfo, filter: string) {
   return filter === "all" || type === filter || filter === "display" && (type === "decorative" || /bold|black|heavy/i.test(`${font.style} ${font.full_name}`));
 }
 
-export function FontSection({ fonts, manualFonts, value, text, onChange, onPreview }: {
+export function FontSection({ fonts, manualFonts, value, text, onChange, onPreview, supportRequest = 0 }: {
   fonts: FontInfo[]; manualFonts: FontInfo[]; value: string; text: string;
   onChange: (id: string) => void; onPreview: (id: string | null) => void;
+  /** Incremented by the KC-MISSING-GLYPHS fix to open the support filter. */
+  supportRequest?: number;
 }) {
   const [filter, setFilter] = useState("all");
   const [supportOnly, setSupportOnly] = useState(false);
+  const supportToggle = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!supportRequest) return;
+    setSupportOnly(true);
+    const input = supportToggle.current;
+    const section = input?.closest("details");
+    if (section) section.open = true;
+    input?.scrollIntoView?.({ block: "center" }); input?.focus();
+  }, [supportRequest]);
   const [supported, setSupported] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
   const candidates = useMemo(() => fonts.filter(font => matchesFontStyle(font, filter)), [fonts, filter]);
@@ -63,7 +74,7 @@ export function FontSection({ fonts, manualFonts, value, text, onChange, onPrevi
       <option value="serif">Serif</option><option value="sans-serif">Sans</option></select></label>
     <FontPicker groups={groups} value={value} selectedFont={selected} onChange={onChange} onPreview={onPreview} previewText={text.trim() || "Name"} label="Keychain font" disabled={!fonts.length} />
     {selected && suitability(selected) && <p className="kc-font-badge">{suitability(selected)} <span>· Font Adviser</span></p>}
-    <Toggle label="Fonts that support this name" checked={supportOnly} onChange={setSupportOnly} />
+    <Toggle label="Fonts that support this name" checked={supportOnly} onChange={setSupportOnly} inputRef={supportToggle} />
     {supportOnly && progress && <small role="status">Checked {progress.done}/{progress.total} fonts · {supported.size} matches{progress.failed > 0 ? ` · ${progress.failed} unavailable` : ""}</small>}
     {supportOnly && progress?.failed ? <button type="button" onClick={() => { setSupportOnly(false); setTimeout(() => setSupportOnly(true), 0); }}>Retry unavailable fonts</button> : null}
   </>;

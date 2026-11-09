@@ -286,7 +286,8 @@ def attach_ring(backing, text, cfg):
                                    outer_diameter_mm=cfg.outer_diameter_mm, hole_diameter_mm=cfg.hole_diameter_mm,
                                    wall_thickness_mm=r-hole_r, neck_width_mm=neck,
                                    snapped=math.dist(center, original) > .05, touching=touching,
-                                   hole_clearance_mm=hole.distance(text))
+                                   hole_clearance_mm=hole.distance(text),
+                                   requested_center_x_mm=original[0], requested_center_y_mm=original[1])
     return finished, metadata
 
 
@@ -391,7 +392,9 @@ class KeychainService:
             infos.append(KeychainGlyphInfo(glyph_index=gi, cluster_text=prepared.labels[gi], bbox_mm=box,
                                           has_floating_component=gi in prepared.floating_glyphs))
         if ring is not None:
-            ring = ring.model_copy(update={"center_x_mm": ring.center_x_mm+dx, "center_y_mm": ring.center_y_mm+dy})
+            ring = ring.model_copy(update={"center_x_mm": ring.center_x_mm+dx, "center_y_mm": ring.center_y_mm+dy,
+                                           "requested_center_x_mm": ring.requested_center_x_mm+dx,
+                                           "requested_center_y_mm": ring.requested_center_y_mm+dy})
         for check in checks:
             if check.highlight_bbox_mm is not None:
                 x0, y0, x1, y1 = check.highlight_bbox_mm

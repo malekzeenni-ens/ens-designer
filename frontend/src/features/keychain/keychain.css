@@ -128,3 +128,28 @@
 .kc-history-load { color: var(--ens-text-accent); font-size: 11px; }
 .kc-file-links { align-items: center; flex-wrap: wrap; }
 .kc-file-links > span { font-size: 12px; color: var(--ens-text-muted); margin-right: auto; }
+
+/* K5: production-check fixes, problem highlights and modal scope */
+.kc-modal-scope { display: contents; }
+.kc-checks-wrap { display: grid; gap: 8px; }
+.kc-fix-status { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; border: 1px solid var(--ens-border-default); background: var(--ens-surface-1); color: var(--ens-text-secondary); }
+.kc-fix-resolved { border-color: var(--ens-success); }
+.kc-fix-remaining, .kc-fix-failed { border-color: var(--ens-warning); }
+.kc-fix-failed { border-color: var(--ens-error); }
+.kc-checks-stale > summary > span:last-child { font-style: italic; }
+.kc-checks-note { margin: 0 0 10px; font-size: 11px; color: var(--ens-text-muted); }
+.kc-check-body { display: grid; gap: 6px; min-width: 0; flex: 1; }
+.kc-check-reason { color: var(--ens-text-muted); font-size: 11px; }
+.kc-check-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.kc-workspace .kc-check-actions button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; height: auto; padding: 4px 10px; font-size: 12px; }
+.kc-workspace .kc-check-actions .kc-fix-button { border-color: var(--ens-border-active); color: var(--ens-text-accent); }
+.kc-checks li.kc-check-highlighted { outline: 2px solid var(--ens-error); outline-offset: 4px; border-radius: 4px; }
+.kc-problem rect { fill: rgba(209, 67, 67, .12); stroke: var(--ens-error, #d14343); stroke-width: .35; pointer-events: none; }
+.kc-problem-note { position: absolute; top: 12px; left: 12px; max-width: calc(100% - 24px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: #fff; border: 1px solid var(--ens-error, #d14343); border-radius: 5px; padding: 5px 9px; font-size: 11px; color: #8a1f1f; }
+/* K5: SVG hit targets draw focus as a stroke in canvas units. A CSS outline on
+   an SVG element is scaled by the viewBox and clipped by the plane. */
+.kc-overlay .kc-ring-target:focus, .kc-overlay .kc-ring-target:focus-visible,
+.kc-overlay .kc-glyph-target:focus, .kc-overlay .kc-glyph-target:focus-visible { outline: none; }
+.kc-overlay .kc-ring-target:focus-visible, .kc-overlay .kc-glyph-target:focus-visible { stroke: var(--ens-action-primary, #b68b43); stroke-width: .35; stroke-dasharray: none; }
+/* Disabled primary actions must not look available. */
+.kc-workspace .kc-primary:disabled { background: var(--ens-surface-2); color: var(--ens-text-muted); border-color: var(--ens-border-default); }

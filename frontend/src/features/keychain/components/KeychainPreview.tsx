@@ -1,6 +1,6 @@
 import { useRef, useState, type PointerEvent } from "react";
 import { Maximize2, Minus, Plus } from "lucide-react";
-import type { KeychainResult, Unit } from "../state/keychainTypes";
+import type { BBox, KeychainResult, Unit } from "../state/keychainTypes";
 import { clamp, dimension } from "../utils/units";
 
 export type Selection = "ring" | number | null;
@@ -8,10 +8,12 @@ export function pointerInMm(x: number, y: number, rect: { left: number; top: num
   const scale = Math.min(rect.width/width, rect.height/height);
   return { x: (x-rect.left-(rect.width-width*scale)/2)/scale, y: (y-rect.top-(rect.height-height*scale)/2)/scale };
 }
-export function KeychainPreview({ result, unit, placeholder, current, selection, onSelect, onMove, editableGlyphs = false }: {
+export function KeychainPreview({ result, unit, placeholder, current, selection, onSelect, onMove, editableGlyphs = false, problem = null }: {
   result: KeychainResult | null; unit: Unit; placeholder: boolean; current: boolean;
   selection: Selection; onSelect: (selection: Selection) => void;
   onMove: (selection: Exclude<Selection, null>, dx: number, dy: number) => void; editableGlyphs?: boolean;
+  /** Production-check region in fitted canvas mm, drawn separately from selection. */
+  problem?: { id: string; label: string; bbox: BBox } | null;
 }) {
   const [zoom, setZoom] = useState(1);
   const [view, setView] = useState("both");
@@ -77,12 +79,16 @@ export function KeychainPreview({ result, unit, placeholder, current, selection,
             onFocus={() => { if (current) onSelect(item.glyph_index); }} onPointerDown={event => down(event, item.glyph_index)} />)}
           {result.ring && view !== "text" && <circle className="kc-ring-target" cx={result.ring.center_x_mm} cy={result.ring.center_y_mm} r={result.ring.outer_diameter_mm/2}
             tabIndex={current ? 0 : -1} role="button" aria-label="Move ring" aria-pressed={selection === "ring"} onFocus={() => { if (current) onSelect("ring"); }} onPointerDown={event => down(event, "ring")} />}
+          {problem && <g className="kc-problem" data-check={problem.id} aria-hidden="true">
+            <rect x={problem.bbox[0]-.6} y={problem.bbox[1]-.6} width={problem.bbox[2]-problem.bbox[0]+1.2} height={problem.bbox[3]-problem.bbox[1]+1.2} rx={.8} />
+          </g>}
           {selectedBounds && <rect className="kc-selection" x={selectedBounds[0]} y={selectedBounds[1]} width={selectedBounds[2]-selectedBounds[0]} height={selectedBounds[3]-selectedBounds[1]} />}
           <g ref={ghost} className="kc-ghost" style={{ display: "none" }}>{selectedBounds && <rect x={selectedBounds[0]} y={selectedBounds[1]} width={selectedBounds[2]-selectedBounds[0]} height={selectedBounds[3]-selectedBounds[1]} />}</g>
         </svg>
       </div> : <div className="kc-canvas-empty"><span className="kc-eyebrow">YOUR NEXT PERSONALISED PIECE</span><h2>A name. A finished keychain.</h2><p>Choose a font and type a name to see your design.</p></div>}
       {placeholder && result && <span className="kc-placeholder-note">Type a name to make it yours</span>}
       {!current && result && <span className="kc-updating">Updating preview…</span>}
+      {problem && result && <span className="kc-problem-note" role="status">Highlighted: {problem.label}</span>}
     </div>
     <div className="kc-preview-caption"><span>{result ? `${dimension(result.width_mm, unit)} × ${dimension(result.height_mm, unit)}` : "Finished dimensions"}</span>
       <div className="kc-layer-legend"><span><i style={{ background: result?.recipe.colors.backing ?? "#000000" }} />Cut backing</span><span><i style={{ background: result?.recipe.colors.text ?? "#FF0000" }} />{result?.recipe.style === "layered" ? "Cut text" : "Engrave text"}</span></div>

@@ -476,6 +476,9 @@ class KeychainCheck(KeychainModel):
     message: str
     fix: dict | None = None
     highlight_bbox_mm: tuple[float, float, float, float] | None = None
+    # Plain-language reason when a failing check has no automatic fix, or what
+    # the fix cannot guarantee. Additive field; older clients ignore it.
+    fix_note: str | None = None
 
 
 class KeychainRingMetadata(KeychainModel):
@@ -488,6 +491,10 @@ class KeychainRingMetadata(KeychainModel):
     snapped: bool
     touching: bool
     hole_clearance_mm: float
+    # Pre-snap centre (position preset + offsets) in the same fitted canvas
+    # coordinates. Clients rebase drags from the actual snapped centre.
+    requested_center_x_mm: float | None = None
+    requested_center_y_mm: float | None = None
 
 
 class KeychainFile(KeychainModel):
