@@ -28,3 +28,9 @@ Rejected for now: browser/WASM geometry, changing ring semantics during extracti
 ## Consequences
 
 Existing engine callers remain compatible. Cache memory is bounded but fonts in active requests can temporarily outlive eviction. Concurrent operations on one font serialize briefly for library safety. A 32-entry font working set can churn; benchmark before changing limits. SVG assembly/PNG costs remain outside the font-cache improvement. Golden fixture bytes and existing Cake Topper tests are release gates.
+
+## K2 implementation note (2026-11-09)
+
+The dedicated engine/API is implemented. It reuses raw glyph outlines and flattened reference geometry, applies physical edits after scaling, and exposes finished dimensions separately from the margin-inclusive SVG canvas. A guarded six-step root solve has a bounded minimum-search fallback for opposing physical translations, where size need not be monotonic near zero. Ring snapping verifies an actual ring/backing boundary chord before reporting the neck width. SVG assembly disables svgwrite debug validation and verifies output XML in tests. Production SVGs preserve unbuffered text curves; explicit stroke reinforcement emits the buffered silhouette.
+
+PNG export uses Cairo when available. The Pillow fallback reuses the existing path drawing on independent layers and alpha-composites them so text counters reveal the backing. It rasterises unioned text geometry to preserve auto-joined dots. Existing Cake Topper rendering is unchanged. Export history is saved once by the export route, with an explicit save/import endpoint available separately. The 22-case preview corpus passes the 150 ms p95 gate; no browser/WASM engine change is needed. See the K2 handoff and QA matrix for evidence and pending LightBurn validation.

@@ -11,4 +11,5 @@ logs/
 .vite-cache/
 backend/scripts/font_fragility_results.json
 backend/data/cake_topper_history.json
+backend/data/keychain_history.json
 fonts/.uploaded_manifest.json

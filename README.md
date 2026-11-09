@@ -6,6 +6,7 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Latest Updates
 
+- 2026-11-09 - Added the dedicated Keychain engine and preview/export/history API (K2): finished sizing, solid backing, ring auto-snap, i/j dot joining, glyph transforms, production checks, layered SVGs and transparent PNGs. The Keychain workspace UI is K3.
 - 2026-11-09 - Added Keychain K1 shared foundations: thread-safe parsed-font caching used by Cake Topper, reusable raw glyph caching, shared ring helpers, optional curve tolerance and configurable history filenames. Existing Cake Topper SVGs remain byte-identical.
 - 2026-11-09 - Started dedicated Keychain Designer milestone K0: reproducible Cake Topper benchmarks and three golden SVG fixtures. The Keychain tab is planned; implementation starts with shared foundations in K1.
 - 2026-07-14 - Moved the consolidated application and backend API to `http://127.0.0.1:8010`.
@@ -20,11 +21,26 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Current Status
 
-Keychain Designer: K0 baseline and K1 shared foundations delivered; K2 engine/API next. See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K1 handoff](docs/handoffs/keychain-designer-k1-foundations-handoff.md).
+Keychain Designer: K0–K2 backend milestones delivered; K3 workspace UI next. See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K2 handoff](docs/handoffs/keychain-designer-k2-engine-api-handoff.md).
 
 Run `.\.venv313\Scripts\python.exe scripts/bench_keychain.py --check-fixtures --iterations 20 --output logs/keychain-benchmark.json` for stage p50/p95 timings. Golden SVG checks also run with pytest. Reference fixtures cannot be overwritten by the benchmark command.
 
-Add `--compare-uncached` to alternate cached and original font paths in one process. This compares caching under the same renderer and machine conditions. The Keychain tab and dedicated API arrive in later milestones.
+Add `--compare-uncached` to alternate cached and original font paths in one process. Use `--keychain --assert-budgets` to measure the K2 PNG-free preview API and full exports, with cold parsed-font caches and 20 warm calls per recipe. Only the Keychain workspace tab remains a later milestone.
+
+## Keychain API (K2)
+
+Choose a `font_id` from `GET /api/fonts`, then send `{"text":"Sarah","font_id":"<id>"}` to `/api/keychain/preview`. Defaults produce a 60 mm wide engraved keychain with a 3 mm backing offset, top-left 12/5 mm ring and separate black/red layers. Arabic and ligatures use whole-word HarfBuzz shaping. Names stay on one line; the limit is 40 characters.
+
+| Endpoint | Result |
+|---|---|
+| `POST /api/keychain/preview` | SVG, glyph hit targets, physical dimensions, ring metadata, production checks and request ID; no PNG or history writes |
+| `POST /api/keychain/export` | Production SVG file(s), transparent PNG and recipe; automatically saves one history entry |
+| `GET /api/keychain/history` | Newest-first saved recipes |
+| `POST /api/keychain/history` | Explicitly save/import a validated recipe; do not call again after an export |
+
+Endpoints force their own quality regardless of the request's `quality` value. `width_mm` and `height_mm` measure the finished outer design, including the ring. `canvas_width_mm` and `canvas_height_mm` add a 2 mm margin on every side; a 60 mm design has a 64 mm SVG canvas. Ring and hole diameters stay physical as text scales uniformly. Validation failures are returned as checks, including actionable fixes; K3/K5 implement the client export confirmation and fix controls.
+
+Engraved exports contain `CUT_BACKING` / `ENGRAVE_TEXT`; Layered uses `CUT_BACKING` / `CUT_TEXT` and supports combined or separate aligned SVGs. SVG metadata stores the reloadable recipe and schema version. Unbuffered text preserves Bézier curves; explicit stroke reinforcement exports the buffered silhouette. History is isolated in `backend/data/keychain_history.json`. LightBurn validation and the full operator journey remain K5 work.
 
 **Phase 1C — Production Hardening — Complete — v0.3.0**
 

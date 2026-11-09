@@ -189,4 +189,17 @@ Run connectivity validation.
 
 ---
 
+# Keychain Layer Strategy (K2, 2026-11-09)
+
+Keychain SVGs use SVG 1.1, physical mm units, a fitted viewBox and a 2 mm artboard margin per side. Finished dimensions include the ring; canvas dimensions include the margins and are therefore 4 mm larger on each axis. A 60 mm product occupies 60 mm of geometry on a 64 mm wide canvas.
+
+| Style | Groups | Default colours | Files |
+|---|---|---|---|
+| Engraved | `CUT_BACKING`, `ENGRAVE_TEXT` | Black `#000000`, red `#FF0000` | One SVG |
+| Layered | `CUT_BACKING`, `CUT_TEXT` | Black `#000000`, red `#FF0000` | One combined SVG or two aligned SVGs |
+
+Separate files share identical canvas dimensions, viewBox and origin. The backing is a compound path with a real ring hole and optional letter counters. Unbuffered text keeps its original Q/C curves; explicit stroke buffering outputs the reinforced polygon silhouette. Files have a human-readable recipe comment and XML-escaped JSON in `<metadata id="ens-recipe">`. Preview-only hit targets are absent from production files.
+
+Automated K2 validation checks XML, actual cut-contour dimensions, 5 mm hole extents at 30/60/90 mm product widths, colour/group separation and file alignment. Manual LightBurn import, colour-to-layer mapping and manufacturing checks are pending K5; no new LightBurn sign-off is claimed here. See `docs/qa/KEYCHAIN_QA_MATRIX.md`.
+
 # End of Document

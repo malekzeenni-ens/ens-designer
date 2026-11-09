@@ -12,7 +12,9 @@ Version: 1.0
 
 # Overview
 
-Keychain workstream (2026-11-09): K0 supplies benchmarks and byte-for-byte Cake Topper SVG fixtures. K1 adds `font_cache.py` (bounded parsed fonts and raw glyph outlines), optional `loaded=` shaping/extraction used by Cake Topper, shared `ring_geometry.py` helpers, configurable history filenames and optional curve tolerance. Existing SVG geometry and UI are preserved. See [ADR-006](../adr/ADR-006-KEYCHAIN-ENGINE-AND-PERFORMANCE.md). The dedicated Keychain engine/API and frontend module remain future milestones in [the plan](../phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md).
+Keychain workstream (2026-11-09): K0 supplies benchmarks and byte-for-byte Cake Topper SVG fixtures. K1 adds `font_cache.py` (bounded parsed fonts and raw glyph outlines), optional `loaded=` shaping/extraction used by Cake Topper, shared `ring_geometry.py` helpers, configurable history filenames and optional curve tolerance. Existing SVG geometry and UI are preserved. See [ADR-006](../adr/ADR-006-KEYCHAIN-ENGINE-AND-PERFORMANCE.md) and [the milestone plan](../phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md).
+
+K2 delivers the dedicated `KeychainService`, additive Pydantic models, validation, SVG/PNG assembly and isolated history store. `/api/keychain/{preview,export,history}` routes are registered before the frontend static mount. Raw glyph outlines are positioned once and flattened once; size iterations reuse that geometry. Physical offsets/transforms remain in final mm. A six-step guarded secant solve includes the ring; opposing translations can trigger a bounded preliminary minimum search. PNG fallback composites independent backing/text layers so text counters reveal the backing. Cake Topper runtime logic is unchanged by K2. The frontend Keychain feature module remains K3.
 
 AI SVG Generator is a local-first application designed to generate production-ready SVG and PNG files for laser cutting workflows.
 

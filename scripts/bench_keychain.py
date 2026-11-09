@@ -144,12 +144,84 @@ def summary(values: list[float]) -> dict:
             "p95_ms": round(sorted(values)[math.ceil(len(values) * .95) - 1], 3)}
 
 
+def benchmark_keychain(args, catalog, fonts):
+    from fastapi.testclient import TestClient
+    from app.font_cache import clear_font_cache
+    from app.keychain_engine import KeychainService
+    from app import keychain_png
+    from app.main import create_app
+    from app.models import KeychainRequest
+
+    app = create_app(project_root=ROOT)
+    service = KeychainService(ROOT, catalog)
+    app.state.keychain_service = service
+    corpus = [(role, name) for role in ("script", "display", "serif") for name in NAMES]
+    corpus.append(("arabic", "سارة"))
+    results = []
+    with TestClient(app) as client:
+        for role, name in corpus:
+            request = KeychainRequest(text=name, font_id=fonts[role]["id"])
+            clear_font_cache()  # guarantee a cold parsed-font/glyph cache per case
+
+            def preview():
+                start = perf_counter()
+                response = client.post("/api/keychain/preview", json=request.model_dump())
+                response.raise_for_status()
+                result = response.json()
+                timings = {**result["timings_ms"], "api_round_trip": (perf_counter()-start)*1000}
+                return timings, result
+
+            cold, _ = preview()
+            samples = []
+            for _ in range(args.iterations):
+                timings, result = preview()
+                samples.append(timings)
+            stages = {stage: summary([sample[stage] for sample in samples]) for stage in samples[0]}
+            with patch.object(keychain_png, "render_paths_png", wraps=keychain_png.render_paths_png) as fallback:
+                start = perf_counter()
+                exported = service.generate(request.model_copy(update={"quality": "export"}))
+                export_ms = (perf_counter()-start)*1000
+                renderer = "Pillow" if fallback.call_count else "CairoSVG"
+            for file in exported.files:
+                ET.fromstring(file.svg)
+            results.append({"role": role, "text": name, "request": request.model_dump(),
+                            "cold_ms": cold, "stages": stages, "samples_ms": samples,
+                            "export_ms": round(export_ms, 3), "export_timings_ms": exported.timings_ms,
+                            "png_renderer": renderer, "checks": result["checks"],
+                            "width_mm": result["width_mm"], "height_mm": result["height_mm"],
+                            "converged": result["size_solve_converged"]})
+            print(f"{role:7} {ascii(name):16} preview p50/p95={stages['total']['p50_ms']:.1f}/{stages['total']['p95_ms']:.1f} "
+                  f"API p95={stages['api_round_trip']['p95_ms']:.1f} cold={cold['api_round_trip']:.1f} export={export_ms:.1f}", flush=True)
+    passed = all(case["stages"]["api_round_trip"]["p95_ms"] <= 150
+                 and case["cold_ms"]["api_round_trip"] <= 800 and case["export_ms"] <= 1500
+                 and case["converged"] for case in results)
+    report = {
+        "recorded_at_utc": datetime.now(timezone.utc).isoformat(), "mode": "keychain-k2",
+        "python": sys.version, "platform": platform.platform(), "fonts": fonts,
+        "dependencies": {package: importlib.metadata.version(package) for package in ("shapely", "uharfbuzz", "fonttools", "cairosvg", "pillow")},
+        "iterations_per_case": args.iterations,
+        "method": "Cold parsed-font and raw glyph caches before each case, then warm API previews. "
+                  "API round trip includes FastAPI routing, response validation, JSON and TestClient overhead, "
+                  "without browser or network latency. One service export per case, including actual PNG renderer. "
+                  "Preview never renders PNG. Fixed 60 mm finished width; Mr Bear stays on one line.",
+        "budget_gate_passed": passed, "results": results,
+    }
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
+    print(f"Keychain budget gate: {'PASS' if passed else 'FAIL'}", flush=True)
+    if args.assert_budgets and not passed:
+        raise SystemExit(1)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--iterations", type=int, default=20)
     parser.add_argument("--output", type=Path, help="Write timings and environment metadata as JSON")
     parser.add_argument("--compare-uncached", action="store_true",
                         help="Alternate cached and uncached font paths in the same process (K1+)")
+    parser.add_argument("--keychain", action="store_true", help="Measure K2 PNG-free preview API and full exports")
+    parser.add_argument("--assert-budgets", action="store_true", help="Fail if K2 preview/cold/export budgets or size convergence fail")
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--write-fixtures", action="store_true")
     action.add_argument("--check-fixtures", action="store_true")
@@ -159,6 +231,10 @@ def main() -> None:
         parser.error("--iterations must be positive")
     if args.fixtures_only and not (args.write_fixtures or args.check_fixtures):
         parser.error("--fixtures-only requires a fixture action")
+    if args.assert_budgets and not args.keychain:
+        parser.error("--assert-budgets requires --keychain")
+    if args.keychain and args.compare_uncached:
+        parser.error("--keychain and --compare-uncached are separate benchmark modes")
     if args.compare_uncached and not hasattr(engine, "get_loaded_font"):
         parser.error("--compare-uncached requires the K1 cached Cake Topper engine")
     catalog = FontCatalog(ROOT)
@@ -169,6 +245,9 @@ def main() -> None:
     if args.check_fixtures or args.write_fixtures:
         check_fixtures(service)
     if args.fixtures_only:
+        return
+    if args.keychain:
+        benchmark_keychain(args, catalog, fonts)
         return
     # Do not pretend unsupported Arabic in Latin faces is a successful sample.
     corpus = [(role, name) for role in ("script", "display", "serif") for name in NAMES]

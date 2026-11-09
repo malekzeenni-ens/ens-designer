@@ -7,7 +7,7 @@ Phase Name: Dedicated Keychain Designer Tab
 Target Release: next minor version after the current tag (run `git tag --sort=-v:refname | head -1`)
 Owner: Etch 'N' Shine
 Date: 2026-11-06
-Status: K0 and K1 complete on 2026-11-09. K2 engine/API is next; see `docs/handoffs/keychain-designer-k1-foundations-handoff.md` for timings, tests and environment notes. Report at the milestone boundary before K2.
+Status: K0–K2 complete on 2026-11-09. K3 workspace UI is next; see `docs/handoffs/keychain-designer-k2-engine-api-handoff.md` for timings, tests and environment notes. Report at the milestone boundary before K3.
 
 Companion document (read first): `docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md`. Stage, check and default references below (for example "Journey §7 Stage 6") point into it.
 
@@ -289,6 +289,8 @@ class KeychainResponse(BaseModel):
     png_base64: str | None = None            # export only
     width_mm: float
     height_mm: float
+    canvas_width_mm: float                  # finished width + 4 mm artboard margins
+    canvas_height_mm: float                 # finished height + 4 mm artboard margins
     scale_applied: float                     # uniform text scale relative to reference size
     size_solve_converged: bool
     glyphs: list[KeychainGlyphInfo]
@@ -330,7 +332,7 @@ All internal units are mm and use the SVG y-down convention, the same as today.
     • export only: PNG via the existing _render_png (cairosvg → Pillow fallback)
 ```
 
-**N1 (units):** dx/dy and spacing are given in *final* mm. Convert them to reference units with the scale from the previous successful solve. If none exists, use a provisional solve that ignores transforms, then re-apply them. Document this in code. The tests in §9.1 cover it.
+**N1 (units, K2 implementation):** dx/dy, dot offsets and spacing are given in *final* mm. Apply them after uniformly scaling the cached reference geometry in each solver evaluation. Rotations/scales act about the final glyph control-bounds centre. This avoids drift from a provisional or previous-request scale and never re-flattens during solving. Tests cover two scales, dot offsets and opposing translations. The default path scales one already-unioned geometry; edited paths compose cached glyph/subpath geometries before union.
 
 ## 5.4 New geometry algorithms
 
@@ -359,6 +361,7 @@ Let `F(s)` = the finished outer width (or height) after scaling the text by `s`,
 1. Initial guess: `s0 = (target − 2·offset − ring_extra_estimate) / text_width_ref`, where `ring_extra_estimate` comes from the ring position.
 2. Secant iteration on `F(s) − target`, at most 6 iterations, tolerance 0.05 mm. `F` is monotone increasing in `s`; guard it with bisection bounds `[s_min, s_max]`.
 3. If the minimum achievable size is above the target (ring + offset dominate), return the minimum, set `size_solve_converged=False` and raise the `KC-SIZE-MIN` error with a fix `{"action":"set","field":"size.target_mm","value":<min>}`.
+   - K2 handles opposing final-mm translations separately: if the tiny-text bound exceeds the target, an 18-step bounded golden-section search finds a smaller extent before the guarded six-step root solve. Such offsets can make `F(s)` initially decrease, contrary to the monotonic assumption for the default recipe.
 4. **Performance:** in each iteration, scale the *already-unioned* reference text geometry with `shapely.affinity.scale(text_geom, s, s, origin=(0,0))`. Do not re-flatten. Only buffering repeats.
 
 ### D. Ring auto-snap
@@ -377,6 +380,8 @@ Let `F(s)` = the finished outer width (or height) after scaling the text by `s`,
    Then add `x_offset_mm` / `y_offset_mm`. Use the same overlap default as the Cake Topper ring (5 mm).
 2. If `auto_snap`: find the nearest point `P` on `backing.exterior` to the centre `C` (`shapely.ops.nearest_points`). Move `C` along `P→C` so that `distance(C, backing) = R − required_overlap`, where `required_overlap` gives a neck width ≥ `min_neck_width_mm` (invert `_approximate_ring_neck_width`). Report `ring.snapped=True` when the centre moved by more than 0.05 mm.
 3. Union the tab, subtract the hole, run the existing checks (wall, neck, hole-text proximity).
+
+K2 implementation verifies the neck as the chord across ring-boundary arcs inside the backing, rather than treating nominal overlap as proof. After projection it searches inward in 0.5 mm steps when needed. Metadata reports `snapped`, measured neck, touching and clearance; impossible neck targets remain explicit warnings.
 
 ### E. Dot auto-join
 
@@ -423,7 +428,7 @@ New module `backend/app/keychain_validation.py`, with pure functions over Shapel
 Structure:
 
 ```xml
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{W}mm" height="{H}mm" viewBox="0 0 {W} {H}">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{canvas_width_mm}mm" height="{canvas_height_mm}mm" viewBox="0 0 {canvas_width_mm} {canvas_height_mm}">
   <!-- EnS Designer — Keychain Recipe … human-readable lines … -->
   <metadata id="ens-recipe">{JSON recipe, XML-escaped}</metadata>
   <g id="CUT_BACKING"><path d="…compound path with hole…" fill="{backing}" stroke="none" fill-rule="nonzero"/></g>
@@ -433,6 +438,7 @@ Structure:
 
 - Build it with `svgwrite`, as `_assemble_svg` does, so the output is valid XML. Add a test that parses every export with `xml.etree` (guards against vectorsfile bug W4).
 - Coordinates are rounded to 3 decimals.
+- Finished `width_mm`/`height_mm` exclude the 2 mm artboard margin; `canvas_width_mm`/`canvas_height_mm` include it. This resolves the original conflict between the finished-size control and the requested fitted margin.
 - **Layered + separate:** two files, `<name>-keychain-<W>mm-backing.svg` and `<name>-keychain-<W>mm-text.svg`. Both use the same canvas and origin so they align when imported together.
 - **Preview SVG:** same structure without `<metadata>`. Add `data-glyph-index` attributes on per-glyph hit paths (transparent) for the inspector, mirroring the vectorsfile approach. The `glyphs[].bbox_mm` list is also returned.
 - Filenames use `_safe_filename` (from `overlap_helpers`).
@@ -443,7 +449,7 @@ Structure:
 | Method | Path | Behaviour |
 |---|---|---|
 | POST | `/api/keychain/preview` | `quality` forced to `preview`; no PNG; no `files`; target < 150 ms p95 warm |
-| POST | `/api/keychain/export` | `quality` forced to `export`; returns `files` + `png_base64` |
+| POST | `/api/keychain/export` | `quality` forced to `export`; returns `files` + `png_base64`; automatically saves one history entry |
 | GET | `/api/keychain/history` | list of keychain history entries (newest first) |
 | POST | `/api/keychain/history` | append an entry `{recipe, filename, width_mm, height_mm}` |
 
@@ -638,7 +644,7 @@ None required. Everything is covered by the existing Shapely 2.1.2 (`affinity`, 
 ## 9.2 Integration tests (API)
 
 - `/api/keychain/preview`: 200; `png_base64 is None`; `request_id` echoed; `preview_svg` parses as XML.
-- `/api/keychain/export`, engraved: one file; `CUT_BACKING` and `ENGRAVE_TEXT` groups; mm units; viewBox matches `width_mm`/`height_mm` within 0.01; `<metadata id="ens-recipe">` JSON round-trips to an equivalent request.
+- `/api/keychain/export`, engraved: one file; `CUT_BACKING` and `ENGRAVE_TEXT` groups; mm units; viewBox matches `canvas_width_mm`/`canvas_height_mm` within 0.01; actual geometry matches finished `width_mm`/`height_mm`; `<metadata id="ens-recipe">` JSON round-trips to an equivalent request.
 - Export, layered + separate: two files with identical viewBox.
 - Missing glyph text: 200 with a warning, or 400 with a clear message when nothing can render (mirror the Cake Topper rule).
 - Invalid ranges: 422.

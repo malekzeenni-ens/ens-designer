@@ -194,3 +194,35 @@ def _apply_to_subpath(path: GeometryPath, floating_idx: int, dx: float, dy: floa
             new_commands.append(PathCommand(**data))
 
     return GeometryPath(path_id=path.path_id, commands=new_commands, closed=path.closed)
+
+
+def join_floating_components(
+    paths: list[GeometryPath], glyphs: list[GlyphGeometry], overlap_pct: float = 25,
+    glyph_chars: list[str] | None = None,
+) -> list[GeometryPath]:
+    """Join above-body i/j dots; preserve below-body accents and other diacritics.
+
+    Uses the original subpath identities, including multiple dots in ligatures.
+    Manual offsets must subsequently use the pre-join identities, since a joined
+    dot no longer satisfies the detector's definition of floating.
+    """
+    eligible = set()
+    for index, glyph in enumerate(glyphs):
+        text = glyph_chars[index] if glyph_chars is not None else glyph.glyph_name.split(".")[0]
+        if any(char in text for char in "ij"):
+            eligible.update(glyph.path_ids)
+    result = []
+    for path in paths:
+        parts = _split_subpaths(path.commands)
+        bounds = [_bounds(part) for part in parts]
+        if path.path_id not in eligible or len(parts) < 2:
+            result.append(path)
+            continue
+        main = max(range(len(parts)), key=lambda i: (bounds[i][2]-bounds[i][0])*(bounds[i][3]-bounds[i][1]))
+        updated = path
+        for index, b in enumerate(bounds):
+            if index != main and b[3] <= bounds[main][1]:
+                delta = bounds[main][1] - b[3] + (b[3]-b[1]) * overlap_pct / 100
+                updated = _apply_to_subpath(updated, index, 0, delta)
+        result.append(updated)
+    return result

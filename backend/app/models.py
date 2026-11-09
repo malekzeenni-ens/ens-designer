@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 HEX_COLOR_PATTERN = r"^#[0-9A-Fa-f]{6}$"
 
@@ -352,4 +352,179 @@ class HistoryEntryCreate(BaseModel):
 
 
 class HistoryEntry(HistoryEntryCreate):
+    timestamp: str
+
+
+# --- Keychain ---
+class KeychainModel(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
+
+class KeychainGlyphTransform(KeychainModel):
+    glyph_index: int = Field(ge=0)
+    dx_mm: float = Field(default=0, ge=-50, le=50)
+    dy_mm: float = Field(default=0, ge=-50, le=50)
+    scale: float = Field(default=1, ge=.5, le=2)
+    rotation_deg: float = Field(default=0, ge=-45, le=45)
+
+
+class KeychainSizeConfig(KeychainModel):
+    mode: Literal["width", "height"] = "width"
+    target_mm: float = Field(default=60, ge=10, le=200)
+
+    @model_validator(mode="after")
+    def check_axis_range(self):
+        low, high = (25, 200) if self.mode == "width" else (10, 100)
+        if not low <= self.target_mm <= high:
+            raise ValueError(f"{self.mode.title()} must be between {low} and {high} mm.")
+        return self
+
+
+class KeychainBackingConfig(KeychainModel):
+    offset_mm: float = Field(default=3, ge=1, le=10)
+    fill_counters: bool = True
+    smoothing_mm: float = Field(default=.5, ge=0, le=3)
+
+
+class KeychainRingConfig(KeychainModel):
+    enabled: bool = True
+    position: Literal["top-left", "top-center", "top-right", "left-middle", "right-middle", "custom"] = "top-left"
+    outer_diameter_mm: float = Field(default=12, ge=10, le=15)
+    hole_diameter_mm: float = Field(default=5, ge=4, le=6)
+    x_offset_mm: float = Field(default=0, ge=-100, le=100)
+    y_offset_mm: float = Field(default=0, ge=-100, le=100)
+    auto_snap: bool = True
+    min_wall_thickness_mm: float = Field(default=3, gt=0, le=7.5)
+    min_neck_width_mm: float = Field(default=5, gt=0, le=15)
+
+
+class KeychainDotConfig(KeychainModel):
+    auto_join: bool = True
+    overlap_pct: float = Field(default=25, ge=10, le=50)
+    manual_offsets: list[FloatingComponentOffset] = Field(default_factory=list)
+
+    @field_validator("manual_offsets")
+    @classmethod
+    def finite_offsets(cls, offsets):
+        import math
+        if any(not math.isfinite(value) or abs(value) > 50 for offset in offsets
+               for value in (offset.x_offset_mm, offset.y_offset_mm)):
+            raise ValueError("Dot offsets must be finite and within 50 mm.")
+        return offsets
+
+
+class KeychainLayerColors(KeychainModel):
+    backing: str = Field(default="#000000", pattern=HEX_COLOR_PATTERN)
+    text: str = Field(default="#FF0000", pattern=HEX_COLOR_PATTERN)
+
+
+class KeychainRequest(KeychainModel):
+    text: str = Field(min_length=1, max_length=40)
+    font_id: str = Field(min_length=1)
+    style: Literal["engraved", "layered"] = "engraved"
+    material_id: str = "cast-acrylic-3mm"
+    size: KeychainSizeConfig = Field(default_factory=KeychainSizeConfig)
+    overlap_mode: Literal["auto", "light", "medium", "strong", "custom"] = "auto"
+    overlap_custom_mm: float | None = Field(default=None, gt=0, le=10)
+    gap_configs: list[OverlapGapConfig] = Field(default_factory=list)
+    letter_spacing_mm: float = Field(default=0, ge=-10, le=20)
+    glyph_transforms: list[KeychainGlyphTransform] = Field(default_factory=list)
+    dots: KeychainDotConfig = Field(default_factory=KeychainDotConfig)
+    stroke_buffer_mm: float = Field(default=0, ge=0, le=.6)
+    backing: KeychainBackingConfig = Field(default_factory=KeychainBackingConfig)
+    ring: KeychainRingConfig = Field(default_factory=KeychainRingConfig)
+    colors: KeychainLayerColors = Field(default_factory=KeychainLayerColors)
+    layered_export: Literal["combined", "separate"] = "combined"
+    quality: Literal["preview", "export"] = "preview"
+    request_id: int | None = None
+
+    @field_validator("text")
+    @classmethod
+    def single_line(cls, value):
+        from .unicode_normalisation import normalise_text
+        if any(char in value for char in "\r\n\u2028\u2029"):
+            raise ValueError("Keychain names must be a single line.")
+        if any(not (ord(char) == 9 or 0x20 <= ord(char) <= 0xD7FF
+                    or 0xE000 <= ord(char) <= 0xFFFD or 0x10000 <= ord(char) <= 0x10FFFF) for char in value):
+            raise ValueError("Keychain names contain an unsupported control character.")
+        return normalise_text(value)
+
+    @model_validator(mode="after")
+    def valid_settings(self):
+        from .material_profiles import get_material
+        get_material(self.material_id)
+        if self.overlap_mode == "custom" and self.overlap_custom_mm is None:
+            raise ValueError("Custom overlap requires overlap_custom_mm.")
+        for indices in ([item.glyph_index for item in self.glyph_transforms],
+                        [item.glyph_index for item in self.dots.manual_offsets],
+                        [item.pair_index for item in self.gap_configs]):
+            if len(set(indices)) != len(indices):
+                raise ValueError("Duplicate glyph or gap settings are not allowed.")
+        return self
+
+
+class KeychainGlyphInfo(KeychainModel):
+    glyph_index: int
+    cluster_text: str
+    bbox_mm: tuple[float, float, float, float]
+    has_floating_component: bool
+
+
+class KeychainCheck(KeychainModel):
+    id: str
+    severity: Literal["error", "warning", "info", "pass"]
+    message: str
+    fix: dict | None = None
+    highlight_bbox_mm: tuple[float, float, float, float] | None = None
+
+
+class KeychainRingMetadata(KeychainModel):
+    center_x_mm: float
+    center_y_mm: float
+    outer_diameter_mm: float
+    hole_diameter_mm: float
+    wall_thickness_mm: float
+    neck_width_mm: float
+    snapped: bool
+    touching: bool
+    hole_clearance_mm: float
+
+
+class KeychainFile(KeychainModel):
+    filename: str
+    svg: str
+
+
+class KeychainResponse(KeychainModel):
+    request_id: int | None = None
+    preview_svg: str
+    files: list[KeychainFile] = Field(default_factory=list)
+    png_base64: str | None = None
+    width_mm: float
+    height_mm: float
+    canvas_width_mm: float
+    canvas_height_mm: float
+    scale_applied: float
+    size_solve_converged: bool
+    glyphs: list[KeychainGlyphInfo]
+    ring: KeychainRingMetadata | None
+    checks: list[KeychainCheck]
+    recipe: dict
+    timings_ms: dict[str, float]
+
+
+class KeychainHistoryCreate(KeychainModel):
+    recipe: dict
+    filename: str = Field(min_length=1, max_length=255)
+    width_mm: float = Field(gt=0)
+    height_mm: float = Field(gt=0)
+
+    @field_validator("recipe")
+    @classmethod
+    def valid_recipe(cls, value):
+        # Preserve version metadata while validating and normalising the request.
+        return {**KeychainRequest.model_validate(value).model_dump(), "app_version": "keychain-1"}
+
+
+class KeychainHistoryEntry(KeychainHistoryCreate):
     timestamp: str
