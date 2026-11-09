@@ -3,6 +3,7 @@ import { designFromRecipe, designReducer } from "../state/keychainReducer";
 import { DEFAULT_DESIGN } from "../state/keychainTypes";
 import { fromMm, toMm, toRequest } from "../utils/units";
 import { pointerInMm } from "../components/KeychainPreview";
+import { matchesFontStyle, suitability } from "../components/FontSection";
 
 describe("Keychain design and physical units", () => {
   it("sends a disabled-export placeholder without changing empty UI text", () => {
@@ -32,5 +33,10 @@ describe("Keychain design and physical units", () => {
   it("maps canvas pointer coordinates through letterboxing and zoom", () => {
     expect(pointerInMm(500, 200, { left: 100, top: 100, width: 800, height: 200 }, 100, 100)).toEqual({ x: 50, y: 50 });
     expect(pointerInMm(520, 200, { left: 100, top: 100, width: 800, height: 200 }, 100, 100)).toEqual({ x: 60, y: 50 });
+  });
+  it("includes bold faces in Bold / Display without inventing unknown font badges", () => {
+    const font = { id: "unknown", family: "Example", full_name: "Example", style: "Bold", source: "project" as const };
+    expect(matchesFontStyle(font, "display")).toBe(true);
+    expect(suitability({ ...font, style: "Regular", full_name: "Unclassified123" })).toBeNull();
   });
 });

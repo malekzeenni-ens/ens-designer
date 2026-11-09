@@ -66,7 +66,7 @@ README, implementation plan/index, QA matrix, this handoff and deployment log. T
 
 ## 15. Git information
 
-Branch: main. Base: `0ee43bd`. Milestone commit subject: `feat(keychain): add dedicated keychain workspace`. No remote push or release tag.
+Branch: main. Base: `0ee43bd`. Milestone commit: `193764c7f621519780df85a26c8d138a6d1a05a3` (`feat(keychain): add dedicated keychain workspace`). No remote push or release tag.
 
 ## 16. Deployment information
 

@@ -17,7 +17,7 @@ export function KeychainPreview({ result, unit, placeholder, current, selection,
   const [view, setView] = useState("both");
   const plane = useRef<HTMLDivElement>(null);
   const ghost = useRef<SVGGElement>(null);
-  const drag = useRef<{ id: number; selection: Exclude<Selection, null>; start: { x: number; y: number }; dx: number; dy: number } | null>(null);
+  const drag = useRef<{ id: number; selection: Exclude<Selection, null>; start: { x: number; y: number }; dx: number; dy: number; target: Element } | null>(null);
   function position(event: PointerEvent) {
     return pointerInMm(event.clientX, event.clientY, plane.current!.getBoundingClientRect(), result!.canvas_width_mm, result!.canvas_height_mm);
   }
@@ -25,8 +25,8 @@ export function KeychainPreview({ result, unit, placeholder, current, selection,
     if (!current || !result) return;
     event.preventDefault(); event.stopPropagation();
     onSelect(selected);
-    (event.currentTarget as SVGElement).focus();
-    drag.current = { id: event.pointerId, selection: selected, start: position(event), dx: 0, dy: 0 };
+    (event.currentTarget as HTMLElement | SVGElement).focus();
+    drag.current = { id: event.pointerId, selection: selected, start: position(event), dx: 0, dy: 0, target: event.currentTarget };
     event.currentTarget.setPointerCapture(event.pointerId);
     if (ghost.current) ghost.current.style.display = "block";
   }
@@ -57,15 +57,26 @@ export function KeychainPreview({ result, unit, placeholder, current, selection,
         <button type="button" aria-label="Fit design" onClick={() => setZoom(1)}><Maximize2 size={15} /></button></div>
     </div>
     <div className={`kc-canvas${placeholder ? " kc-placeholder" : ""}`} onClick={event => { if (event.target === event.currentTarget) onSelect(null); }}>
-      {result ? <div className="kc-design-plane" ref={plane} style={{ transform: `scale(${zoom})` }}>
+      {result ? <div className="kc-design-plane" ref={plane} tabIndex={-1} style={{ transform: `scale(${zoom})` }}
+        onPointerDown={event => {
+          const hit = (event.target as Element).closest("[data-glyph-index]");
+          if (hit && editableGlyphs && view !== "backing") down(event, Number(hit.getAttribute("data-glyph-index")));
+        }} onPointerMove={move} onPointerUp={event => end(event)} onPointerCancel={event => end(event, true)} onLostPointerCapture={event => end(event, true)}
+        onKeyDown={event => {
+          if (event.key === "Escape" && drag.current) {
+            const active = drag.current; drag.current = null;
+            if (ghost.current) { ghost.current.style.display = "none"; ghost.current.setAttribute("transform", ""); }
+            if (active.target.hasPointerCapture(active.id)) active.target.releasePointerCapture(active.id);
+          }
+        }}>
         <div className="kc-svg" data-view={view} dangerouslySetInnerHTML={{ __html: result.preview_svg }} />
-        <svg className="kc-overlay" viewBox={`0 0 ${result.canvas_width_mm} ${result.canvas_height_mm}`} onPointerMove={move} onPointerUp={event => end(event)} onPointerCancel={event => end(event, true)} onLostPointerCapture={event => end(event, true)}>
+        <svg className="kc-overlay" viewBox={`0 0 ${result.canvas_width_mm} ${result.canvas_height_mm}`}>
           {editableGlyphs && view !== "backing" && result.glyphs.filter(g => g.bbox_mm[2] > g.bbox_mm[0]).map(item => <rect key={item.glyph_index}
             className="kc-glyph-target" x={item.bbox_mm[0]} y={item.bbox_mm[1]} width={item.bbox_mm[2]-item.bbox_mm[0]} height={item.bbox_mm[3]-item.bbox_mm[1]}
-            tabIndex={0} role="button" aria-label={`Select ${item.cluster_text}, glyph ${item.glyph_index+1}`} aria-pressed={selection === item.glyph_index}
-            onFocus={() => onSelect(item.glyph_index)} onPointerDown={event => down(event, item.glyph_index)} />)}
+            tabIndex={current ? 0 : -1} role="button" aria-label={`Select ${item.cluster_text}, glyph ${item.glyph_index+1}`} aria-pressed={selection === item.glyph_index}
+            onFocus={() => { if (current) onSelect(item.glyph_index); }} onPointerDown={event => down(event, item.glyph_index)} />)}
           {result.ring && view !== "text" && <circle className="kc-ring-target" cx={result.ring.center_x_mm} cy={result.ring.center_y_mm} r={result.ring.outer_diameter_mm/2}
-            tabIndex={0} role="button" aria-label="Move ring" aria-pressed={selection === "ring"} onFocus={() => onSelect("ring")} onPointerDown={event => down(event, "ring")} />}
+            tabIndex={current ? 0 : -1} role="button" aria-label="Move ring" aria-pressed={selection === "ring"} onFocus={() => { if (current) onSelect("ring"); }} onPointerDown={event => down(event, "ring")} />}
           {selectedBounds && <rect className="kc-selection" x={selectedBounds[0]} y={selectedBounds[1]} width={selectedBounds[2]-selectedBounds[0]} height={selectedBounds[3]-selectedBounds[1]} />}
           <g ref={ghost} className="kc-ghost" style={{ display: "none" }}>{selectedBounds && <rect x={selectedBounds[0]} y={selectedBounds[1]} width={selectedBounds[2]-selectedBounds[0]} height={selectedBounds[3]-selectedBounds[1]} />}</g>
         </svg>
@@ -74,7 +85,7 @@ export function KeychainPreview({ result, unit, placeholder, current, selection,
       {!current && result && <span className="kc-updating">Updating preview…</span>}
     </div>
     <div className="kc-preview-caption"><span>{result ? `${dimension(result.width_mm, unit)} × ${dimension(result.height_mm, unit)}` : "Finished dimensions"}</span>
-      <div className="kc-layer-legend"><span>● Cut backing</span><span>● {result?.recipe.style === "layered" ? "Cut text" : "Engrave text"}</span></div>
+      <div className="kc-layer-legend"><span><i style={{ background: result?.recipe.colors.backing ?? "#000000" }} />Cut backing</span><span><i style={{ background: result?.recipe.colors.text ?? "#FF0000" }} />{result?.recipe.style === "layered" ? "Cut text" : "Engrave text"}</span></div>
     </div>
   </section>;
 }

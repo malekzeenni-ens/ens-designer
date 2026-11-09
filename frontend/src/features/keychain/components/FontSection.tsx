@@ -19,6 +19,10 @@ export function suitability(font: FontInfo): "Recommended" | "OK" | "Caution" | 
 export function preferredFont(fonts: FontInfo[], manual: FontInfo[]) {
   return manual.find(font => suitability(font) === "Recommended") ?? manual[0] ?? fonts[0];
 }
+export function matchesFontStyle(font: FontInfo, filter: string) {
+  const type = getFontClassification(font).type;
+  return filter === "all" || type === filter || filter === "display" && (type === "decorative" || /bold|black|heavy/i.test(`${font.style} ${font.full_name}`));
+}
 
 export function FontSection({ fonts, manualFonts, value, text, onChange, onPreview }: {
   fonts: FontInfo[]; manualFonts: FontInfo[]; value: string; text: string;
@@ -28,8 +32,7 @@ export function FontSection({ fonts, manualFonts, value, text, onChange, onPrevi
   const [supportOnly, setSupportOnly] = useState(false);
   const [supported, setSupported] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
-  const candidates = useMemo(() => fonts.filter(font => filter === "all" || getFontClassification(font).type === filter
-    || filter === "display" && getFontClassification(font).type === "decorative"), [fonts, filter]);
+  const candidates = useMemo(() => fonts.filter(font => matchesFontStyle(font, filter)), [fonts, filter]);
   useEffect(() => {
     if (!supportOnly) return;
     let cancelled = false;

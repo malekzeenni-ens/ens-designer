@@ -1,6 +1,6 @@
 # Keychain QA matrix
 
-Date: 2026-11-09. Status: K2 backend and K3 automated workspace checks verified; K4 implementation follows. User reserved the K5 browser/LightBurn/operator testing pass for later.
+Date: 2026-11-09. Status: K0–K4 implemented with automated implementation checks (325 backend / 91 frontend tests). User reserved the K5 browser/LightBurn/operator testing and hardening pass for later. This matrix does not claim final product acceptance.
 
 | ID | Scenario | Expected result | Evidence / status |
 |---|---|---|---|
@@ -30,8 +30,8 @@ Date: 2026-11-09. Status: K2 backend and K3 automated workspace checks verified;
 | KC-24 | Eight concurrent requests | Deterministic SVG and dimensions; shared glyph/font caches remain safe | Automated |
 | KC-25 | 22-case preview/export corpus | Preview API p95 <=150 ms, cold <=800 ms, export <=1500 ms; convergence | `keychain-k2-benchmark.json`; 20 warm previews per case, budget gate enforced |
 | KC-26 | Existing Cake Topper | Three golden SVGs byte-identical; existing full regression suite passes | Automated: 325 backend tests, 63 frontend tests |
-| KC-27 | Keychain tab, state preservation, keyboard, live request ordering | Complete operator journey | K3 automated state/export/stale-request checks pass; K4 tools next; actual browser walkthrough pending K5 |
+| KC-27 | Keychain tab, state preservation, keyboard, live request ordering | Complete operator journey | K3/K4 automated state/export/stale-request, cluster-edit, undo/redo, Next name and history checks pass; actual browser walkthrough pending K5 |
 | KC-28 | LightBurn import and colour mapping | Separate physical layers, selected geometry size within 0.1 mm, no repairs | Pending K5 manual validation |
 | KC-29 | Actual material cut | Neck strength, minimum-feature quality and assembled Layered product | Pending manufacturing validation; automated warnings are not physical certification |
 
-Performance evidence is local FastAPI/TestClient and service measurement, not browser/network latency. Cairo native libraries are unavailable; exports use the existing Pillow drawing functions with K2 layer compositing. The HTML UI is unchanged in K2. Samples under `keychain-k2-samples/` are review artifacts, not replacements for the K0 golden fixtures.
+Performance evidence is local FastAPI/TestClient and service measurement, not browser/network latency. Cairo native libraries are unavailable; exports use the existing Pillow drawing functions with K2 layer compositing. K3/K4 implement the HTML workspace; native browser verification stopped because Chrome's current URL could not be confidently verified by Computer Use. Samples under `keychain-k2-samples/` are review artifacts, not replacements for the K0 golden fixtures. Production-check Fix buttons/highlights, broad focus/error-state audits and actual browser drag/appearance checks remain K5.

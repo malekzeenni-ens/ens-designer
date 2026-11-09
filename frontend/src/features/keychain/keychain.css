@@ -63,6 +63,8 @@
 .kc-svg > svg { width: 100%; height: 100%; display: block; }
 .kc-overlay { pointer-events: none; }
 .kc-ring-target, .kc-glyph-target { pointer-events: all; cursor: grab; fill: transparent; stroke: transparent; touch-action: none; }
+.kc-glyph-target { pointer-events: none; }
+.kc-svg [data-glyph-index] { cursor: grab; }
 .kc-ring-target:hover, .kc-ring-target:focus { stroke: #b68b43; stroke-width: .2; stroke-dasharray: 1 .5; outline: none; }
 .kc-ring-target:active, .kc-glyph-target:active { cursor: grabbing; }
 .kc-selection { fill: none; stroke: #b68b43; stroke-width: .18; stroke-dasharray: 1 .5; pointer-events: none; }
@@ -77,6 +79,8 @@
 .kc-canvas-empty p { font-size: 13px; }
 .kc-preview-caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 16px; font-size: 12px; color: var(--ens-text-secondary); font-variant-numeric: tabular-nums; }
 .kc-layer-legend { display: flex; gap: 16px; font-size: 10px; color: var(--ens-text-muted); }
+.kc-layer-legend > span { display: flex; align-items: center; gap: 5px; }
+.kc-layer-legend i { width: 7px; height: 7px; border: 1px solid var(--ens-border-strong); border-radius: 50%; }
 .kc-checks { background: var(--ens-surface-1); border: 1px solid var(--ens-border-default); border-radius: 8px; padding: 0 15px; }
 .kc-checks > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 13px 0; cursor: pointer; list-style: none; font-size: 11px; color: var(--ens-text-muted); }
 .kc-checks > summary > span:first-child { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ens-success); }
@@ -102,5 +106,25 @@
 .kc-spin { animation: kc-rotate 1s linear infinite; }
 @keyframes kc-rotate { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .kc-spin { animation: none; } }
-@media (max-width: 1100px) { .kc-body { grid-template-columns: 1fr; } .kc-stage { grid-row: 1; } .kc-controls { max-height: none; } .kc-topbar { gap: 12px; } .kc-heading { width: 100%; } }
+@media (max-width: 1100px) { .kc-body { grid-template-columns: 1fr; } .kc-stage { grid-row: 1; } .kc-controls { max-height: 46vh; } .kc-canvas { height: max(230px, 34vh); } .kc-topbar { gap: 12px; } .kc-heading { width: 100%; } }
 @media (max-width: 600px) { .kc-topbar { padding: 14px; } .kc-name { flex-basis: 100%; grid-template-columns: 40px 1fr; } .kc-canvas { height: 330px; padding: 14px; } .kc-preview-toolbar { padding: 8px; } .kc-view-buttons button { padding: 0 7px; } .kc-layer-legend { gap: 9px; } .kc-exportbar { padding: 12px; } .kc-exportbar > div:first-child { width: 100%; } }
+.kc-edit-actions { display: flex; gap: 5px; align-items: center; }
+.kc-edit-actions > button { padding: 0 9px; }
+.kc-edit-actions span { font-size: 11px; }
+.kc-inspector-hint { color: var(--ens-text-muted); font-size: 12px; line-height: 1.7; margin: 0; }
+.kc-inspector-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+.kc-inspector-title button { height: 28px; min-height: 28px; font-size: 11px; }
+.kc-history { border: 1px solid var(--ens-border-default); border-radius: 10px; background: var(--ens-surface-1); padding: 16px 20px; }
+.kc-history > header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.kc-history h2 { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 0; font-weight: 600; }
+.kc-history header > div { display: flex; gap: 5px; }
+.kc-history header button { height: 28px; min-height: 28px; width: 28px; padding: 0; }
+.kc-history p { color: var(--ens-text-muted); font-size: 12px; }
+.kc-history-list { max-height: 250px; overflow-y: auto; display: grid; gap: 6px; }
+.kc-history-list > button { display: flex; justify-content: space-between; text-align: left; height: auto; min-height: 60px; padding: 10px 12px; }
+.kc-history-list > button > span { display: grid; gap: 5px; }
+.kc-history-list > button > span:last-child { text-align: right; }
+.kc-history-list small { font-size: 10px; color: var(--ens-text-muted); font-weight: 400; }
+.kc-history-load { color: var(--ens-text-accent); font-size: 11px; }
+.kc-file-links { align-items: center; flex-wrap: wrap; }
+.kc-file-links > span { font-size: 12px; color: var(--ens-text-muted); margin-right: auto; }

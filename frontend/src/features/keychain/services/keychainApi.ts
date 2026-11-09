@@ -17,8 +17,8 @@ async function generate(path: string, request: KeychainRequest, signal?: AbortSi
 }
 export const previewKeychain = (request: KeychainRequest, signal: AbortSignal) => generate("preview", request, signal);
 export const exportKeychain = (request: KeychainRequest) => generate("export", request);
-export async function fetchKeychainHistory(): Promise<KeychainHistoryEntry[]> {
-  return read(await fetch("/api/keychain/history"));
+export async function fetchKeychainHistory(signal?: AbortSignal): Promise<KeychainHistoryEntry[]> {
+  return read(await fetch("/api/keychain/history", { signal }));
 }
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);

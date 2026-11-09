@@ -15,6 +15,26 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-11-09 21:17 Europe/London] - Keychain Designer K3 Workspace
+
+### Commit
+- Commit hash: `193764c7f621519780df85a26c8d138a6d1a05a3`
+- Previous commit: `0ee43bd`
+- Branch: `main`
+- User authorised K3 and K4 together; K5 testing/hardening remains deferred.
+
+### Summary and Validation
+- Added the dedicated Keychain tab and feature module with sequenced/cancelled live previews, font/size/backing/ring/spacing/layer controls, units, presets, layer views, zoom and ring ghost drag.
+- Export requires a current named design and explicit confirmation for production errors. Separate Layered files have individual download buttons; the backend alone saves export history.
+- Added optional sample-text and hover callbacks to the shared font picker without changing default Designer behaviour. CakeTopperPanel and PreviewPanel were not modified.
+- Frontend: 21 files / 78 tests passed. TypeScript/Vite build passed. Tests cover stale/aborted responses, last-good preview, export gating/confirmation, unit conversion and Activity state.
+- Started a separate hidden local preview server on 127.0.0.1:8011; normal production 8010 was not restarted.
+- Actual browser inspection is not signed off: browser host was unavailable and native Chrome automation then stopped because the URL could not be confidently verified. No further UI automation attempted. Browser, drag/appearance, accessibility and LightBurn checks remain K5.
+- Handoff: `docs/handoffs/keychain-designer-k3-workspace-handoff.md`.
+- Revert the K3 implementation commit and rebuild to roll back. K4 proceeds immediately under the existing user authorisation.
+
+---
+
 ## [2026-11-09 20:48:42 Europe/London] - Keychain Designer K2 Engine and API
 
 ### Commit

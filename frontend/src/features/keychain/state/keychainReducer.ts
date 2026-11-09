@@ -6,6 +6,7 @@ export type DesignAction =
   | { type: "preset"; value: "name" | "mini" | "bag" }
   | { type: "replace"; value: KeychainDesign }
   | { type: "glyph"; index: number; value: Partial<GlyphTransform> }
+  | { type: "move"; selection: "ring" | number; dx: number; dy: number }
   | { type: "reset-glyph"; index: number };
 
 export function defaultGlyph(index: number): GlyphTransform {
@@ -29,6 +30,14 @@ export function designReducer(state: KeychainDesign, action: DesignAction): Keyc
     case "glyph": {
       const value = { ...(state.glyph_transforms.find(item => item.glyph_index === action.index) ?? defaultGlyph(action.index)), ...action.value, glyph_index: action.index };
       return { ...state, glyph_transforms: [...state.glyph_transforms.filter(item => item.glyph_index !== action.index), value] };
+    }
+    case "move": {
+      const bound = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
+      if (action.selection === "ring") return { ...state, ring: { ...state.ring,
+        x_offset_mm: bound(state.ring.x_offset_mm+action.dx, 100), y_offset_mm: bound(state.ring.y_offset_mm+action.dy, 100) } };
+      const current = state.glyph_transforms.find(item => item.glyph_index === action.selection) ?? defaultGlyph(action.selection);
+      return designReducer(state, { type: "glyph", index: action.selection,
+        value: { dx_mm: bound(current.dx_mm+action.dx, 50), dy_mm: bound(current.dy_mm+action.dy, 50) } });
     }
     case "reset-glyph": return { ...state, glyph_transforms: state.glyph_transforms.filter(item => item.glyph_index !== action.index),
       dots: { ...state.dots, manual_offsets: state.dots.manual_offsets.filter(item => item.glyph_index !== action.index) } };
