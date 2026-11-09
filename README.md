@@ -6,6 +6,7 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Latest Updates
 
+- 2026-11-09 - Added the Keychain workspace (K3): live preview, font/size/backing/ring/layer controls, presets, production checks and exports. K4 editing tools follow; K5 is reserved for the later testing pass.
 - 2026-11-09 - Added the dedicated Keychain engine and preview/export/history API (K2): finished sizing, solid backing, ring auto-snap, i/j dot joining, glyph transforms, production checks, layered SVGs and transparent PNGs. The Keychain workspace UI is K3.
 - 2026-11-09 - Added Keychain K1 shared foundations: thread-safe parsed-font caching used by Cake Topper, reusable raw glyph caching, shared ring helpers, optional curve tolerance and configurable history filenames. Existing Cake Topper SVGs remain byte-identical.
 - 2026-11-09 - Started dedicated Keychain Designer milestone K0: reproducible Cake Topper benchmarks and three golden SVG fixtures. The Keychain tab is planned; implementation starts with shared foundations in K1.
@@ -21,7 +22,7 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Current Status
 
-Keychain Designer: K0–K2 backend milestones delivered; K3 workspace UI next. See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K2 handoff](docs/handoffs/keychain-designer-k2-engine-api-handoff.md).
+Keychain Designer: K0–K3 delivered; K4 editing tools in progress. See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K3 handoff](docs/handoffs/keychain-designer-k3-workspace-handoff.md). K5 testing remains deferred by request.
 
 Run `.\.venv313\Scripts\python.exe scripts/bench_keychain.py --check-fixtures --iterations 20 --output logs/keychain-benchmark.json` for stage p50/p95 timings. Golden SVG checks also run with pytest. Reference fixtures cannot be overwritten by the benchmark command.
 

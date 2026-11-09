@@ -7,7 +7,7 @@ Phase Name: Dedicated Keychain Designer Tab
 Target Release: next minor version after the current tag (run `git tag --sort=-v:refname | head -1`)
 Owner: Etch 'N' Shine
 Date: 2026-11-06
-Status: K0–K2 complete on 2026-11-09. K3 workspace UI is next; see `docs/handoffs/keychain-designer-k2-engine-api-handoff.md` for timings, tests and environment notes. Report at the milestone boundary before K3.
+Status: K0–K3 implemented on 2026-11-09. User authorised K3 and K4 together, reserving K5 for the later testing pass. Continue directly into K4 after recording K3; browser/LightBurn sign-off remains pending K5. See `docs/handoffs/keychain-designer-k3-workspace-handoff.md`.
 
 Companion document (read first): `docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md`. Stage, check and default references below (for example "Journey §7 Stage 6") point into it.
 

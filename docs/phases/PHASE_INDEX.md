@@ -27,7 +27,7 @@ Some filenames were retained for repository continuity after the Stage -1 archit
 
 # Approved Roadmap
 
-Independent Keychain workstream: [plan](KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](KEYCHAIN_DESIGNER_USER_JOURNEY.md). K0–K2 completed on 2026-11-09 ([K2 handoff](../handoffs/keychain-designer-k2-engine-api-handoff.md)); K3–K5 follow the plan's milestone gates.
+Independent Keychain workstream: [plan](KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](KEYCHAIN_DESIGNER_USER_JOURNEY.md). K0–K3 implemented on 2026-11-09 ([K3 handoff](../handoffs/keychain-designer-k3-workspace-handoff.md)); K4 is authorised next. User reserved K5 for the later testing pass.
 
 1. Stage -1 - Architecture Remediation
 2. Phase 00 - Repository & Architecture Assessment

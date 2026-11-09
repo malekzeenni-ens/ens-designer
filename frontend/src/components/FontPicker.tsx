@@ -15,9 +15,11 @@ interface Props {
   label: string;
   selectedFont?: FontInfo;
   disabled?: boolean;
+  previewText?: string;
+  onPreview?: (id: string | null) => void;
 }
 
-export function FontPicker({ groups, value, onChange, label, selectedFont, disabled }: Props) {
+export function FontPicker({ groups, value, onChange, label, selectedFont, disabled, previewText, onPreview }: Props) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const popup = useRef<HTMLDivElement>(null);
@@ -32,7 +34,7 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
   const active = fonts.find((font) => font.id === activeId) ?? fonts[0];
   const optionId = (fontId: string) => `${id}-option-${fontId}`;
 
-  function close(restore = false) { setOpen(false); if (restore) trigger.current?.focus(); }
+  function close(restore = false) { setOpen(false); onPreview?.(null); if (restore) trigger.current?.focus(); }
   function choose(fontId: string) { onChange(fontId); close(true); }
 
   useEffect(() => {
@@ -61,6 +63,11 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
   useEffect(() => {
     if (open && active) document.getElementById(optionId(active.id))?.scrollIntoView?.({ block: "nearest" });
   }, [open, active?.id]);
+
+  useEffect(() => {
+    if (open) onPreview?.(active?.id ?? null);
+  }, [open, active?.id, onPreview]);
+  useEffect(() => () => onPreview?.(null), [onPreview]);
 
   return <div className="font-picker">
     <button ref={trigger} type="button" className="font-picker-trigger" aria-label={label} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-popup` : undefined} disabled={disabled}
@@ -93,7 +100,8 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
           {group.fonts.map((font) => {
             const classification = getFontClassification(font);
             return <div key={font.id} id={optionId(font.id)} role="option" aria-selected={font.id === value} aria-label={`${fontDisplayName(font)}, ${font.style}, ${FONT_CATEGORY_LABELS[classification.category]}, score ${classification.score}`} className={`font-picker-option${font.id === active?.id ? " is-active" : ""}`} onPointerMove={() => setActiveId(font.id)} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(font.id)}>
-              <FontNamePreview font={font} />
+              <FontNamePreview font={font} text={previewText} />
+              {previewText && <span className="font-picker-detail">{fontDisplayName(font)}</span>}
               <div className="font-picker-detail"><span>{font.style} · {FONT_CATEGORY_LABELS[classification.category]} · {classification.score}</span>{font.id === value && <Check size={16} aria-hidden="true" />}</div>
             </div>;
           })}

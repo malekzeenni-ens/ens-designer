@@ -31,7 +31,7 @@ function acquire(id: string) {
   return { promise: entry.promise, release: () => { current.users--; trimCache(); } };
 }
 
-export function FontNamePreview({ font }: { font: FontInfo }) {
+export function FontNamePreview({ font, text }: { font: FontInfo; text?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
   useEffect(() => {
@@ -55,7 +55,7 @@ export function FontNamePreview({ font }: { font: FontInfo }) {
     return () => { cancelled = true; observer?.disconnect(); lease?.release(); };
   }, [font.id]);
   return <span className="font-name-preview-wrap" ref={ref}>
-    <span className="font-name-preview" style={status === "ready" ? { fontFamily: `"ens-font-${font.id}"`, fontSynthesis: "none" } : undefined}>{fontDisplayName(font)}</span>
+    <span className="font-name-preview" style={status === "ready" ? { fontFamily: `"ens-font-${font.id}"`, fontSynthesis: "none" } : undefined}>{text ?? fontDisplayName(font)}</span>
     {status === "failed" && <span className="font-preview-status">Preview unavailable</span>}
   </span>;
 }

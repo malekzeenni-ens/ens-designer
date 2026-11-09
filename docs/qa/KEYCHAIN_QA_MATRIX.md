@@ -1,6 +1,6 @@
 # Keychain QA matrix
 
-Date: 2026-11-09. Status: K2 backend verified; K3 UI and K5 LightBurn/operator checks pending.
+Date: 2026-11-09. Status: K2 backend and K3 automated workspace checks verified; K4 implementation follows. User reserved the K5 browser/LightBurn/operator testing pass for later.
 
 | ID | Scenario | Expected result | Evidence / status |
 |---|---|---|---|
@@ -30,7 +30,7 @@ Date: 2026-11-09. Status: K2 backend verified; K3 UI and K5 LightBurn/operator c
 | KC-24 | Eight concurrent requests | Deterministic SVG and dimensions; shared glyph/font caches remain safe | Automated |
 | KC-25 | 22-case preview/export corpus | Preview API p95 <=150 ms, cold <=800 ms, export <=1500 ms; convergence | `keychain-k2-benchmark.json`; 20 warm previews per case, budget gate enforced |
 | KC-26 | Existing Cake Topper | Three golden SVGs byte-identical; existing full regression suite passes | Automated: 325 backend tests, 63 frontend tests |
-| KC-27 | Keychain tab, state preservation, keyboard, live request ordering | Complete operator journey | Pending K3–K5 |
+| KC-27 | Keychain tab, state preservation, keyboard, live request ordering | Complete operator journey | K3 automated state/export/stale-request checks pass; K4 tools next; actual browser walkthrough pending K5 |
 | KC-28 | LightBurn import and colour mapping | Separate physical layers, selected geometry size within 0.1 mm, no repairs | Pending K5 manual validation |
 | KC-29 | Actual material cut | Neck strength, minimum-feature quality and assembled Layered product | Pending manufacturing validation; automated warnings are not physical certification |
 

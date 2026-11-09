@@ -1,6 +1,7 @@
 import {
   BadgeCheck,
   Clock3,
+  KeyRound,
   PenTool,
   Ruler,
   Settings2,
@@ -16,13 +17,15 @@ import { FontAdvisorPanel } from "./components/FontAdvisorPanel";
 import { FontsPanel } from "./components/FontsPanel";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { SizingAssistantTab } from "./features/sizing-assistant/components/SizingAssistantTab";
+import { KeychainTab } from "./features/keychain/components/KeychainTab";
 import { deleteFonts, fetchFonts, fetchManualFonts, fetchUploadedFonts, saveManualFonts } from "./services/generationApi";
 import type { FontInfo } from "./types/design";
 
-type WorkspaceTab = "designer" | "sizingAssistant" | "advisor" | "fonts" | "configuration" | "history";
+type WorkspaceTab = "designer" | "keychain" | "sizingAssistant" | "advisor" | "fonts" | "configuration" | "history";
 
 const WORKSPACES = [
   { id: "designer", label: "Designer", icon: PenTool },
+  { id: "keychain", label: "Keychain", icon: KeyRound },
   { id: "sizingAssistant", label: "Sizing", fullLabel: "Sizing Assistant", icon: Ruler },
   { id: "advisor", label: "Advisor", fullLabel: "Font Advisor", icon: BadgeCheck },
   { id: "fonts", label: "Fonts", icon: Type },
@@ -132,6 +135,7 @@ export function App() {
         ) : (
           <>
             <Activity mode={activeTab === "designer" ? "visible" : "hidden"}><CakeTopperPanel fonts={fonts} manualFonts={manualFonts} toolbarHost={toolbarHost} active={activeTab === "designer"} /></Activity>
+            <Activity mode={activeTab === "keychain" ? "visible" : "hidden"}><KeychainTab fonts={fonts} manualFonts={manualFonts} active={activeTab === "keychain"} /></Activity>
             {activeTab === "sizingAssistant" && <SizingAssistantTab />}
             {activeTab === "advisor" && (
               <FontAdvisorPanel fonts={fonts} uploadedFonts={uploadedFonts} />
