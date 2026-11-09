@@ -7,7 +7,7 @@ Phase Name: Dedicated Keychain Designer Tab
 Target Release: next minor version after the current tag (run `git tag --sort=-v:refname | head -1`)
 Owner: Etch 'N' Shine
 Date: 2026-11-06
-Status: K0 complete on 2026-11-09. K1 is next; see `docs/handoffs/keychain-designer-k0-baseline-handoff.md` for timings, tests and environment notes. Report at the milestone boundary before K1.
+Status: K0 and K1 complete on 2026-11-09. K2 engine/API is next; see `docs/handoffs/keychain-designer-k1-foundations-handoff.md` for timings, tests and environment notes. Report at the milestone boundary before K2.
 
 Companion document (read first): `docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md`. Stage, check and default references below (for example "Journey §7 Stage 6") point into it.
 
@@ -114,7 +114,7 @@ Companion document (read first): `docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md`
 
 - **Rejected alternative:** port the engine to the browser (opentype.js + ClipperLib or harfbuzzjs WASM), as vectorsfile.com does.
 - **Why rejected:** it would duplicate the shaping, overlap, floating, ring and validation logic in TypeScript, create two sources of truth for production geometry, and weaken HarfBuzz/Shapely fidelity.
-- **Revisit** only if K1 benchmarks cannot meet the Journey §11 budget. Record that decision as a new ADR.
+- **Revisit** only if the PNG-free Keychain preview endpoint in K2 cannot meet the Journey §11 budget. K1 is judged by measured caching improvements, not the current PNG-inclusive generation time (confirmed 2026-11-09). Record a change of engine strategy as a new ADR.
 
 ## AD-2: New engine module; reuse, don't fork
 
@@ -193,7 +193,7 @@ Changes to existing modules:
 - Call `clear_font_cache()` from the font upload and delete routes in `api/routes/fonts.py`.
 - **The Cake Topper does not have to adopt the cache in this phase.** Adoption is optional and allowed only if the golden-file comparison stays identical. Recommended: adopt it, because it is pure speed.
 
-Also in K1, add a glyph outline cache in the keychain engine: an LRU keyed by `(font key, glyph_name)` that stores raw font-unit `PathCommand` lists. Positioning and scaling are applied afterwards, so this is safe.
+Also in K1, add reusable glyph outline cache support in `font_cache.py`, owned by the loaded font snapshot and keyed by glyph name. It stores raw font-unit `PathCommand` lists before positioning/scaling, bounded to 512 glyphs per font. Wire it into the Keychain engine in K2 (confirmed 2026-11-09). Cake Topper retains its existing drawing operations with cached font objects for exact parity.
 
 ## 5.2 Keychain request and response models (K2)
 

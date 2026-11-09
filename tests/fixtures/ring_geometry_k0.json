@@ -1,0 +1,230 @@
+{
+  "source": "e3a481e:backend/app/cake_topper_engine.py",
+  "cases": [
+    {
+      "config": {
+        "position": "top-left"
+      },
+      "wkt_sha256": "13427a582570c635aa5e40a94e550eaa72bcb6f959e0af2f08bbdb694f135c9a",
+      "metadata": {
+        "enabled": true,
+        "position": "top-left",
+        "center_x_mm": 6.0,
+        "center_y_mm": -1.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 0.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 11.832,
+        "is_valid": true,
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "config": {
+        "position": "top-center"
+      },
+      "wkt_sha256": "b60bdcd1834f13ba87991e1aead6034fe8e0c63911a447f3a76fbbfa6abf21d8",
+      "metadata": {
+        "enabled": true,
+        "position": "top-center",
+        "center_x_mm": 20.0,
+        "center_y_mm": -1.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 0.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 11.832,
+        "is_valid": true,
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "config": {
+        "position": "top-right"
+      },
+      "wkt_sha256": "0cff6c1e3e2b345db4cd4e77bb07475b41713024954a8e346be9a23702473500",
+      "metadata": {
+        "enabled": true,
+        "position": "top-right",
+        "center_x_mm": 34.0,
+        "center_y_mm": -1.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 0.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 11.832,
+        "is_valid": true,
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "config": {
+        "position": "left"
+      },
+      "wkt_sha256": "13427a582570c635aa5e40a94e550eaa72bcb6f959e0af2f08bbdb694f135c9a",
+      "metadata": {
+        "enabled": true,
+        "position": "left",
+        "center_x_mm": 6.0,
+        "center_y_mm": -1.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 0.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 11.832,
+        "is_valid": true,
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "config": {
+        "position": "right"
+      },
+      "wkt_sha256": "13427a582570c635aa5e40a94e550eaa72bcb6f959e0af2f08bbdb694f135c9a",
+      "metadata": {
+        "enabled": true,
+        "position": "right",
+        "center_x_mm": 6.0,
+        "center_y_mm": -1.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 0.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 11.832,
+        "is_valid": true,
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "config": {
+        "position": "custom",
+        "x_offset_mm": 4,
+        "y_offset_mm": -1
+      },
+      "wkt_sha256": "f6b594eba967b63dd249f5dcc2f1f4d1509cac0b7778faf5b3283032bf8492a7",
+      "metadata": {
+        "enabled": true,
+        "position": "custom",
+        "center_x_mm": 10.0,
+        "center_y_mm": -2.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 4.0,
+        "y_offset_mm": -1.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 11.832,
+        "is_valid": true,
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "config": {
+        "outer_diameter_mm": 10,
+        "hole_diameter_mm": 6,
+        "overlap_mm": 2
+      },
+      "wkt_sha256": "5452ead3eb07a0c6a11610833d313a3424c5b462ad1d221e1b5a9fb60d225cc6",
+      "metadata": {
+        "enabled": true,
+        "position": "top-left",
+        "center_x_mm": 5.0,
+        "center_y_mm": -3.0,
+        "outer_diameter_mm": 10.0,
+        "hole_diameter_mm": 6.0,
+        "outer_radius_mm": 5.0,
+        "hole_radius_mm": 3.0,
+        "x_offset_mm": 0.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 2.0,
+        "neck_width_mm": 8.0,
+        "is_valid": false,
+        "warnings": [
+          "Ring wall thickness is below 3 mm. Increase the outer diameter or reduce the hole diameter.",
+          "Ring connection to the backing may be too weak. Increase overlap or move the ring closer to the design body."
+        ]
+      },
+      "warnings": [
+        "Ring wall thickness is below 3 mm. Increase the outer diameter or reduce the hole diameter.",
+        "Ring connection to the backing may be too weak. Increase overlap or move the ring closer to the design body."
+      ]
+    },
+    {
+      "config": {
+        "x_offset_mm": 100
+      },
+      "wkt_sha256": "91d09782dafbe4e7122149a5738e587414dadbc9dc9b9ef75888b7b476bf7de5",
+      "metadata": {
+        "enabled": true,
+        "position": "top-left",
+        "center_x_mm": 106.0,
+        "center_y_mm": -1.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 100.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 11.832,
+        "is_valid": false,
+        "warnings": [
+          "Ring/keyhole is not touching the backing layer. Move it closer to the design body."
+        ]
+      },
+      "warnings": [
+        "Ring/keyhole is not touching the backing layer. Move it closer to the design body."
+      ]
+    },
+    {
+      "config": {
+        "overlap_mm": 10
+      },
+      "wkt_sha256": "90eabab206033a373dc4c8b273eaa45ac78ceb3eac7be4a5cd31d778507ca474",
+      "metadata": {
+        "enabled": true,
+        "position": "top-left",
+        "center_x_mm": 6.0,
+        "center_y_mm": 4.0,
+        "outer_diameter_mm": 12.0,
+        "hole_diameter_mm": 5.0,
+        "outer_radius_mm": 6.0,
+        "hole_radius_mm": 2.5,
+        "x_offset_mm": 0.0,
+        "y_offset_mm": 0.0,
+        "wall_thickness_mm": 3.5,
+        "neck_width_mm": 8.944,
+        "is_valid": false,
+        "warnings": [
+          "Ring hole may be too close to the text. Move the ring or increase the outline offset."
+        ]
+      },
+      "warnings": [
+        "Ring hole may be too close to the text. Move the ring or increase the outline offset."
+      ]
+    }
+  ]
+}

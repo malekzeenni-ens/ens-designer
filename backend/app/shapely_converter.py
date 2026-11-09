@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
@@ -14,7 +15,18 @@ _CUBIC_STEPS = 12
 _CONNECTIVITY_TOLERANCE_MM = 0.1
 
 
-def path_to_shapely(path: GeometryPath) -> Polygon | MultiPolygon | None:
+def _curve_steps(points, default: int, tolerance_mm: float | None) -> int:
+    if tolerance_mm is None:
+        return default
+    length = sum(math.dist(a, b) for a, b in zip(points, points[1:]))
+    degree = len(points) - 1
+    # Linear interpolation error <= max|B''| / (8*n*n). The control polygon
+    # bounds max|B''| by degree*(degree-1)*length. Cap work at 64 segments.
+    estimate = math.sqrt(degree * (degree - 1) * length / (8 * tolerance_mm))
+    return max(4, math.ceil(min(64, estimate)))
+
+
+def path_to_shapely(path: GeometryPath, tolerance_mm: float | None = None) -> Polygon | MultiPolygon | None:
     """
     Convert one canonical path to Shapely geometry.
 
@@ -22,7 +34,13 @@ def path_to_shapely(path: GeometryPath) -> Polygon | MultiPolygon | None:
     for example the outer ring and counter hole of the letter O. Each subpath
     is built as a separate Polygon, then combined via the same outer/hole logic
     used by glyph_to_shapely.
+
+    Optional tolerance uses a conservative control-polygon error bound, with
+    4–64 segments per curve. At the 64-segment cap, extreme curves may exceed
+    the requested tolerance. None preserves the original fixed subdivision.
     """
+    if tolerance_mm is not None and (not math.isfinite(tolerance_mm) or tolerance_mm <= 0):
+        raise ValueError("Curve tolerance must be a finite positive number.")
     subpath_coords: list[list[tuple[float, float]]] = []
     current_coords: list[tuple[float, float]] = []
     current = (0.0, 0.0)
@@ -38,8 +56,9 @@ def path_to_shapely(path: GeometryPath) -> Polygon | MultiPolygon | None:
             current_coords.append(current)
         elif cmd.type == "Q":
             p0, p1, p2 = current, (cmd.x1, cmd.y1), (cmd.x, cmd.y)
-            for i in range(1, _QUAD_STEPS + 1):
-                t = i / _QUAD_STEPS
+            steps = _curve_steps((p0, p1, p2), _QUAD_STEPS, tolerance_mm)
+            for i in range(1, steps + 1):
+                t = i / steps
                 current_coords.append((
                     (1 - t) ** 2 * p0[0] + 2 * t * (1 - t) * p1[0] + t ** 2 * p2[0],
                     (1 - t) ** 2 * p0[1] + 2 * t * (1 - t) * p1[1] + t ** 2 * p2[1],
@@ -47,8 +66,9 @@ def path_to_shapely(path: GeometryPath) -> Polygon | MultiPolygon | None:
             current = p2
         elif cmd.type == "C":
             p0, p1, p2, p3 = current, (cmd.x1, cmd.y1), (cmd.x2, cmd.y2), (cmd.x, cmd.y)
-            for i in range(1, _CUBIC_STEPS + 1):
-                t = i / _CUBIC_STEPS
+            steps = _curve_steps((p0, p1, p2, p3), _CUBIC_STEPS, tolerance_mm)
+            for i in range(1, steps + 1):
+                t = i / steps
                 current_coords.append((
                     (1 - t) ** 3 * p0[0] + 3 * t * (1 - t) ** 2 * p1[0]
                     + 3 * t ** 2 * (1 - t) * p2[0] + t ** 3 * p3[0],

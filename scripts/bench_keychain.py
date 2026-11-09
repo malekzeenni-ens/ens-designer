@@ -1,4 +1,4 @@
-"""K0: benchmark the unchanged Cake Topper outline + ring workflow.
+"""Benchmark the Cake Topper outline + ring workflow (K0 baseline / K1 cache).
 
 Run with .venv313/Scripts/python.exe scripts/bench_keychain.py --help.
 Stage timings are inclusive, process-warm service timings (not HTTP latency).
@@ -148,6 +148,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--iterations", type=int, default=20)
     parser.add_argument("--output", type=Path, help="Write timings and environment metadata as JSON")
+    parser.add_argument("--compare-uncached", action="store_true",
+                        help="Alternate cached and uncached font paths in the same process (K1+)")
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--write-fixtures", action="store_true")
     action.add_argument("--check-fixtures", action="store_true")
@@ -157,6 +159,8 @@ def main() -> None:
         parser.error("--iterations must be positive")
     if args.fixtures_only and not (args.write_fixtures or args.check_fixtures):
         parser.error("--fixtures-only requires a fixture action")
+    if args.compare_uncached and not hasattr(engine, "get_loaded_font"):
+        parser.error("--compare-uncached requires the K1 cached Cake Topper engine")
     catalog = FontCatalog(ROOT)
     service = engine.CakeTopperService(ROOT, catalog)
     fonts = pinned_fonts(catalog)
@@ -177,15 +181,35 @@ def main() -> None:
         if any("missing" in warning.lower() for warning in first_response.warnings):
             raise ValueError(f"Corpus font cannot render {name!r}: {first_response.warnings}")
         samples = []
-        for _ in range(args.iterations):
-            timings, response = timed_call(service, request)
-            samples.append(timings)
+        uncached_samples = []
+        if args.compare_uncached:
+            with patch.object(engine, "get_loaded_font", return_value=None):
+                timed_call(service, request)  # separately warm the original font path
+        for iteration in range(args.iterations):
+            order = ["cached", "uncached"] if args.compare_uncached else ["cached"]
+            if iteration % 2:
+                order.reverse()
+            for mode in order:
+                if mode == "cached":
+                    timings, response = timed_call(service, request)
+                    samples.append(timings)
+                else:
+                    with patch.object(engine, "get_loaded_font", return_value=None):
+                        timings, _ = timed_call(service, request)
+                        uncached_samples.append(timings)
         stages = {stage: summary([sample.get(stage, 0) for sample in samples])
                   for stage in [*STAGES, "total"]}
         results.append({"role": role, "text": name, "request": request.model_dump(),
                         "png_renderer": "Pillow" if samples[-1].get("pillow_fallback", 0) else "CairoSVG",
                         "first_observed_ms": first, "stages": stages,
                         "samples_ms": samples, "warnings": response.warnings})
+        if args.compare_uncached:
+            uncached_stages = {stage: summary([sample.get(stage, 0) for sample in uncached_samples])
+                               for stage in [*STAGES, "total"]}
+            results[-1]["comparison"] = {
+                "uncached_stages": uncached_stages, "uncached_samples_ms": uncached_samples,
+                "median_total_speedup": round(uncached_stages["total"]["p50_ms"] / stages["total"]["p50_ms"], 4),
+            }
         print(f"{role:7} {ascii(name):16} " + " ".join(
             f"{stage}={stats['p50_ms']:.1f}/{stats['p95_ms']:.1f}"
             for stage, stats in stages.items()), flush=True)
@@ -195,9 +219,12 @@ def main() -> None:
         "dependencies": {package: importlib.metadata.version(package)
                          for package in ("shapely", "uharfbuzz", "fonttools", "cairosvg", "pillow")},
         "iterations_per_case": args.iterations, "fonts": fonts,
+        "compare_uncached": args.compare_uncached,
         "method": "One separately recorded warm-up per case, then timed service calls including PNG. "
                   "Stage times inclusive, not additive. First-observed call is not a cold-font guarantee. "
-                  "No HTTP or browser latency. Mr Bear uses current word-per-line Cake Topper behaviour.",
+                  "No HTTP or browser latency. Mr Bear uses current word-per-line Cake Topper behaviour. "
+                  "When comparison is enabled, alternate cached/uncached order each iteration; "
+                  "uncached calls use the original font paths via loaded=None, with the same current geometry and PNG renderer.",
         "results": results,
     }
     if args.output:

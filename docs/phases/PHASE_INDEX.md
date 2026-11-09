@@ -27,7 +27,7 @@ Some filenames were retained for repository continuity after the Stage -1 archit
 
 # Approved Roadmap
 
-Independent Keychain workstream: [plan](KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](KEYCHAIN_DESIGNER_USER_JOURNEY.md). K0 baseline completed on 2026-11-09 ([handoff](../handoffs/keychain-designer-k0-baseline-handoff.md)); K1–K5 follow the plan's milestone gates.
+Independent Keychain workstream: [plan](KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](KEYCHAIN_DESIGNER_USER_JOURNEY.md). K0 baseline and K1 shared foundations completed on 2026-11-09 ([K1 handoff](../handoffs/keychain-designer-k1-foundations-handoff.md)); K2–K5 follow the plan's milestone gates.
 
 1. Stage -1 - Architecture Remediation
 2. Phase 00 - Repository & Architecture Assessment

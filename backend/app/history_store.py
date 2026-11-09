@@ -18,8 +18,10 @@ MAX_ENTRIES = 500
 class HistoryStore:
     """Append-only JSON-backed store for cake topper export history."""
 
-    def __init__(self, project_root: Path) -> None:
-        self._path = project_root / "backend" / "data" / "cake_topper_history.json"
+    def __init__(self, project_root: Path, filename: str = "cake_topper_history.json") -> None:
+        if not filename or Path(filename).name != filename or filename in {".", ".."}:
+            raise ValueError("History filename must be a single filename.")
+        self._path = project_root / "backend" / "data" / filename
         self._lock = threading.Lock()
 
     def _read(self) -> list[dict]:

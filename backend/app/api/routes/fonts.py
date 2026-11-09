@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from fontTools.ttLib import TTFont
 
 from ...models import DeleteFontsRequest, FontUploadResponse, ManualFontsRequest, ManualFontsResponse
+from ...font_cache import clear_font_cache
 
 router = APIRouter(prefix="/api/fonts", tags=["fonts"])
 
@@ -55,6 +56,7 @@ def update_manual_fonts(payload: ManualFontsRequest, request: Request):
 @router.delete("")
 def delete_fonts(payload: DeleteFontsRequest, request: Request):
     removed_ids = request.app.state.font_catalog.exclude_font_ids(payload.font_ids)
+    clear_font_cache()
     return {"removed_ids": removed_ids, "removed_count": len(removed_ids)}
 
 
@@ -141,6 +143,7 @@ async def upload_font(request: Request, file: UploadFile):
 
     # --- persist to manifest ---
     catalog.record_upload(record.info.id)
+    clear_font_cache()
 
     return FontUploadResponse(
         success=True,

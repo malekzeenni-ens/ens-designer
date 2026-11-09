@@ -6,6 +6,8 @@ from pathlib import Path
 import uharfbuzz as hb
 from fontTools.ttLib import TTFont
 
+from .font_cache import LoadedFont
+
 
 @dataclass(frozen=True)
 class ShapedGlyph:
@@ -18,7 +20,21 @@ class ShapedGlyph:
     offset_y: float
 
 
-def shape_text(text: str, font_path: Path) -> list[ShapedGlyph]:
+def shape_text(text: str, font_path: Path, loaded: LoadedFont | None = None) -> list[ShapedGlyph]:
+    if loaded is not None:
+        with loaded.lock:
+            buffer = hb.Buffer()
+            buffer.add_str(text)
+            buffer.guess_segment_properties()
+            hb.shape(loaded.hb_font, buffer)
+            return [ShapedGlyph(
+                glyph_id=info.codepoint,
+                glyph_name=loaded.tt_font.getGlyphName(info.codepoint),
+                cluster=info.cluster,
+                advance_x=float(position.x_advance), advance_y=float(position.y_advance),
+                offset_x=float(position.x_offset), offset_y=float(position.y_offset),
+            ) for info, position in zip(buffer.glyph_infos, buffer.glyph_positions)]
+
     font_data = font_path.read_bytes()
     hb_face = hb.Face(font_data)
     hb_font = hb.Font(hb_face)

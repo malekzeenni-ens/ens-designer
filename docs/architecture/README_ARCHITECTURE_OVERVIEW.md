@@ -12,7 +12,7 @@ Version: 1.0
 
 # Overview
 
-Keychain workstream (2026-11-09): K0 adds a standalone benchmark of the existing Cake Topper service and byte-for-byte SVG regression fixtures. Runtime services and UI are unchanged. The proposed separate Keychain engine/API and frontend module are described in [the implementation plan](../phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md); they are not implemented in K0.
+Keychain workstream (2026-11-09): K0 supplies benchmarks and byte-for-byte Cake Topper SVG fixtures. K1 adds `font_cache.py` (bounded parsed fonts and raw glyph outlines), optional `loaded=` shaping/extraction used by Cake Topper, shared `ring_geometry.py` helpers, configurable history filenames and optional curve tolerance. Existing SVG geometry and UI are preserved. See [ADR-006](../adr/ADR-006-KEYCHAIN-ENGINE-AND-PERFORMANCE.md). The dedicated Keychain engine/API and frontend module remain future milestones in [the plan](../phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md).
 
 AI SVG Generator is a local-first application designed to generate production-ready SVG and PNG files for laser cutting workflows.
 

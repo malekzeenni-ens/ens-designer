@@ -6,6 +6,7 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Latest Updates
 
+- 2026-11-09 - Added Keychain K1 shared foundations: thread-safe parsed-font caching used by Cake Topper, reusable raw glyph caching, shared ring helpers, optional curve tolerance and configurable history filenames. Existing Cake Topper SVGs remain byte-identical.
 - 2026-11-09 - Started dedicated Keychain Designer milestone K0: reproducible Cake Topper benchmarks and three golden SVG fixtures. The Keychain tab is planned; implementation starts with shared foundations in K1.
 - 2026-07-14 - Moved the consolidated application and backend API to `http://127.0.0.1:8010`.
 - 2026-07-14 - Consolidated normal startup into one production FastAPI process. FastAPI serves the compiled React interface and API from one local origin; `ens_launch_dev.ps1` retains the two-server Vite workflow for development.
@@ -19,9 +20,11 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Current Status
 
-Keychain Designer: K0 baseline complete; K1 shared foundations next. See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K0 handoff](docs/handoffs/keychain-designer-k0-baseline-handoff.md).
+Keychain Designer: K0 baseline and K1 shared foundations delivered; K2 engine/API next. See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K1 handoff](docs/handoffs/keychain-designer-k1-foundations-handoff.md).
 
 Run `.\.venv313\Scripts\python.exe scripts/bench_keychain.py --check-fixtures --iterations 20 --output logs/keychain-benchmark.json` for stage p50/p95 timings. Golden SVG checks also run with pytest. Reference fixtures cannot be overwritten by the benchmark command.
+
+Add `--compare-uncached` to alternate cached and original font paths in one process. This compares caching under the same renderer and machine conditions. The Keychain tab and dedicated API arrive in later milestones.
 
 **Phase 1C — Production Hardening — Complete — v0.3.0**
 

@@ -7,6 +7,7 @@ from fontTools.pens.basePen import BasePen
 from fontTools.ttLib import TTFont
 
 from .models import GeometryPath, GlyphGeometry, PathCommand
+from .font_cache import LoadedFont
 from .text_shaper import ShapedGlyph
 
 logger = logging.getLogger(__name__)
@@ -60,11 +61,14 @@ def extract_outlines(
     font_path: Path,
     shaped_glyphs: list[ShapedGlyph],
     font_size_mm: float = FONT_SIZE_MM,
+    loaded: LoadedFont | None = None,
 ) -> tuple[list[GlyphGeometry], list[GeometryPath]]:
-    font = TTFont(font_path)
+    font = loaded.tt_font if loaded is not None else TTFont(font_path)
+    if loaded is not None:
+        loaded.lock.acquire()
     try:
-        glyph_set = font.getGlyphSet()
-        upem = float(font["head"].unitsPerEm)
+        glyph_set = loaded.glyph_set if loaded is not None else font.getGlyphSet()
+        upem = loaded.upem if loaded is not None else float(font["head"].unitsPerEm)
         scale = font_size_mm / upem
         cursor_x = 0.0
         cursor_y = 0.0
@@ -111,4 +115,7 @@ def extract_outlines(
 
         return glyphs, paths
     finally:
-        font.close()
+        if loaded is not None:
+            loaded.lock.release()
+        else:
+            font.close()
