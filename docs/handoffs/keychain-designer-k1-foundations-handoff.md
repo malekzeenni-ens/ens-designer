@@ -92,7 +92,7 @@ README, architecture overview, phase index, Keychain implementation plan, ADR-00
 
 ## 15. Git information
 
-Branch: `main`. Base: `3000113` (K0 and its deployment log). Milestone commit: `perf(keychain): add cached fonts and shared geometry foundations`. No remote push or release tag.
+Branch: `main`. Base: `3000113` (K0 and its deployment log). Milestone commit: `63560b5a2a17605657406435bb4ccc36244faafd` (`perf(keychain): add cached fonts and shared geometry foundations`). No remote push or release tag.
 
 ## 16. Deployment information
 

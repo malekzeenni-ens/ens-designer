@@ -15,6 +15,38 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-11-09 20:14:36 Europe/London] - Keychain Designer K1 Shared Foundations
+
+### Commit
+- Commit hash: `63560b5a2a17605657406435bb4ccc36244faafd`
+- Previous commit: `3000113`
+- Branch: `main`
+- Deployment: source and local validation; no production restart, remote push or release tag.
+
+### Summary and Files Changed
+- Added bounded, thread-safe parsed-font caching, adopted by Cake Topper through optional `loaded=` shaping/extraction. Upload/delete invalidates the cache; file signatures detect replacement. Active snapshots survive eviction safely.
+- Added reusable raw glyph outlines for K2; extracted shared ring helpers under existing private aliases, preserving all helper bodies and Cake Topper ring semantics.
+- Added optional curve tolerance with unchanged default subdivision, and configurable history filenames with the original default/schema preserved.
+- Updated the benchmark with a counterbalanced cached-versus-uncached comparison and saved `docs/qa/keychain-k1-benchmark.json`.
+- Added 28 foundation tests and original-K0 ring reference fixtures; updated README, architecture overview, phase index, plan, ADR-006 and K1 handoff.
+
+### Tests and Validation
+- Full backend suite: 244 passed; one existing Starlette/httpx deprecation warning.
+- Final foundation run after extreme-tolerance bounds: 28 passed, including two additional cases. Existing no-tolerance callers bypass the changed branch.
+- Frontend: 18 files / 63 tests passed, exit 0.
+- Three golden SVGs byte-identical; early Cake Topper/golden run: 77 passed.
+- Nine extracted helper ASTs identical to K0; nine ring reference cases match WKT at 1e-6, metadata and warnings.
+- Benchmark: 22 cases, 440 cached and 440 uncached samples, same Pillow renderer, exit 0. Sum of case medians: shaping 96.7% lower, outline extraction 69.8% lower, full generation 3.3% lower. Total p50 improved in 17/22 cases; the five others show why font-stage savings do not guarantee faster full generation for every case.
+- Staged whitespace check passed. K0 golden files and baseline report unchanged. No UI/LightBurn validation claimed for K1.
+
+### Known Issues and Revert
+- Cairo remains unavailable; Pillow fallback and existing ring-disconnection warnings are preserved. SVG/PNG remain substantial costs. Extreme curves may reach the 64-subdivision cap before meeting optional tolerance.
+- K2 supplies the dedicated Keychain engine/API, size solver, validation, ring auto-snap and history model; the preview latency budget is assessed there without PNG.
+- Revert the implementation commit above to remove K1. No migration or dependency rollback required.
+- Details: `docs/handoffs/keychain-designer-k1-foundations-handoff.md`.
+
+---
+
 ## [2026-11-09 20:00:23 Europe/London] - Keychain Designer K0 Baseline
 
 ### Commit
