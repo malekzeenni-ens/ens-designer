@@ -1,0 +1,2 @@
+# Golden SVGs are exact UTF-8 byte references, including their line endings.
+tests/fixtures/keychain_baseline/*.svg -text

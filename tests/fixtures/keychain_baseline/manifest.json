@@ -1,0 +1,112 @@
+{
+  "generated_date": "2026-11-09",
+  "font": {
+    "id": "49243712633711db",
+    "path": "fonts/Anton,League_Spartan,Lora,Quicksand,Satisfy/Anton/Anton-Regular.ttf",
+    "sha256": "28beb8f6542f642ba4143bd4a1d1cfc7be7b1dedc951096efd8e0942502ea1bf"
+  },
+  "recipes": [
+    {
+      "file": "defaults.svg",
+      "request": {
+        "text": "Happy Birthday Sarah",
+        "default_font_id": "49243712633711db",
+        "default_font_size_mm": 42.0,
+        "default_overlap_mode": "medium",
+        "default_overlap_custom_mm": null,
+        "line_configs": [],
+        "inter_line_gaps_mm": [],
+        "stake_config": {
+          "count": 0,
+          "width_mm": 3.0,
+          "length_mm": 50.0,
+          "overlap_mm": 2.0,
+          "offsets": []
+        },
+        "ring_config": {
+          "enabled": false,
+          "position": "top-left",
+          "outer_diameter_mm": 12.0,
+          "hole_diameter_mm": 5.0,
+          "overlap_mm": 5.0,
+          "x_offset_mm": 0.0,
+          "y_offset_mm": 0.0,
+          "min_wall_thickness_mm": 3.0,
+          "min_neck_width_mm": 5.0
+        },
+        "outline_enabled": false,
+        "outline_width_mm": 3.0,
+        "outline_color": "#000000"
+      },
+      "sha256": "3b7f473f2b04a4e1809f3277204a8d5f53f2df692ea1fc59c49e5d784f5521fb"
+    },
+    {
+      "file": "outline-ring.svg",
+      "request": {
+        "text": "Happy Birthday Sarah",
+        "default_font_id": "49243712633711db",
+        "default_font_size_mm": 42.0,
+        "default_overlap_mode": "medium",
+        "default_overlap_custom_mm": null,
+        "line_configs": [],
+        "inter_line_gaps_mm": [],
+        "stake_config": {
+          "count": 0,
+          "width_mm": 3.0,
+          "length_mm": 50.0,
+          "overlap_mm": 2.0,
+          "offsets": []
+        },
+        "ring_config": {
+          "enabled": true,
+          "position": "top-left",
+          "outer_diameter_mm": 12.0,
+          "hole_diameter_mm": 5.0,
+          "overlap_mm": 5.0,
+          "x_offset_mm": 0.0,
+          "y_offset_mm": 0.0,
+          "min_wall_thickness_mm": 3.0,
+          "min_neck_width_mm": 5.0
+        },
+        "outline_enabled": true,
+        "outline_width_mm": 3.0,
+        "outline_color": "#000000"
+      },
+      "sha256": "e02861890f6b4397e2d3aad7d3f27790bd6c5bb3313ba47113090426e17d479e"
+    },
+    {
+      "file": "two-stakes.svg",
+      "request": {
+        "text": "Happy Birthday Sarah",
+        "default_font_id": "49243712633711db",
+        "default_font_size_mm": 42.0,
+        "default_overlap_mode": "medium",
+        "default_overlap_custom_mm": null,
+        "line_configs": [],
+        "inter_line_gaps_mm": [],
+        "stake_config": {
+          "count": 2,
+          "width_mm": 3.0,
+          "length_mm": 50.0,
+          "overlap_mm": 2.0,
+          "offsets": []
+        },
+        "ring_config": {
+          "enabled": false,
+          "position": "top-left",
+          "outer_diameter_mm": 12.0,
+          "hole_diameter_mm": 5.0,
+          "overlap_mm": 5.0,
+          "x_offset_mm": 0.0,
+          "y_offset_mm": 0.0,
+          "min_wall_thickness_mm": 3.0,
+          "min_neck_width_mm": 5.0
+        },
+        "outline_enabled": false,
+        "outline_width_mm": 3.0,
+        "outline_color": "#000000"
+      },
+      "sha256": "46f1e014bc98611ec697416a1277a2ee3f148ff32a639d0558a0b9700c15c858"
+    }
+  ]
+}
