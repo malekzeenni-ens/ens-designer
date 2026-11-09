@@ -18,7 +18,7 @@ from .floating_component import (_apply_to_subpath, _bounds, _split_subpaths,
 from .font_cache import get_glyph_outline, get_loaded_font
 from .font_loader import FontCatalog
 from .keychain_svg import assemble_svg
-from .keychain_validation import polygon_parts, validate_keychain
+from .keychain_validation import cut_overlap_check, polygon_parts, validate_keychain
 from .models import (GeometryPath, GlyphGeometry, KeychainFile, KeychainGlyphInfo,
                      KeychainRequest, KeychainResponse, KeychainRingMetadata)
 from .overlap_helpers import _bbox_gaps, _cumulative, _pair_shifts, _safe_filename, _shift_paths
@@ -380,8 +380,13 @@ class KeychainService:
         dx, dy = CANVAS_MARGIN_MM-minx, CANVAS_MARGIN_MM-miny
         translation = (1, 0, 0, 1, dx, dy)
         hit_paths = [transform_path(path, translation) for path in text_paths]
-        if request.stroke_buffer_mm:
+        if request.style == "layered" or request.stroke_buffer_mm:
+            # D1 (R1): a laser cuts every contour, so the Layered cut layer is the
+            # welded (unioned) silhouette, never overlapping per-glyph outlines.
+            # Engraved fills keep the original Q/C curves; hit paths stay per glyph.
             text_paths = _compound_paths_from_shapely(text, "KC-TEXT")
+        if request.style == "layered":
+            checks.append(cut_overlap_check(text_paths, text.bounds))
         text_paths = [transform_path(path, translation) for path in text_paths]
         backing_paths = [transform_path(path, translation) for path in _compound_paths_from_shapely(body, "KC-BACKING")]
         glyph_indices = {pid: gi for gi, glyph in enumerate(prepared.glyphs) for pid in glyph.path_ids}

@@ -18,6 +18,40 @@ def opening_loss(geometry, width: float) -> float:
     return geometry.difference(opened).area
 
 
+def cut_contour_overlap_mm2(paths) -> float:
+    """Largest pairwise overlap area between exported cut paths.
+
+    Works on the exported path data, so a regression in how the cut layer is
+    assembled is caught even when the shapely input was clean. A laser cuts
+    every contour: any overlap would cut the material apart.
+    """
+    from shapely.strtree import STRtree
+
+    from .shapely_converter import path_to_shapely
+
+    shapes = [path_to_shapely(path) for path in paths]
+    shapes = [shape for shape in shapes if shape is not None and not shape.is_empty]
+    if len(shapes) < 2:
+        return 0.0
+    tree = STRtree(shapes)
+    worst = 0.0
+    for i, shape in enumerate(shapes):
+        for j in tree.query(shape):
+            if j > i:
+                worst = max(worst, shape.intersection(shapes[j]).area)
+    return worst
+
+
+def cut_overlap_check(paths, bounds) -> KeychainCheck:
+    worst = cut_contour_overlap_mm2(paths)
+    passed = worst <= 1e-6
+    return KeychainCheck(id="KC-TEXT-CUT-OVERLAP", severity="pass" if passed else "error",
+                         message="Cut text contours do not overlap." if passed else
+                         f"Cut text contours overlap ({worst:.2f} mm²); the laser would cut the letters apart.",
+                         highlight_bbox_mm=None if passed else bounds,
+                         fix_note=None if passed else "This is an internal export fault. Do not cut this file; report it.")
+
+
 def ring_snap_fix(cfg):
     """A snap fix that changes something, or None when snapping is already active at the preset."""
     if not cfg.auto_snap:

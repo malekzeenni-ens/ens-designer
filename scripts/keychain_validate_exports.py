@@ -27,7 +27,8 @@ from PIL import Image  # noqa: E402
 
 from app.font_loader import FontCatalog  # noqa: E402
 from app.keychain_engine import KeychainService  # noqa: E402
-from app.models import KeychainRequest  # noqa: E402
+from app.keychain_validation import cut_contour_overlap_mm2  # noqa: E402
+from app.models import GeometryPath, KeychainRequest, PathCommand  # noqa: E402
 
 NS = {"svg": "http://www.w3.org/2000/svg"}
 FONTS = {
@@ -47,6 +48,26 @@ CASES = [
     ("06-height-30mm", "display", dict(text="Bee", size={"mode": "height", "target_mm": 30})),
 ]
 NUMBER = re.compile(r"-?\d+(?:\.\d+)?(?:e-?\d+)?")
+TOKEN = re.compile(r"[MLQCZ]|-?\d+(?:\.\d+)?(?:e-?\d+)?")
+ARITY = {"M": 2, "L": 2, "Q": 4, "C": 6, "Z": 0}
+KEYS = {"M": ("x", "y"), "L": ("x", "y"), "Q": ("x1", "y1", "x", "y"), "C": ("x1", "y1", "x2", "y2", "x", "y"), "Z": ()}
+
+
+def geometry_path(d: str, path_id: str) -> GeometryPath:
+    """Parse written path data (M/L/Q/C/Z, absolute) back into a GeometryPath."""
+    tokens, commands, i = TOKEN.findall(d), [], 0
+    while i < len(tokens):
+        kind = tokens[i]
+        values = [float(v) for v in tokens[i+1:i+1+ARITY[kind]]]
+        commands.append(PathCommand(type=kind, **dict(zip(KEYS[kind], values))))
+        i += 1 + ARITY[kind]
+    return GeometryPath(path_id=path_id, commands=commands, closed=True)
+
+
+def overlap_mm2(group) -> float:
+    paths = [geometry_path(p.get("d"), p.get("id") or str(i))
+             for i, p in enumerate(group.iter("{http://www.w3.org/2000/svg}path"))]
+    return cut_contour_overlap_mm2(paths)
 
 
 def subpaths(d: str):
@@ -80,7 +101,8 @@ def inspect_svg(text: str):
     groups = {g.get("id"): g for g in root.iter("{http://www.w3.org/2000/svg}g") if g.get("id")}
     info = {"width_mm": mm(root.get("width")), "height_mm": mm(root.get("height")), "viewBox": vb,
             "groups": sorted(groups), "hit_paths": len(re.findall(r"data-glyph-index", text)),
-            "metadata": None}
+            "metadata": None,
+            "cut_overlap_mm2": {name: round(overlap_mm2(g), 6) for name, g in groups.items() if name.startswith("CUT_")}}
     meta = root.find("svg:metadata", NS)
     if meta is not None and meta.text:
         info["metadata"] = json.loads(meta.text)
@@ -165,7 +187,10 @@ def main():
             "no preview hit paths": all(info["hit_paths"] == 0 for _, info in files),
             "expected layer groups": all(set(info["groups"]) <= {"CUT_BACKING", "ENGRAVE_TEXT", "CUT_TEXT"} for _, info in files)
                 and {g for _, info in files for g in info["groups"]} == ({"CUT_BACKING", "ENGRAVE_TEXT"} if request.style == "engraved" else {"CUT_BACKING", "CUT_TEXT"}),
-            "unbuffered text keeps Q/C curves": all(info["text"]["has_curves"] for _, info in files if "text" in info),
+            # D1 (R1): engraved fills keep Q/C; Layered cut text is welded polylines.
+            "engraved text keeps Q/C curves": all(info["text"]["has_curves"] for _, info in files
+                                                   if "text" in info and info["text"]["layer"] == "ENGRAVE_TEXT"),
+            "no overlapping cut contours": all(v <= 1e-6 for _, info in files for v in info["cut_overlap_mm2"].values()),
             "separate files share canvas/viewBox": len({json.dumps(info["viewBox"]) for _, info in files}) == 1,
             "recipe round-trips": all(KeychainRequest.model_validate({k: v for k, v in info["metadata"].items() if k != "app_version"}).model_dump(exclude={"quality", "request_id"})
                                       == request.model_dump(exclude={"quality", "request_id"}) for _, info in files),
