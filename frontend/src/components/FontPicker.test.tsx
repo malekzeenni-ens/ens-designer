@@ -109,3 +109,15 @@ it("releases an observer when a preview is removed before intersection", async (
   await act(async () => observer.callback([{ isIntersecting: true }]));
   expect(load).not.toHaveBeenCalled();
 });
+
+it("R1 F7: closing the picker with its trigger clears the hover preview", async () => {
+  const onPreview = vi.fn();
+  await act(async () => root.render(<FontPicker groups={[{ label: "Manual Fonts", fonts }]} value={fonts[0].id} onChange={onChange} onPreview={onPreview} label="Base font" />));
+  await act(async () => trigger().click());
+  await key("ArrowDown");
+  expect(onPreview).toHaveBeenLastCalledWith(fonts[1].id);
+  await act(async () => trigger().click());
+  expect(document.querySelector('[role="dialog"]')).toBeNull();
+  expect(onPreview).toHaveBeenLastCalledWith(null);
+  expect(onChange).not.toHaveBeenCalled();
+});

@@ -6,6 +6,7 @@ Used by OverlapService (overlap_engine.py) and CakeTopperService
 """
 from __future__ import annotations
 
+import hashlib
 import re
 import unicodedata
 
@@ -112,7 +113,26 @@ def _extract_chars(text: str, n_glyphs: int) -> list[str]:
     return chars[:n_glyphs]
 
 
+# Letters NFKD does not decompose to ASCII.
+_TRANSLITERATE = str.maketrans({"ß": "ss", "ẞ": "SS", "Æ": "AE", "æ": "ae", "Œ": "OE", "œ": "oe",
+                                "Ø": "O", "ø": "o", "Ł": "L", "ł": "l", "Đ": "D", "đ": "d",
+                                "Þ": "TH", "þ": "th", "Ð": "D", "ð": "d", "ı": "i"})
+
+
 def _safe_filename(text: str) -> str:
-    """Sanitise text into a safe lowercase filename stem."""
-    value = re.sub(r"[^A-Za-z0-9_-]+", "-", text.strip()).strip("-").lower()
+    """Sanitise text into a safe lowercase ASCII filename stem (R1 F11).
+
+    Accented Latin letters are transliterated (Zoë -> zoe). When letters or
+    digits have no ASCII equivalent (e.g. Arabic), a short stable hash of the
+    text is appended so different names never share a filename.
+    """
+    original = unicodedata.normalize("NFC", text.strip())
+    decomposed = unicodedata.normalize("NFKD", original.translate(_TRANSLITERATE))
+    stripped = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    value = re.sub(r"[^A-Za-z0-9_-]+", "-", stripped).strip("-").lower()
+    dropped = any(unicodedata.category(ch)[0] in "LN" and not (ch.isascii() and ch.isalnum())
+                  for ch in stripped)
+    if dropped:
+        digest = hashlib.sha1(original.encode("utf-8")).hexdigest()[:6]
+        return f"{value or 'design'}-{digest}"
     return value or "design"

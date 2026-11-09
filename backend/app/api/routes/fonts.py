@@ -175,27 +175,34 @@ def get_font_characters(font_id: str, request: Request):
     except ValueError:
         raise HTTPException(status_code=404, detail="Font not found.")
     try:
-        font = TTFont(font_path, lazy=True)
-        cmap = font.getBestCmap() or {}
-        characters = []
-        for codepoint in sorted(cmap.keys()):
-            if codepoint < 32:
-                continue
-            glyph_name = cmap[codepoint]
-            char = chr(codepoint)
-            category = _categorise_codepoint(codepoint, glyph_name)
-            label = _glyph_label(glyph_name, char, codepoint)
-            characters.append({
-                "codepoint": codepoint,
-                "char": char,
-                "glyph_name": glyph_name,
-                "category": category,
-                "label": label,
-            })
-        font.close()
+        # R1 F13: own the file handle so it is closed even when fontTools
+        # fails while parsing (a leaked handle blocks deleting the font on Windows).
+        with open(font_path, "rb") as handle, TTFont(handle, lazy=True) as font:
+            characters = _font_characters(font)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Could not read font characters: {exc}")
+        raise HTTPException(status_code=500, detail=f"Could not read font characters: {exc}") from None
     return {"font_id": font_id, "font_name": font_info.full_name, "characters": characters}
+
+
+def _font_characters(font) -> list[dict]:
+    cmap = font.getBestCmap() or {}
+    characters = []
+    for codepoint in sorted(cmap.keys()):
+        if codepoint < 32:
+            continue
+        glyph_name = cmap[codepoint]
+        char = chr(codepoint)
+        category = _categorise_codepoint(codepoint, glyph_name)
+        label = _glyph_label(glyph_name, char, codepoint)
+        characters.append({
+            "codepoint": codepoint,
+            "char": char,
+            "glyph_name": glyph_name,
+            "category": category,
+            "label": label,
+        })
+    return characters
+
 
 
 def _categorise_codepoint(codepoint: int, glyph_name: str) -> str:

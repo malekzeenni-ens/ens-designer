@@ -88,8 +88,25 @@ export function PreviewPanel({
       }
       document.removeEventListener("pointermove", onMove, true);
       document.removeEventListener("pointerup", onUp, true);
-      document.removeEventListener("pointercancel", onUp, true);
+      document.removeEventListener("pointercancel", onCancel, true);
+      handleEl.removeEventListener("lostpointercapture", onLostCapture);
       cleanupDragRef.current = null;
+    }
+
+    // R1 F9: a cancelled gesture (touch scroll, system interruption) or a
+    // genuine loss of capture discards the drag; it never commits a move.
+    function onCancel(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId || finished) return;
+      finished = true;
+      cleanup();
+    }
+
+    function onLostCapture(ev: PointerEvent) {
+      // pointerup releases capture after onUp has finished the drag. A handle
+      // replaced by a re-render loses capture too; document listeners still
+      // carry that drag, so only a still-attached handle cancels it.
+      if (finished || !handleEl.isConnected) return;
+      onCancel(ev);
     }
 
     function onMove(ev: PointerEvent) {
@@ -145,7 +162,8 @@ export function PreviewPanel({
 
     document.addEventListener("pointermove", onMove, true);
     document.addEventListener("pointerup", onUp, true);
-    document.addEventListener("pointercancel", onUp, true);
+    document.addEventListener("pointercancel", onCancel, true);
+    handleEl.addEventListener("lostpointercapture", onLostCapture);
     cleanupDragRef.current = cleanup;
   }
 

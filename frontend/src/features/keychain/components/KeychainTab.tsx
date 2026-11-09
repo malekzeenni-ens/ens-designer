@@ -74,6 +74,8 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
   const preview = useKeychainPreview(request, delay, active);
   const layoutResult = preview.result?.recipe.text === toRequest(design).text && preview.result.recipe.font_id === design.font_id ? preview.result : null;
   const onFontPreview = useCallback((id: string | null) => { setHoverFont(id); setDelay(id ? 250 : 0); }, []);
+  // R1 F7: while another font is only being previewed, its result must not be edited or fixed.
+  const previewingFont = Boolean(hoverFont && hoverFont !== design.font_id);
   useEffect(() => {
     if (preview.current) pendingFont.current = null;
     if (preview.error && pendingFont.current && hoverFont === null) {
@@ -84,6 +86,7 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
     }
   }, [preview.error, preview.current, hoverFont, change, design.dots]);
   function move(selected: Exclude<Selection, null>, dx: number, dy: number, group?: string) {
+    if (previewingFont) return;
     const ring = layoutResult?.ring, recipe = layoutResult?.recipe.ring;
     // A snapped ring is not at its nominal offsets. Rebase the move on the
     // actual centre, otherwise re-snapping from nominal+delta jumps or drifts.
@@ -137,7 +140,7 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
     window.addEventListener("keydown", keyboard);
     return () => window.removeEventListener("keydown", keyboard);
   });
-  const canExport = Boolean(design.text.trim() && preview.current && !exporting && (!hoverFont || hoverFont === design.font_id));
+  const canExport = Boolean(design.text.trim() && preview.current && !exporting && !previewingFont);
   function deliver(kind: "svg" | "png", result: KeychainResult) {
     setLastExport(result);
     try {
@@ -187,7 +190,7 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
   function applyFix(check: ProductionCheck) {
     // Fixes are bound to the current accepted result: never apply a check
     // from an older preview to a different name, font or recipe.
-    if (!preview.current || !preview.result?.checks.some(item => item.id === check.id && item.severity !== "pass")) return;
+    if (previewingFont || !preview.current || !preview.result?.checks.some(item => item.id === check.id && item.severity !== "pass")) return;
     if (fixStatus?.state === "pending") return;
     const plan = planFix(check, design, unit);
     if (plan.kind === "none") { setFixStatus({ checkId: check.id, state: "remaining", message: plan.reason, expected: JSON.stringify(design) }); return; }
@@ -245,8 +248,8 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
         supportRequest={supportRequest}
         onFont={id => { setHoverFont(null); if (id === design.font_id) return; pendingFont.current = design; change({ type: "patch", value: { font_id: id, gap_configs: [], glyph_transforms: [], dots: { ...design.dots, manual_offsets: [] } } }); setSelection(null); }} onFontPreview={onFontPreview} />
       <LetterInspector index={typeof selection === "number" ? selection : null} design={design} result={layoutResult} change={change} unit={unit} />
-    </aside><div className="kc-stage"><KeychainPreview result={preview.result} unit={unit} placeholder={!design.text.trim()} current={preview.current} selection={selection} onSelect={setSelection} onMove={move} editableGlyphs problem={problem} />
-      <ProductionCheckPanel result={preview.result} stale={!preview.current} design={design} unit={unit} highlighted={problem ? highlight : null}
+    </aside><div className="kc-stage"><KeychainPreview result={preview.result} unit={unit} placeholder={!design.text.trim()} current={preview.current && !previewingFont} selection={selection} onSelect={setSelection} onMove={move} editableGlyphs problem={problem} />
+      <ProductionCheckPanel result={preview.result} stale={!preview.current || previewingFont} design={design} unit={unit} highlighted={problem ? highlight : null}
         fixStatus={fixStatus} onFix={applyFix} onShow={check => setHighlight(current => current === check.id ? null : check.id)} />
       <footer className="kc-exportbar"><div><strong>{preview.result ? `${dimension(preview.result.width_mm, unit)} × ${dimension(preview.result.height_mm, unit)}` : "Your keychain"}</strong><small>{design.style === "engraved" ? "Cut backing + engraved name" : "Two layers for assembly"}</small></div>
         <button type="button" disabled={!canExport} onClick={() => startExport("png")}>Download PNG</button>

@@ -184,15 +184,15 @@ def text_at(prepared, request, scale, include_paths=False):
             updated = transform_path(path, (scale, 0, 0, scale, 0, 0))
             offset = offsets.get(gi)
             if offset is not None and prepared.floats[pid]:
-                index = prepared.floats[pid][0]
-                updated = _apply_to_subpath(updated, index, offset.x_offset_mm, offset.y_offset_mm)
+                # R1 F8: every floating mark of the glyph (both umlaut dots,
+                # all tashkeel) moves together; the body stays put.
+                for index in prepared.floats[pid]:
+                    updated = _apply_to_subpath(updated, index, offset.x_offset_mm, offset.y_offset_mm)
                 parts = [] if body is None else [affinity.scale(body, scale, scale, origin=(0, 0))]
-                for fi, dot in dots.items():
+                for dot in dots.values():
                     if dot is not None:
                         part = affinity.scale(dot, scale, scale, origin=(0, 0))
-                        if fi == index:
-                            part = affinity.translate(part, offset.x_offset_mm, offset.y_offset_mm)
-                        parts.append(part)
+                        parts.append(affinity.translate(part, offset.x_offset_mm, offset.y_offset_mm))
                 geometry = unary_union(parts)
             else:
                 geometry = affinity.scale(geometry, scale, scale, origin=(0, 0))

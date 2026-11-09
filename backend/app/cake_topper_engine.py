@@ -577,7 +577,8 @@ def _assemble_svg(
     if line_metadata:
         today = date.today().isoformat()
         recipe_lines = [
-            f'  Line {i + 1}  "{m.text}"  —  {m.font_name or "Unknown"} · {m.font_size_mm}mm · {m.color}'
+            f'  Line {i + 1}  "{_comment_text(m.text)}"  —  {_comment_text(m.font_name or "Unknown")} · '
+            f'{m.font_size_mm}mm · {_comment_text(str(m.color))}'
             for i, m in enumerate(line_metadata)
         ]
         comment = (
@@ -592,6 +593,20 @@ def _assemble_svg(
             tag_end = svg_str.find(">", tag_start) + 1
             svg_str = svg_str[:tag_end] + "\n" + comment + svg_str[tag_end:]
     return svg_str
+
+
+def _comment_text(value: str) -> str:
+    """Make user text safe inside an XML comment (R1 F6).
+
+    XML forbids "--" inside a comment and a comment ending in "-", so user
+    words such as "Anne--Marie" or "x--><g/>" could break or inject markup.
+    Control characters are removed; text without "--" is unchanged, which
+    keeps the golden SVGs byte-identical.
+    """
+    cleaned = "".join(ch for ch in value if ch in "\t" or ord(ch) >= 32 and ord(ch) != 127)
+    while "--" in cleaned:
+        cleaned = cleaned.replace("--", "\u2013")
+    return cleaned.rstrip("-")
 
 
 def _cmd_str(cmd: PathCommand) -> str:

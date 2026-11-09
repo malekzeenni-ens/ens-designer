@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,6 +17,7 @@ from .unicode_normalisation import normalise_text
 from .bridge_override import apply_bridge_overrides
 from .connectivity_engine import resolve_connectivity
 from .models import BridgeOverride
+from .overlap_helpers import _safe_filename  # R1 F11: one shared filename helper
 
 
 @dataclass
@@ -55,7 +55,3 @@ class GenerationService:
             png_filename=f"{base_name}.png",
         )
 
-
-def _safe_filename(text: str) -> str:
-    value = re.sub(r"[^A-Za-z0-9_-]+", "-", text.strip()).strip("-").lower()
-    return value or "design"

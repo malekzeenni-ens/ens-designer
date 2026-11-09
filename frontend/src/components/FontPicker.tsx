@@ -71,7 +71,11 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
 
   return <div className="font-picker">
     <button ref={trigger} type="button" className="font-picker-trigger" aria-label={label} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-popup` : undefined} disabled={disabled}
-      onClick={() => { setQuery(""); setActiveId(value); setOpen(!open); }}
+      onClick={() => {
+        // R1 F7: toggling closed goes through close() so the hover preview ends.
+        if (open) { close(); return; }
+        setQuery(""); setActiveId(value); setOpen(true);
+      }}
       onKeyDown={(event) => { if (["ArrowDown", "ArrowUp"].includes(event.key)) { event.preventDefault(); setQuery(""); setActiveId(value); setOpen(true); } }}>
       {selected ? <FontNamePreview key={selected.id} font={selected} /> : <span>No fonts available</span>}<ChevronDown size={16} aria-hidden="true" />
     </button>
