@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import { downloadBlob, downloadUrl } from "../services/download";
 
 interface ExportControlsProps {
   compact?: boolean;
@@ -6,22 +7,25 @@ interface ExportControlsProps {
   pngBase64: string | null;
   svgFilename: string;
   pngFilename: string;
+  /** R1 F3: false while the result is updating or no longer matches the inputs. */
+  current?: boolean;
   onExport?: (type: "svg" | "png") => void;
 }
 
-export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExport, compact = false }: ExportControlsProps) {
-  const disabled = !svg || !pngBase64;
+export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExport, compact = false, current = true }: ExportControlsProps) {
+  const disabled = !svg || !pngBase64 || !current;
+  const title = (label: string) => (svg && pngBase64 && !current ? `${label} (updating, regenerate to export)` : label);
 
   return (
     <div className="export-controls">
       <button
         type="button"
         aria-label="Download SVG"
-        title="Download SVG"
+        title={title("Download SVG")}
         disabled={disabled}
         onClick={() => {
-          if (!svg) return;
-          downloadText(svg, svgFilename, "image/svg+xml");
+          if (!svg || disabled) return;
+          downloadBlob(new Blob([svg], { type: "image/svg+xml" }), svgFilename);
           onExport?.("svg");
         }}
       >
@@ -31,11 +35,11 @@ export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExp
       <button
         type="button"
         aria-label="Download PNG"
-        title="Download PNG"
+        title={title("Download PNG")}
         disabled={disabled}
         onClick={() => {
-          if (!pngBase64) return;
-          downloadBase64(pngBase64, pngFilename);
+          if (!pngBase64 || disabled) return;
+          downloadUrl(`data:image/png;base64,${pngBase64}`, pngFilename);
           onExport?.("png");
         }}
       >
@@ -44,22 +48,4 @@ export function ExportControls({ svg, pngBase64, svgFilename, pngFilename, onExp
       </button>
     </div>
   );
-}
-
-function downloadText(content: string, filename: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  triggerDownload(url, filename);
-  URL.revokeObjectURL(url);
-}
-
-function downloadBase64(content: string, filename: string) {
-  triggerDownload(`data:image/png;base64,${content}`, filename);
-}
-
-function triggerDownload(url: string, filename: string) {
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
 }

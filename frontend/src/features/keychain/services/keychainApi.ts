@@ -1,3 +1,4 @@
+import { downloadBlob } from "../../../services/download";
 import type { KeychainHistoryEntry, KeychainRequest, KeychainResult } from "../state/keychainTypes";
 
 async function read<T>(response: Response): Promise<T> {
@@ -20,13 +21,8 @@ export const exportKeychain = (request: KeychainRequest) => generate("export", r
 export async function fetchKeychainHistory(signal?: AbortSignal): Promise<KeychainHistoryEntry[]> {
   return read(await fetch("/api/keychain/history", { signal }));
 }
-export function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url; anchor.download = filename;
-  document.body.appendChild(anchor); anchor.click(); anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
+// R1 F12: one shared download helper for the Designer and the Keychain.
+export { downloadBlob };
 export function downloadPng(result: KeychainResult) {
   if (!result.png_base64) throw new Error("The export did not include a PNG. Retry the export.");
   const data = Uint8Array.from(atob(result.png_base64), char => char.charCodeAt(0));

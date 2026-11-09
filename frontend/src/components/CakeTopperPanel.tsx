@@ -120,13 +120,23 @@ const FONT_FILTERS: { value: FontFilterCategory; label: string }[] = [
   { value: "use_with_caution", label: "Caution" },
 ];
 
-function initLine(fontId: string, overlapMm: string, numGaps: number): LineState {
+// R1 F3: rapid numeric/drag regenerations are coalesced (leading + trailing).
+const REGENERATE_COALESCE_MS = 150;
+
+interface BaseSettings {
+  fontId: string;
+  sizeMm: string;
+  overlap: OverlapMode;
+}
+
+function initLine(fontId: string, overlapMm: string, numGaps: number, sizeMm = DEFAULT_SIZE, overlap = DEFAULT_OVERLAP): LineState {
+  // R1 F2: lines start from the base size/overlap that produced them, not the defaults.
   return {
     fontId,
-    fontSizeMm: DEFAULT_SIZE,
+    fontSizeMm: sizeMm,
     alignment: "center",
     alignmentOffsetMm: "0",
-    overlapMode: DEFAULT_OVERLAP,
+    overlapMode: overlap,
     overlapCustomMm: "1.5",
     gapStates: Array.from({ length: numGaps }, () => ({ enabled: true, overlapMm })),
     floatingOffsets: {},
@@ -248,6 +258,16 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
   const [selectedRing, setSelectedRing] = useState(false);
   const [glyphBrowserLineIndex, setGlyphBrowserLineIndex] = useState<number | null>(null);
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("design");
+  // R1 F3: only the latest request may update the canvas, and export is only
+  // offered for a result produced from the current inputs.
+  const requestSeqRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const coalesceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastRegenerateRef = useRef(0);
+  // Last valid Base size the line states were synced to (survives an empty field).
+  const baseSizeAppliedRef = useRef(parseFloat(DEFAULT_SIZE));
+  const [resultKey, setResultKey] = useState<string | null>(null);
+  const [baseNotice, setBaseNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!defaultFontId || typeof FontFace === "undefined") return;
@@ -291,9 +311,9 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
     }
   }, [fonts, manualFonts, defaultFontId]);
 
-  function buildLineConfigs(states: LineState[]): CakeTopperLineConfig[] {
+  function buildLineConfigs(states: LineState[], baseFontId = defaultFontId): CakeTopperLineConfig[] {
     return states.map((s) => ({
-      font_id: s.fontId || defaultFontId,
+      font_id: s.fontId || baseFontId,
       font_size_mm: parseFloat(s.fontSizeMm) || 42,
       alignment: s.alignment,
       alignment_offset_mm: parseFloat(s.alignmentOffsetMm) || 0,
@@ -360,55 +380,154 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
     preserveCanvas = true,
     textOverride?: string,
     ringConfig: CakeTopperRingConfig = buildRingConfig(),
+    base: BaseSettings = { fontId: defaultFontId, sizeMm: defaultSize, overlap: defaultOverlap },
   ) {
+    cancelCoalesced();
     const activeText = textOverride ?? text;
+    const args = requestArgs(activeText, states, gaps, count, offsets, outline, ringConfig, base);
+    const seq = ++requestSeqRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await generateCakeTopper(...args, controller.signal);
+      if (seq !== requestSeqRef.current) return; // a newer request owns the canvas
+      setResult(r);
+      if (states.length === 0) {
+        baseSizeAppliedRef.current = parseFloat(base.sizeMm) || 42;
+        const mm = String(OVERLAP_MODES.find((m) => m.value === base.overlap)?.mm ?? 1.5);
+        const initialised = r.metadata.lines.map((lm) => initLine(base.fontId, mm, lm.gaps_before_mm.length, base.sizeMm, base.overlap));
+        const initialGaps = r.metadata.inter_line_gaps_mm.map(String);
+        setLineStates(initialised);
+        setInterLineGaps(initialGaps);
+        // The explicit per-line state now describes this same result.
+        setResultKey(JSON.stringify(requestArgs(activeText, initialised, initialGaps, count, offsets, outline, ringConfig, base)));
+      } else {
+        setResultKey(JSON.stringify(args));
+      }
+    } catch (e) {
+      if (seq !== requestSeqRef.current) return;
+      if (!preserveCanvas) { setResult(null); setResultKey(null); }
+      setError(e instanceof Error ? e.message : "Could not generate cake topper.");
+    } finally {
+      if (seq === requestSeqRef.current) {
+        setLoading(false);
+        if (abortRef.current === controller) abortRef.current = null;
+      }
+    }
+  }
+
+  function requestArgs(
+    activeText: string,
+    states: LineState[],
+    gaps: string[],
+    count: StakeCount,
+    offsets: StakeOffsetState[],
+    outline: CakeTopperOutlineRequest,
+    ringConfig: CakeTopperRingConfig,
+    base: BaseSettings,
+  ) {
     const n = activeText.trim().split(/\s+/).filter(Boolean).slice(0, 4).length;
-    const configs = states.length >= n ? buildLineConfigs(states.slice(0, n)) : [];
+    const configs = states.length >= n ? buildLineConfigs(states.slice(0, n), base.fontId) : [];
     const gapValues = gaps.slice(0, n - 1).map((g) => {
       const v = parseFloat(g);
       return isNaN(v) ? 3 : v;
     });
-    setLoading(true);
-    setError(null);
-    try {
-      const r = await generateCakeTopper(
-        activeText,
-        defaultFontId,
-        parseFloat(defaultSize) || 42,
-        defaultOverlap,
-        configs,
-        gapValues,
-        buildStakeConfig(count, offsets),
-        ringConfig,
-        outline,
-      );
-      setResult(r);
-      if (states.length === 0) {
-        const mm = String(OVERLAP_MODES.find((m) => m.value === defaultOverlap)?.mm ?? 1.5);
-        setLineStates(
-          r.metadata.lines.map((lm) => initLine(defaultFontId, mm, lm.gaps_before_mm.length)),
-        );
-        setInterLineGaps(r.metadata.inter_line_gaps_mm.map(String));
-      }
-    } catch (e) {
-      if (!preserveCanvas) setResult(null);
-      setError(e instanceof Error ? e.message : "Could not generate cake topper.");
-    } finally {
-      setLoading(false);
+    return [
+      activeText,
+      base.fontId,
+      parseFloat(base.sizeMm) || 42,
+      base.overlap,
+      configs,
+      gapValues,
+      buildStakeConfig(count, offsets),
+      ringConfig,
+      outline,
+    ] as const;
+  }
+
+  function cancelCoalesced() {
+    if (coalesceTimerRef.current !== null) {
+      clearTimeout(coalesceTimerRef.current);
+      coalesceTimerRef.current = null;
     }
   }
 
+  /** Regenerate now, or (for rapid numeric/drag edits) once the burst settles. */
+  function regenerateCoalesced(run: () => void) {
+    const elapsed = Date.now() - lastRegenerateRef.current;
+    cancelCoalesced();
+    if (elapsed >= REGENERATE_COALESCE_MS) { lastRegenerateRef.current = Date.now(); run(); return; }
+    coalesceTimerRef.current = setTimeout(() => {
+      coalesceTimerRef.current = null; lastRegenerateRef.current = Date.now(); run();
+    }, REGENERATE_COALESCE_MS - elapsed);
+  }
+
+  /** Discard any in-flight or pending regeneration (e.g. the text changed). */
+  function invalidatePending() {
+    cancelCoalesced();
+    requestSeqRef.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setLoading(false);
+  }
+
+  useEffect(() => () => { cancelCoalesced(); abortRef.current?.abort(); }, []);
+
+  function changeBaseFont(fontId: string) {
+    hasUserPickedFontRef.current = true;
+    const previous = defaultFontId;
+    setDefaultFontId(fontId);
+    if (!result || lineStates.length === 0 || fontId === previous) return;
+    // R1 F4: lines that used the base font follow it; explicit overrides stay.
+    const kept: number[] = [];
+    const updated = lineStates.map((s, i) => {
+      if (!s.fontId || s.fontId === previous) return { ...s, fontId };
+      kept.push(i + 1);
+      return s;
+    });
+    setBaseNotice(kept.length ? `${kept.map((i) => `Line ${i}`).join(", ")} ${kept.length === 1 ? "keeps its" : "keep their"} own font.` : null);
+    setLineStates(updated);
+    callApi(updated, interLineGaps, stakeCount, stakeOffsets, undefined, true, undefined, buildRingConfig(),
+      { fontId, sizeMm: defaultSize, overlap: defaultOverlap });
+  }
+
+  function changeBaseSize(value: string) {
+    const previous = baseSizeAppliedRef.current;
+    setDefaultSize(value);
+    const next = parseFloat(value);
+    if (isNaN(next)) return;
+    baseSizeAppliedRef.current = next;
+    if (!result || lineStates.length === 0) return;
+    const kept: number[] = [];
+    const updated = lineStates.map((s, i) => {
+      const size = parseFloat(s.fontSizeMm);
+      if (isNaN(size) || size === previous) return { ...s, fontSizeMm: value };
+      // Explicit per-line sizes are kept and reported below.
+      kept.push(i + 1);
+      return s;
+    });
+    setBaseNotice(kept.length ? `${kept.map((i) => `Line ${i}`).join(", ")} ${kept.length === 1 ? "keeps its" : "keep their"} own size.` : null);
+    setLineStates(updated);
+    regenerateCoalesced(() => callApi(updated, interLineGaps, stakeCount, stakeOffsets, undefined, true, undefined, buildRingConfig(),
+      { fontId: defaultFontId, sizeMm: value, overlap: defaultOverlap }));
+  }
+
   function handleGenerate() {
+    setBaseNotice(null);
     setSelectedLine(null);
     setLineStates([]);
     setInterLineGaps([]);
     callApi([], [], stakeCount, stakeOffsets, undefined, false);
   }
 
-  function patchLine(i: number, patch: Partial<LineState>) {
+  function patchLine(i: number, patch: Partial<LineState>, coalesce = false) {
     const updated = lineStates.map((s, idx) => (idx === i ? { ...s, ...patch } : s));
     setLineStates(updated);
-    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
+    if (coalesce) regenerateCoalesced(() => callApi(updated, interLineGaps, stakeCount, stakeOffsets));
+    else callApi(updated, interLineGaps, stakeCount, stakeOffsets);
   }
 
   function toggleGap(li: number, gi: number) {
@@ -434,13 +553,13 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
           },
     );
     setLineStates(updated);
-    if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps, stakeCount, stakeOffsets);
+    if (!isNaN(parseFloat(value))) regenerateCoalesced(() => callApi(updated, interLineGaps, stakeCount, stakeOffsets));
   }
 
   function setInterGap(i: number, value: string) {
     const updated = interLineGaps.map((g, idx) => (idx === i ? value : g));
     setInterLineGaps(updated);
-    if (!isNaN(parseFloat(value))) callApi(lineStates, updated, stakeCount, stakeOffsets);
+    if (!isNaN(parseFloat(value))) regenerateCoalesced(() => callApi(lineStates, updated, stakeCount, stakeOffsets));
   }
 
   function applyGlobalOverlap(mode: OverlapMode) {
@@ -454,7 +573,8 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
       gapStates: s.gapStates.map((g) => ({ ...g, overlapMm: String(mm) })),
     }));
     setLineStates(updated);
-    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
+    callApi(updated, interLineGaps, stakeCount, stakeOffsets, undefined, true, undefined, buildRingConfig(),
+      { fontId: defaultFontId, sizeMm: defaultSize, overlap: mode });
   }
 
   function handleLineDrag(lineIndex: number, dxMm: number, dyMm: number) {
@@ -465,7 +585,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
       return { ...s, manualXOffsetMm: String(newX), manualYOffsetMm: String(newY) };
     });
     setLineStates(updated);
-    callApi(updated, interLineGaps, stakeCount, stakeOffsets);
+    regenerateCoalesced(() => callApi(updated, interLineGaps, stakeCount, stakeOffsets));
   }
 
   function resetPosition(lineIndex: number) {
@@ -500,7 +620,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
     setSelectedLine(null);
     setSelectedStake(stakeIndex);
     setInspectorTab("structure");
-    callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+    regenerateCoalesced(() => callApi(lineStates, interLineGaps, stakeCount, nextOffsets));
   }
 
   function handleRingEnabledChange(enabled: boolean) {
@@ -542,14 +662,14 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
   function setRingOuterAndRegenerate(value: string) {
     setRingOuterDiameterMm(value);
     if (result && !isNaN(parseFloat(value))) {
-      callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, undefined, true, undefined, buildRingConfig(ringEnabled, ringPosition, value));
+      regenerateCoalesced(() => callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, undefined, true, undefined, buildRingConfig(ringEnabled, ringPosition, value)));
     }
   }
 
   function setRingHoleAndRegenerate(value: string) {
     setRingHoleDiameterMm(value);
     if (result && !isNaN(parseFloat(value))) {
-      callApi(
+      regenerateCoalesced(() => callApi(
         lineStates,
         interLineGaps,
         stakeCount,
@@ -558,14 +678,14 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
         true,
         undefined,
         buildRingConfig(ringEnabled, ringPosition, ringOuterDiameterMm, value),
-      );
+      ));
     }
   }
 
   function setRingOffsetAndRegenerate(nextOffset: RingOffsetState) {
     setRingOffset(nextOffset);
     if (result && !isNaN(parseFloat(nextOffset.xMm)) && !isNaN(parseFloat(nextOffset.yMm))) {
-      callApi(
+      regenerateCoalesced(() => callApi(
         lineStates,
         interLineGaps,
         stakeCount,
@@ -574,7 +694,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
         true,
         undefined,
         buildRingConfig(ringEnabled, ringPosition, ringOuterDiameterMm, ringHoleDiameterMm, nextOffset),
-      );
+      ));
     }
   }
 
@@ -602,11 +722,11 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
   function setOutlineWidth(value: string) {
     setOutlineWidthMm(value);
     if (!isNaN(parseFloat(value))) {
-      callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, {
+      regenerateCoalesced(() => callApi(lineStates, interLineGaps, stakeCount, stakeOffsets, {
         enabled: outlineEnabled,
         widthMm: parseFloat(value) || 3,
         color: outlineColor,
-      });
+      }));
     }
   }
 
@@ -647,10 +767,14 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
     setFontCategory("all");
     setDefaultFontId(pickDefaultFontId(fonts, manualFonts));
     setDefaultSize(DEFAULT_SIZE);
+    baseSizeAppliedRef.current = parseFloat(DEFAULT_SIZE);
     setDefaultOverlap(DEFAULT_OVERLAP);
     setLineStates([]);
     setInterLineGaps([]);
+    invalidatePending();
     setResult(null);
+    setResultKey(null);
+    setBaseNotice(null);
     setLoading(false);
     setError(null);
     setSelectedLine(null);
@@ -697,6 +821,15 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
   }
 
   const meta = result?.metadata;
+  const currentKey = JSON.stringify(requestArgs(
+    text, lineStates, interLineGaps, stakeCount, stakeOffsets,
+    { enabled: outlineEnabled, widthMm: parseFloat(outlineWidthMm) || 3, color: outlineColor },
+    buildRingConfig(), { fontId: defaultFontId, sizeMm: defaultSize, overlap: defaultOverlap },
+  ));
+  const resultCurrent = Boolean(result) && !loading && resultKey === currentKey;
+  const exportStatus = !meta ? "Create a design to export"
+    : resultCurrent ? "Ready to export"
+    : loading || coalesceTimerRef.current !== null ? "Updating…" : "Regenerate to export";
   const exportSizeText = meta ? `${meta.canvas_width_mm.toFixed(1)} × ${meta.canvas_height_mm.toFixed(1)} mm` : "Not generated";
   const ringMeta = meta?.ring ?? null;
   const ringStatus = !ringEnabled
@@ -732,7 +865,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
           </div>
         </div>
         <div className="ct-header-actions">
-          <span className="ct-export-status" aria-live="polite">{meta ? "Ready to export" : "Create a design to export"}</span>
+          <span className="ct-export-status" aria-live="polite">{exportStatus}</span>
           <button
             type="button"
             className="ct-reset-action"
@@ -746,6 +879,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
             compact={Boolean(toolbarHost)}
             svg={result?.svg ?? null}
             pngBase64={result?.png_base64 ?? null}
+            current={resultCurrent}
             svgFilename={result?.svg_filename ?? "cake-topper.svg"}
             pngFilename={result?.png_filename ?? "cake-topper.png"}
             onExport={handleExport}
@@ -766,8 +900,8 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                 <h2>Preview</h2>
                 <p>SVG export preview</p>
               </div>
-              {loading && result && (
-                <span className="ct-updating-chip" aria-live="polite">Updating…</span>
+              {result && !resultCurrent && (
+                <span className="ct-updating-chip" aria-live="polite">{exportStatus}</span>
               )}
               <div className="ct-size-chip">
                 <span>Final cut size</span>
@@ -856,9 +990,12 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                 placeholder="Happy Birthday Sarah"
                 onChange={(e) => {
                   setText(e.target.value);
+                  invalidatePending();
                   setLineStates([]);
                   setInterLineGaps([]);
                   setResult(null);
+                  setResultKey(null);
+                  setBaseNotice(null);
                   setSelectedLine(null);
                 }}
               />
@@ -889,7 +1026,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                 </select>
                 <FontPicker groups={fontGroups} value={defaultFontId}
                   selectedFont={fonts.find((font) => font.id === defaultFontId)} label="Base font"
-                  onChange={(fontId) => { hasUserPickedFontRef.current = true; setDefaultFontId(fontId); }} />
+                  onChange={changeBaseFont} />
               </div>
             </div>
 
@@ -903,11 +1040,12 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                     max="300"
                     step="1"
                     value={defaultSize}
-                    onChange={(e) => setDefaultSize(e.target.value)}
+                    onChange={(e) => changeBaseSize(e.target.value)}
                   />
                   <span>mm</span>
                 </span>
               </label>
+              {baseNotice && <p className="ct-field-note" role="status">{baseNotice}</p>}
 
 
             </div>
@@ -959,7 +1097,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                               ));
                               setStakeOffsets(nextOffsets);
                               if (!isNaN(parseFloat(e.target.value))) {
-                                callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+                                regenerateCoalesced(() => callApi(lineStates, interLineGaps, stakeCount, nextOffsets));
                               }
                             }}
                           />
@@ -981,7 +1119,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                               ));
                               setStakeOffsets(nextOffsets);
                               if (!isNaN(parseFloat(e.target.value))) {
-                                callApi(lineStates, interLineGaps, stakeCount, nextOffsets);
+                                regenerateCoalesced(() => callApi(lineStates, interLineGaps, stakeCount, nextOffsets));
                               }
                             }}
                           />
@@ -1241,7 +1379,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                                 max="500"
                                 step="0.5"
                                 value={ls.alignmentOffsetMm}
-                                onChange={(e) => patchLine(li, { alignmentOffsetMm: e.target.value })}
+                                onChange={(e) => patchLine(li, { alignmentOffsetMm: e.target.value }, true)}
                               />
                               <span>mm</span>
                             </span>
@@ -1259,7 +1397,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                               max="300"
                               step="1"
                               value={ls.fontSizeMm}
-                              onChange={(e) => patchLine(li, { fontSizeMm: e.target.value })}
+                              onChange={(e) => patchLine(li, { fontSizeMm: e.target.value }, true)}
                             />
                             <span>mm</span>
                           </span>
@@ -1279,7 +1417,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                               max={STROKE_BUFFER_MAX_MM}
                               step="0.05"
                               value={ls.strokeBufferMm}
-                              onChange={(e) => patchLine(li, { strokeBufferMm: e.target.value })}
+                              onChange={(e) => patchLine(li, { strokeBufferMm: e.target.value }, true)}
                               onBlur={(e) =>
                                 patchLine(li, {
                                   strokeBufferMm: String(clampStrokeBufferMm(parseFloat(e.target.value))),
@@ -1307,7 +1445,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                                 step="0.5"
                                 value={ls.manualXOffsetMm}
                                 className="ct-position-input"
-                                onChange={(e) => patchLine(li, { manualXOffsetMm: e.target.value })}
+                                onChange={(e) => patchLine(li, { manualXOffsetMm: e.target.value }, true)}
                               />
                               <span>mm</span>
                             </span>
@@ -1322,7 +1460,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                                 step="0.5"
                                 value={ls.manualYOffsetMm}
                                 className="ct-position-input"
-                                onChange={(e) => patchLine(li, { manualYOffsetMm: e.target.value })}
+                                onChange={(e) => patchLine(li, { manualYOffsetMm: e.target.value }, true)}
                               />
                               <span>mm</span>
                             </span>
@@ -1422,7 +1560,7 @@ export function CakeTopperPanel({ fonts, manualFonts, toolbarHost = null, active
                                   },
                             );
                             setLineStates(updated);
-                            if (!isNaN(parseFloat(value))) callApi(updated, interLineGaps);
+                            if (!isNaN(parseFloat(value))) regenerateCoalesced(() => callApi(updated, interLineGaps));
                           }}
                         />
                       )}

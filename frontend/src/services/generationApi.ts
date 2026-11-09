@@ -194,11 +194,13 @@ export async function generateCakeTopper(
   stakeConfig?: CakeTopperStakeConfig,
   ringConfig?: CakeTopperRingConfig,
   outline?: CakeTopperOutlineRequest,
+  signal?: AbortSignal,
 ): Promise<CakeTopperResult> {
   let r: Response;
   try {
     r = await fetch("/api/cake-topper", {
       method: "POST",
+      signal,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text,
