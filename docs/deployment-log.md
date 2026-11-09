@@ -15,6 +15,31 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-11-09 22:40 Europe/London] - Keychain Designer K5 Testing and Hardening
+
+### Commit
+- Implementation: `57ae14feea84bd64ee299902fec0490fc1b9c449` (`feat(keychain): production check fixes, highlights and export hardening`); documentation/evidence in the following `docs(keychain)` commit.
+- Previous: `dea68fe` (K5 brief). Branch `main`; no push or release tag.
+
+### Summary
+- Production-check Fix actions: allowlisted, one undo step, outcome from the next accepted preview, explanations when no fix exists. Canvas problem highlights.
+- Focus-trapped export modal over an inert workspace. Export-result errors hold that exact result for confirmation without a second export. Duplicate-export guard.
+- Fixed: snapped-ring drag jumps, ineffective/repeating backend fixes, unit-draft blur changing mm, no-op re-previews, a stale "Fixed" message after Undo, the SVG focus outline, and the disabled primary button style.
+- Files: Keychain feature module, `keychain_validation.py`, `keychain_engine.py`, `models.py` (additive `fix_note`, ring `requested_center_*`), two QA scripts, tests, docs.
+
+### Validation
+- Backend 332 passed; frontend 24 files / 115 tests; build passed; golden SVGs 3/3 byte-identical; benchmark gate PASS (worst API p95 100.2 ms); written-file validator 6/6 PASS.
+- Chrome 156 walkthrough on the isolated 8012 server: drags, fixes, highlights, modal keyboard, layouts and download content verified. Gaps are listed in `docs/qa/KEYCHAIN_K5_VALIDATION_REPORT.md`.
+- LightBurn and physical cuts **pending**: LightBurn held the owner's unsaved document, so it was not touched; samples and checklist are in `docs/qa/keychain-k5-evidence/`.
+
+### Remaining Work / Revert
+- Operator LightBurn import and material cut; remaining browser gaps; K5-013 layout shift.
+- Restart 8010 to load the K5 backend (it currently serves the new frontend with the old backend process).
+- Revert: `git revert 57ae14f` and rebuild. No data migration.
+- Handoff: `docs/handoffs/keychain-designer-k5-hardening-handoff.md`.
+
+---
+
 ## [2026-11-09 21:32:58 Europe/London] - Keychain Designer K4 Editing Workflow
 
 ### Commit

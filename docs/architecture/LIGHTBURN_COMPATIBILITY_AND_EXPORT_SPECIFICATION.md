@@ -200,6 +200,8 @@ Keychain SVGs use SVG 1.1, physical mm units, a fitted viewBox and a 2 mm artboa
 
 Separate files share identical canvas dimensions, viewBox and origin. The backing is a compound path with a real ring hole and optional letter counters. Unbuffered text keeps its original Q/C curves; explicit stroke buffering outputs the reinforced polygon silhouette. Files have a human-readable recipe comment and XML-escaped JSON in `<metadata id="ens-recipe">`. Preview-only hit targets are absent from production files.
 
+K5 adds `scripts/keychain_validate_exports.py`, which re-reads six labelled written exports (default, Mini Charm, Bag Tag, Layered combined/custom colours, Layered separate, height mode) and measures size, margins, hole diameter, winding, groups, curves, alignment, recipe round-trip and PNG transparency; all pass. Manual LightBurn import acceptance remains pending (owner's LightBurn session was not touched).
+
 Automated K2 validation checks XML, actual cut-contour dimensions, 5 mm hole extents at 30/60/90 mm product widths, colour/group separation and file alignment. Manual LightBurn import, colour-to-layer mapping and manufacturing checks are pending K5; no new LightBurn sign-off is claimed here. See `docs/qa/KEYCHAIN_QA_MATRIX.md`.
 
 # End of Document

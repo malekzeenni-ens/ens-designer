@@ -7,7 +7,9 @@ Phase Name: Dedicated Keychain Designer Tab
 Target Release: next minor version after the current tag (run `git tag --sort=-v:refname | head -1`)
 Owner: Etch 'N' Shine
 Date: 2026-11-06
-Status: K0–K4 implemented on 2026-11-09. User authorised K3 and K4 together and reserved K5 for the later testing pass. K5 browser/LightBurn/hardening sign-off remains pending. See `docs/handoffs/keychain-designer-k4-editing-handoff.md`.
+Status update 2026-11-09: K5 implemented in `57ae14f` (Fix actions, highlights, modal/export hardening). Software and Chrome validation largely complete; LightBurn and physical-cut acceptance pending ([K5 handoff](../handoffs/keychain-designer-k5-hardening-handoff.md)).
+
+Previous status: K0–K4 implemented on 2026-11-09. User authorised K3 and K4 together and reserved K5 for the later testing pass. K5 browser/LightBurn/hardening sign-off remains pending. See `docs/handoffs/keychain-designer-k4-editing-handoff.md`.
 
 Companion document (read first): `docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md`. Stage, check and default references below (for example "Journey §7 Stage 6") point into it.
 

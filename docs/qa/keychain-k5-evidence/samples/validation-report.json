@@ -1,0 +1,655 @@
+{
+  "png_renderer": "see keychain-k5-benchmark.json",
+  "cases": [
+    {
+      "case": "01-engraved-default-60mm",
+      "request": {
+        "text": "Sarah"
+      },
+      "font_role": "script",
+      "reported_width_mm": 60.0,
+      "reported_height_mm": 34.601,
+      "canvas_mm": [
+        64.0,
+        38.601
+      ],
+      "files": [
+        {
+          "name": "01-engraved-default-60mm--sarah-keychain-60mm.svg",
+          "width_mm": 64.0,
+          "height_mm": 38.601,
+          "viewBox": [
+            0.0,
+            0.0,
+            64.0,
+            38.601
+          ],
+          "groups": [
+            "CUT_BACKING",
+            "ENGRAVE_TEXT"
+          ],
+          "hit_paths": 0,
+          "backing": {
+            "subpaths": 2,
+            "outer_contours": 1,
+            "inner_contours": 1,
+            "measured_width_mm": 60.0,
+            "measured_height_mm": 34.601,
+            "margin_mm": [
+              2.0,
+              2.0,
+              2.0,
+              2.0
+            ],
+            "fill_rule": "nonzero",
+            "duplicate_contours": 0,
+            "hole_diameters_mm": [
+              5.0
+            ],
+            "hole_centres_mm": [
+              [
+                8.0,
+                8.0
+              ]
+            ]
+          },
+          "text": {
+            "layer": "ENGRAVE_TEXT",
+            "fill": "#FF0000",
+            "has_curves": true,
+            "paths": 5
+          }
+        }
+      ],
+      "png": {
+        "name": "01-engraved-default-60mm--sarah-keychain-60mm.png",
+        "size_px": [
+          512,
+          309
+        ],
+        "corner_alpha": 0,
+        "backing_pixels": 53265,
+        "text_pixels": 17752,
+        "hole_centre_alpha": 0
+      },
+      "production_checks": {
+        "KC-BACKING-SINGLE-PIECE": "pass",
+        "KC-SIZE-MIN": "pass",
+        "KC-RING-WALL": "pass",
+        "KC-RING-NECK": "pass",
+        "KC-RING-TOUCH": "pass",
+        "KC-HOLE-CLEARANCE": "pass",
+        "KC-BACKING-MIN-FEATURE": "pass",
+        "KC-MISSING-GLYPHS": "pass",
+        "KC-SIZE-CONVERGED": "pass"
+      },
+      "checks": {
+        "finished size within 0.05 mm": true,
+        "canvas = finished + 2 mm margin each side": true,
+        "svg width/height match viewBox in mm": true,
+        "hole diameter within 0.01 mm": true,
+        "single outer backing contour": true,
+        "no duplicate cut contours": true,
+        "no preview hit paths": true,
+        "expected layer groups": true,
+        "unbuffered text keeps Q/C curves": true,
+        "separate files share canvas/viewBox": true,
+        "recipe round-trips": true,
+        "PNG exterior transparent": true,
+        "PNG ring hole transparent": true,
+        "PNG backing and text colours present": true
+      },
+      "passed": true
+    },
+    {
+      "case": "02-mini-charm-40mm",
+      "request": {
+        "text": "Ali",
+        "size": {
+          "mode": "width",
+          "target_mm": 40
+        },
+        "ring": {
+          "outer_diameter_mm": 10,
+          "hole_diameter_mm": 4
+        }
+      },
+      "font_role": "script",
+      "reported_width_mm": 40.0,
+      "reported_height_mm": 34.793,
+      "canvas_mm": [
+        44.0,
+        38.793
+      ],
+      "files": [
+        {
+          "name": "02-mini-charm-40mm--ali-keychain-40mm.svg",
+          "width_mm": 44.0,
+          "height_mm": 38.793,
+          "viewBox": [
+            0.0,
+            0.0,
+            44.0,
+            38.793
+          ],
+          "groups": [
+            "CUT_BACKING",
+            "ENGRAVE_TEXT"
+          ],
+          "hit_paths": 0,
+          "backing": {
+            "subpaths": 2,
+            "outer_contours": 1,
+            "inner_contours": 1,
+            "measured_width_mm": 40.0,
+            "measured_height_mm": 34.793,
+            "margin_mm": [
+              2.0,
+              2.0,
+              2.0,
+              2.0
+            ],
+            "fill_rule": "nonzero",
+            "duplicate_contours": 0,
+            "hole_diameters_mm": [
+              4.0
+            ],
+            "hole_centres_mm": [
+              [
+                12.897,
+                7.0
+              ]
+            ]
+          },
+          "text": {
+            "layer": "ENGRAVE_TEXT",
+            "fill": "#FF0000",
+            "has_curves": true,
+            "paths": 3
+          }
+        }
+      ],
+      "png": {
+        "name": "02-mini-charm-40mm--ali-keychain-40mm.png",
+        "size_px": [
+          352,
+          310
+        ],
+        "corner_alpha": 0,
+        "backing_pixels": 41454,
+        "text_pixels": 16928,
+        "hole_centre_alpha": 0
+      },
+      "production_checks": {
+        "KC-BACKING-SINGLE-PIECE": "pass",
+        "KC-SIZE-MIN": "pass",
+        "KC-RING-WALL": "pass",
+        "KC-RING-NECK": "pass",
+        "KC-RING-TOUCH": "pass",
+        "KC-HOLE-CLEARANCE": "pass",
+        "KC-BACKING-MIN-FEATURE": "pass",
+        "KC-MISSING-GLYPHS": "pass",
+        "KC-SIZE-CONVERGED": "pass"
+      },
+      "checks": {
+        "finished size within 0.05 mm": true,
+        "canvas = finished + 2 mm margin each side": true,
+        "svg width/height match viewBox in mm": true,
+        "hole diameter within 0.01 mm": true,
+        "single outer backing contour": true,
+        "no duplicate cut contours": true,
+        "no preview hit paths": true,
+        "expected layer groups": true,
+        "unbuffered text keeps Q/C curves": true,
+        "separate files share canvas/viewBox": true,
+        "recipe round-trips": true,
+        "PNG exterior transparent": true,
+        "PNG ring hole transparent": true,
+        "PNG backing and text colours present": true
+      },
+      "passed": true
+    },
+    {
+      "case": "03-bag-tag-90mm",
+      "request": {
+        "text": "Maximilian",
+        "size": {
+          "mode": "width",
+          "target_mm": 90
+        },
+        "backing": {
+          "offset_mm": 4,
+          "fill_counters": true,
+          "smoothing_mm": 0.5
+        },
+        "ring": {
+          "outer_diameter_mm": 15,
+          "hole_diameter_mm": 6
+        }
+      },
+      "font_role": "display",
+      "reported_width_mm": 90.0,
+      "reported_height_mm": 37.137,
+      "canvas_mm": [
+        94.0,
+        41.137
+      ],
+      "files": [
+        {
+          "name": "03-bag-tag-90mm--maximilian-keychain-90mm.svg",
+          "width_mm": 94.0,
+          "height_mm": 41.137,
+          "viewBox": [
+            0.0,
+            0.0,
+            94.0,
+            41.137
+          ],
+          "groups": [
+            "CUT_BACKING",
+            "ENGRAVE_TEXT"
+          ],
+          "hit_paths": 0,
+          "backing": {
+            "subpaths": 2,
+            "outer_contours": 1,
+            "inner_contours": 1,
+            "measured_width_mm": 90.0,
+            "measured_height_mm": 37.137,
+            "margin_mm": [
+              2.0,
+              2.0,
+              2.0,
+              2.0
+            ],
+            "fill_rule": "nonzero",
+            "duplicate_contours": 0,
+            "hole_diameters_mm": [
+              6.0
+            ],
+            "hole_centres_mm": [
+              [
+                9.5,
+                9.5
+              ]
+            ]
+          },
+          "text": {
+            "layer": "ENGRAVE_TEXT",
+            "fill": "#FF0000",
+            "has_curves": true,
+            "paths": 10
+          }
+        }
+      ],
+      "png": {
+        "name": "03-bag-tag-90mm--maximilian-keychain-90mm.png",
+        "size_px": [
+          752,
+          329
+        ],
+        "corner_alpha": 0,
+        "backing_pixels": 76813,
+        "text_pixels": 75986,
+        "hole_centre_alpha": 0
+      },
+      "production_checks": {
+        "KC-BACKING-SINGLE-PIECE": "pass",
+        "KC-SIZE-MIN": "pass",
+        "KC-RING-WALL": "pass",
+        "KC-RING-NECK": "pass",
+        "KC-RING-TOUCH": "pass",
+        "KC-HOLE-CLEARANCE": "pass",
+        "KC-BACKING-MIN-FEATURE": "pass",
+        "KC-MISSING-GLYPHS": "pass",
+        "KC-SIZE-CONVERGED": "pass"
+      },
+      "checks": {
+        "finished size within 0.05 mm": true,
+        "canvas = finished + 2 mm margin each side": true,
+        "svg width/height match viewBox in mm": true,
+        "hole diameter within 0.01 mm": true,
+        "single outer backing contour": true,
+        "no duplicate cut contours": true,
+        "no preview hit paths": true,
+        "expected layer groups": true,
+        "unbuffered text keeps Q/C curves": true,
+        "separate files share canvas/viewBox": true,
+        "recipe round-trips": true,
+        "PNG exterior transparent": true,
+        "PNG ring hole transparent": true,
+        "PNG backing and text colours present": true
+      },
+      "passed": true
+    },
+    {
+      "case": "04-layered-combined-custom-colours",
+      "request": {
+        "text": "Jo",
+        "style": "layered",
+        "colors": {
+          "backing": "#1E3A8A",
+          "text": "#F59E0B"
+        }
+      },
+      "font_role": "display",
+      "reported_width_mm": 60.0,
+      "reported_height_mm": 65.402,
+      "canvas_mm": [
+        64.0,
+        69.402
+      ],
+      "files": [
+        {
+          "name": "04-layered-combined-custom-colours--jo-keychain-60mm.svg",
+          "width_mm": 64.0,
+          "height_mm": 69.402,
+          "viewBox": [
+            0.0,
+            0.0,
+            64.0,
+            69.402
+          ],
+          "groups": [
+            "CUT_BACKING",
+            "CUT_TEXT"
+          ],
+          "hit_paths": 0,
+          "backing": {
+            "subpaths": 2,
+            "outer_contours": 1,
+            "inner_contours": 1,
+            "measured_width_mm": 60.0,
+            "measured_height_mm": 65.401,
+            "margin_mm": [
+              2.0,
+              2.0,
+              2.0,
+              2.001
+            ],
+            "fill_rule": "nonzero",
+            "duplicate_contours": 0,
+            "hole_diameters_mm": [
+              5.0
+            ],
+            "hole_centres_mm": [
+              [
+                16.88,
+                8.0
+              ]
+            ]
+          },
+          "text": {
+            "layer": "CUT_TEXT",
+            "fill": "#F59E0B",
+            "has_curves": true,
+            "paths": 2
+          }
+        }
+      ],
+      "png": {
+        "name": "04-layered-combined-custom-colours--jo-keychain-60mm.png",
+        "size_px": [
+          512,
+          555
+        ],
+        "corner_alpha": 0,
+        "backing_pixels": 61712,
+        "text_pixels": 121872,
+        "hole_centre_alpha": 0
+      },
+      "production_checks": {
+        "KC-BACKING-SINGLE-PIECE": "pass",
+        "KC-SIZE-MIN": "pass",
+        "KC-RING-WALL": "pass",
+        "KC-RING-NECK": "pass",
+        "KC-RING-TOUCH": "pass",
+        "KC-HOLE-CLEARANCE": "pass",
+        "KC-BACKING-MIN-FEATURE": "pass",
+        "KC-TEXT-FLOATING-PARTS": "pass",
+        "KC-TEXT-MIN-STROKE": "pass",
+        "KC-MISSING-GLYPHS": "pass",
+        "KC-SIZE-CONVERGED": "pass"
+      },
+      "checks": {
+        "finished size within 0.05 mm": true,
+        "canvas = finished + 2 mm margin each side": true,
+        "svg width/height match viewBox in mm": true,
+        "hole diameter within 0.01 mm": true,
+        "single outer backing contour": true,
+        "no duplicate cut contours": true,
+        "no preview hit paths": true,
+        "expected layer groups": true,
+        "unbuffered text keeps Q/C curves": true,
+        "separate files share canvas/viewBox": true,
+        "recipe round-trips": true,
+        "PNG exterior transparent": true,
+        "PNG ring hole transparent": true,
+        "PNG backing and text colours present": true
+      },
+      "passed": true
+    },
+    {
+      "case": "05-layered-separate-60mm",
+      "request": {
+        "text": "Sarah",
+        "style": "layered",
+        "layered_export": "separate"
+      },
+      "font_role": "script",
+      "reported_width_mm": 60.0,
+      "reported_height_mm": 34.601,
+      "canvas_mm": [
+        64.0,
+        38.601
+      ],
+      "files": [
+        {
+          "name": "05-layered-separate-60mm--sarah-keychain-60mm-backing.svg",
+          "width_mm": 64.0,
+          "height_mm": 38.601,
+          "viewBox": [
+            0.0,
+            0.0,
+            64.0,
+            38.601
+          ],
+          "groups": [
+            "CUT_BACKING"
+          ],
+          "hit_paths": 0,
+          "backing": {
+            "subpaths": 2,
+            "outer_contours": 1,
+            "inner_contours": 1,
+            "measured_width_mm": 60.0,
+            "measured_height_mm": 34.601,
+            "margin_mm": [
+              2.0,
+              2.0,
+              2.0,
+              2.0
+            ],
+            "fill_rule": "nonzero",
+            "duplicate_contours": 0,
+            "hole_diameters_mm": [
+              5.0
+            ],
+            "hole_centres_mm": [
+              [
+                8.0,
+                8.0
+              ]
+            ]
+          }
+        },
+        {
+          "name": "05-layered-separate-60mm--sarah-keychain-60mm-text.svg",
+          "width_mm": 64.0,
+          "height_mm": 38.601,
+          "viewBox": [
+            0.0,
+            0.0,
+            64.0,
+            38.601
+          ],
+          "groups": [
+            "CUT_TEXT"
+          ],
+          "hit_paths": 0,
+          "text": {
+            "layer": "CUT_TEXT",
+            "fill": "#FF0000",
+            "has_curves": true,
+            "paths": 5
+          }
+        }
+      ],
+      "png": {
+        "name": "05-layered-separate-60mm--sarah-keychain-60mm.png",
+        "size_px": [
+          512,
+          309
+        ],
+        "corner_alpha": 0,
+        "backing_pixels": 53265,
+        "text_pixels": 17752,
+        "hole_centre_alpha": 0
+      },
+      "production_checks": {
+        "KC-BACKING-SINGLE-PIECE": "pass",
+        "KC-SIZE-MIN": "pass",
+        "KC-RING-WALL": "pass",
+        "KC-RING-NECK": "pass",
+        "KC-RING-TOUCH": "pass",
+        "KC-HOLE-CLEARANCE": "pass",
+        "KC-BACKING-MIN-FEATURE": "pass",
+        "KC-TEXT-FLOATING-PARTS": "pass",
+        "KC-TEXT-MIN-STROKE": "warning",
+        "KC-MISSING-GLYPHS": "pass",
+        "KC-SIZE-CONVERGED": "pass"
+      },
+      "checks": {
+        "finished size within 0.05 mm": true,
+        "canvas = finished + 2 mm margin each side": true,
+        "svg width/height match viewBox in mm": true,
+        "hole diameter within 0.01 mm": true,
+        "single outer backing contour": true,
+        "no duplicate cut contours": true,
+        "no preview hit paths": true,
+        "expected layer groups": true,
+        "unbuffered text keeps Q/C curves": true,
+        "separate files share canvas/viewBox": true,
+        "recipe round-trips": true,
+        "PNG exterior transparent": true,
+        "PNG ring hole transparent": true,
+        "PNG backing and text colours present": true
+      },
+      "passed": true
+    },
+    {
+      "case": "06-height-30mm",
+      "request": {
+        "text": "Bee",
+        "size": {
+          "mode": "height",
+          "target_mm": 30
+        }
+      },
+      "font_role": "display",
+      "reported_width_mm": 30.764,
+      "reported_height_mm": 30.0,
+      "canvas_mm": [
+        34.764,
+        34.0
+      ],
+      "files": [
+        {
+          "name": "06-height-30mm--bee-keychain-30.8mm.svg",
+          "width_mm": 34.764,
+          "height_mm": 34.0,
+          "viewBox": [
+            0.0,
+            0.0,
+            34.764,
+            34.0
+          ],
+          "groups": [
+            "CUT_BACKING",
+            "ENGRAVE_TEXT"
+          ],
+          "hit_paths": 0,
+          "backing": {
+            "subpaths": 2,
+            "outer_contours": 1,
+            "inner_contours": 1,
+            "measured_width_mm": 30.763,
+            "measured_height_mm": 30.0,
+            "margin_mm": [
+              2.0,
+              2.0,
+              2.001,
+              2.0
+            ],
+            "fill_rule": "nonzero",
+            "duplicate_contours": 0,
+            "hole_diameters_mm": [
+              5.0
+            ],
+            "hole_centres_mm": [
+              [
+                8.0,
+                8.0
+              ]
+            ]
+          },
+          "text": {
+            "layer": "ENGRAVE_TEXT",
+            "fill": "#FF0000",
+            "has_curves": true,
+            "paths": 3
+          }
+        }
+      ],
+      "png": {
+        "name": "06-height-30mm--bee-keychain-30.8mm.png",
+        "size_px": [
+          278,
+          272
+        ],
+        "corner_alpha": 0,
+        "backing_pixels": 24128,
+        "text_pixels": 19710,
+        "hole_centre_alpha": 0
+      },
+      "production_checks": {
+        "KC-BACKING-SINGLE-PIECE": "pass",
+        "KC-SIZE-MIN": "pass",
+        "KC-RING-WALL": "pass",
+        "KC-RING-NECK": "pass",
+        "KC-RING-TOUCH": "pass",
+        "KC-HOLE-CLEARANCE": "pass",
+        "KC-BACKING-MIN-FEATURE": "pass",
+        "KC-MISSING-GLYPHS": "pass",
+        "KC-SIZE-CONVERGED": "pass"
+      },
+      "checks": {
+        "finished size within 0.05 mm": true,
+        "canvas = finished + 2 mm margin each side": true,
+        "svg width/height match viewBox in mm": true,
+        "hole diameter within 0.01 mm": true,
+        "single outer backing contour": true,
+        "no duplicate cut contours": true,
+        "no preview hit paths": true,
+        "expected layer groups": true,
+        "unbuffered text keeps Q/C curves": true,
+        "separate files share canvas/viewBox": true,
+        "recipe round-trips": true,
+        "PNG exterior transparent": true,
+        "PNG ring hole transparent": true,
+        "PNG backing and text colours present": true
+      },
+      "passed": true
+    }
+  ]
+}

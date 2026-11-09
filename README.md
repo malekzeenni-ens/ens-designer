@@ -6,6 +6,7 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Latest Updates
 
+- 2026-11-09 - K5 hardening: production-check Fix buttons and canvas highlights, focus-trapped export confirmation, export-result error checks, ring-drag and unit-draft fixes. Chrome-validated; LightBurn and physical cuts pending ([K5 handoff](docs/handoffs/keychain-designer-k5-hardening-handoff.md))
 - 2026-11-09 - Added K4 letter editing, cluster selection/drag, 100-step undo/redo, Next name and saved recipe reload. K3/K4 implementation is complete; the dedicated K5 testing/hardening pass remains pending.
 - 2026-11-09 - Added the Keychain workspace (K3): live preview, font/size/backing/ring/layer controls, presets, production checks and exports. K4 editing tools follow; K5 is reserved for the later testing pass.
 - 2026-11-09 - Added the dedicated Keychain engine and preview/export/history API (K2): finished sizing, solid backing, ring auto-snap, i/j dot joining, glyph transforms, production checks, layered SVGs and transparent PNGs. The Keychain workspace UI is K3.
@@ -23,7 +24,7 @@ AI SVG Generator is a local-first application for Etch 'N' Shine that generates 
 
 # Current Status
 
-Keychain Designer: K0–K4 implemented. See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K4 handoff](docs/handoffs/keychain-designer-k4-editing-handoff.md). K5 testing/hardening remains deferred by request.
+Keychain Designer: K0–K5 implemented (LightBurn and material acceptance pending). See [implementation plan](docs/phases/KEYCHAIN_DESIGNER_IMPLEMENTATION_PLAN.md), [user journey](docs/phases/KEYCHAIN_DESIGNER_USER_JOURNEY.md) and [K4 handoff](docs/handoffs/keychain-designer-k4-editing-handoff.md). K5 testing/hardening remains deferred by request.
 
 Run `.\.venv313\Scripts\python.exe scripts/bench_keychain.py --check-fixtures --iterations 20 --output logs/keychain-benchmark.json` for stage p50/p95 timings. Golden SVG checks also run with pytest. Reference fixtures cannot be overwritten by the benchmark command.
 
