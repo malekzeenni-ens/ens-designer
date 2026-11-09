@@ -91,7 +91,7 @@ README, architecture overview, phase index, Keychain plan and journey statuses, 
 
 ## 15. Git information
 
-Branch: `main`. Base: `582e9d1`. Milestone commit: `chore(keychain): add baseline benchmark and cake topper golden fixtures`. Internal K0 milestone; no release tag or remote push.
+Branch: `main`. Base: `582e9d1`. Milestone commit: `e3a481e518f51bfdc9f2fbbbd6cc29cc7e5649ee` (`chore(keychain): add baseline benchmark and cake topper golden fixtures`). Internal K0 milestone; no release tag or remote push.
 
 ## 16. Deployment information
 

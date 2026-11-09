@@ -15,6 +15,37 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-11-09 20:00:23 Europe/London] - Keychain Designer K0 Baseline
+
+### Commit
+- Commit hash: `e3a481e518f51bfdc9f2fbbbd6cc29cc7e5649ee`
+- Previous commit: `582e9d1`
+- Branch: `main`
+- Deployment: local tooling milestone; no application restart, remote push or release tag.
+
+### Summary and Files Changed
+- Added `scripts/bench_keychain.py`, a 22-case baseline report in `docs/qa/keychain-k0-baseline.json`, three pinned SVG fixtures and their manifest under `tests/fixtures/keychain_baseline/`, and `tests/test_keychain_baseline.py`.
+- Added `.gitattributes` to preserve exact fixture bytes across Windows checkouts.
+- Included the existing Keychain journey and plan, updated their statuses, and updated README, architecture overview, phase index and the K0 handoff.
+- Runtime backend and frontend code are unchanged.
+
+### Tests and Validation
+- Environment imports: Shapely, uharfbuzz and FontTools passed using `.venv313`.
+- Full backend suite: 218 passed; one existing Starlette/httpx deprecation warning.
+- Final date-frozen golden test run: 3 passed.
+- Frontend: 18 files, 63 tests passed, exit 0 using cmd.exe. The first PowerShell-redirection run reported all tests passing but returned exit 1; the explicit shell rerun resolved the exit-status ambiguity.
+- Benchmark: 20 warm samples per case, 22 cases; exit 0. Three reference SVGs verified byte-identical. Fixture overwrite attempt correctly refused.
+- Git staged whitespace check passed. Fixture Git attribute verified as `text: unset`.
+- Final full-generation p50: 123.722–527.828 ms across cases; p95: 150.191–759.178 ms. Timings include PNG and are not equivalent to the future 150 ms preview-only target.
+
+### Known Issues and Revert
+- Cairo native library unavailable; all cases use the existing Pillow fallback. Seven cases produce the existing disconnected-ring warning. These findings are recorded for K1/K2.
+- No UI or LightBurn validation claimed for this tooling-only milestone. K1 shared foundations is next.
+- Revert the implementation commit above to remove K0 tooling and documentation; no data migration is needed.
+- Details: `docs/handoffs/keychain-designer-k0-baseline-handoff.md`.
+
+---
+
 ## [2026-07-14 23:40:00 Europe/London] - Consolidated Local Runtime on Port 8010
 
 ### Commit
