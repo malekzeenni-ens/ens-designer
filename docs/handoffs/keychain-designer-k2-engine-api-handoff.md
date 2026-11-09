@@ -102,7 +102,7 @@ README, architecture overview, LightBurn export specification, Keychain implemen
 
 ## 15. Git information
 
-Branch: `main`. Base: `869599e` (K1 and its deployment log). Milestone commit: `feat(keychain): add keychain engine validation and API`. No remote push or release tag.
+Branch: `main`. Base: `869599e` (K1 and its deployment log). Milestone commit: `b22c3f26d3e9246d20d0de901f76c8d25b3cd7ec` (`feat(keychain): add keychain engine validation and API`). No remote push or release tag.
 
 ## 16. Deployment information
 

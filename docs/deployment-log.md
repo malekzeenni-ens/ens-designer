@@ -15,6 +15,40 @@ Each completed phase or meaningful code change must include:
 
 ---
 
+## [2026-11-09 20:48:42 Europe/London] - Keychain Designer K2 Engine and API
+
+### Commit
+- Commit hash: `b22c3f26d3e9246d20d0de901f76c8d25b3cd7ec`
+- Previous commit: `869599e`
+- Branch: `main`
+- Deployment: source/local validation; no production restart, remote push or release tag.
+
+### Summary and Files Changed
+- Added the dedicated Keychain engine, validation, SVG/PNG assembly, history store and `/api/keychain/{preview,export,history}` routes; registered routes before static serving.
+- Added finite-valued Pydantic settings and glyph/ring/check/recipe metadata. Reused K1 raw outline caching, overlap and compound-path helpers. Existing Cake Topper geometry and PNG drawing were not changed.
+- Implemented physical finished sizing, fixed ring/hole sizes, ring auto-snap, solid/smoothed backing, i/j dot joining, manual offsets and per-glyph transforms. Added a bounded minimum search for opposing physical translations before the six-step size solve.
+- Added margin-inclusive canvas dimensions separately from finished product dimensions. Export saves history once; explicit history POST supports manual save/import.
+- Fixed Keychain PNG compositing so counters reveal the backing, with the actual ring hole transparent. The new fallback still reuses the existing Pillow drawing functions on separate layers.
+- Added 79 K2 tests, benchmark mode/evidence, QA matrix, sample SVG/PNG, handoff and architecture/export/API documentation.
+
+### Tests and Validation
+- Final full backend suite: 325 passed; one existing Starlette/httpx deprecation warning.
+- Frontend: 18 files / 63 tests passed, exit 0.
+- Three K0 Cake Topper golden SVGs byte-identical in pytest and benchmark.
+- Budget-enforced final benchmark: 22 recipes, 440 warm preview API calls, 22 full service exports; all sizes converged and all recipes had zero production-check errors. Exit 0 / PASS.
+- Worst warm service preview p95: 79.081 ms. Worst in-process API round-trip p95: 81.299 ms (<150 ms). Slowest cold parsed-font-cache API preview: 83.489 ms (<800 ms). Slowest full SVG + PNG export: 113.569 ms (<1500 ms).
+- All PNGs used composited Pillow; native Cairo remains unavailable. Inspected the saved Sarah sample visually after the counter-compositing correction; automated pixel checks cover transparent exterior/keyhole and opaque backing beneath the text counter.
+- SVG XML, actual 5 mm hole bounds at 30/60/90 mm sizes, true finished cut extents, layer alignment, recipe escaping/reload, history isolation, malformed records, eight-thread previews and API errors are covered by tests.
+- Staged whitespace check passed. Manual LightBurn/manufacturing validation is pending K5; browser UI is K3.
+
+### Known Issues and Revert
+- K3/K4 supply the workspace and advanced editing UX; K3/K5 must consume checks and add client export-error confirmation. Export already saves history, so clients must not save it a second time.
+- Keep finished dimensions distinct from margin-inclusive canvas dimensions when building the preview overlays. Optional flattening retains the 64-segment cap on extreme curves.
+- Revert the implementation commit above to remove K2. No existing-data migration occurred; the isolated Keychain history file can remain as user data.
+- Details: `docs/handoffs/keychain-designer-k2-engine-api-handoff.md`, `docs/qa/KEYCHAIN_QA_MATRIX.md`.
+
+---
+
 ## [2026-11-09 20:14:36 Europe/London] - Keychain Designer K1 Shared Foundations
 
 ### Commit
