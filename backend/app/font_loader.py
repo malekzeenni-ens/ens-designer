@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import re
+import threading
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -30,6 +31,7 @@ class FontCatalog:
     def __init__(self, project_root: Path) -> None:
         self.project_root = project_root
         self._records: dict[str, FontRecord] | None = None
+        self._scan_lock = threading.Lock()
 
     def list_fonts(self) -> list[FontInfo]:
         records = self._scan()
@@ -67,10 +69,23 @@ class FontCatalog:
             raise ValueError("Selected font was not found.")
         return records[font_id].info
 
+    def warm(self) -> None:
+        """Build the catalog ahead of the first request (the cold scan can take 10s+)."""
+        try:
+            self._scan()
+        except Exception:  # A failed warm-up must not break startup; requests rescan.
+            logger.exception("Font catalog warm-up failed.")
+
     def _scan(self) -> dict[str, FontRecord]:
         if self._records is not None:
             return self._records
+        # Serialise cold scans so a warm-up thread and early requests share one scan.
+        with self._scan_lock:
+            if self._records is not None:
+                return self._records
+            return self._scan_uncached()
 
+    def _scan_uncached(self) -> dict[str, FontRecord]:
         parsed: list[FontRecord] = []
         legacy_to_new: dict[str, str] = {}
         for source, directory in self._font_directories():

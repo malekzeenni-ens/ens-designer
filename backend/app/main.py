@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import threading
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -31,7 +34,16 @@ def create_app(
     project_root: Path = PROJECT_ROOT,
     frontend_dist: Path | None = None,
 ) -> FastAPI:
-    app = FastAPI(title="Etch N Shine Designer", version="0.1.0")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # Scan fonts in the background so the first font-picker load is instant
+        # without delaying the health check that launchers wait on.
+        warm = getattr(app.state.font_catalog, "warm", None)  # Tests may swap in a stub catalog.
+        if warm is not None:
+            threading.Thread(target=warm, name="font-warmup", daemon=True).start()
+        yield
+
+    app = FastAPI(title="Etch N Shine Designer", version="0.1.0", lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
