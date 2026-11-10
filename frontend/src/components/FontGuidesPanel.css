@@ -1,0 +1,45 @@
+.font-guides { max-width: 1440px; margin: 0 auto; padding: 28px; }
+.font-guides-heading { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 28px; }
+.font-guides-eyebrow { font-size: 11px; letter-spacing: .18em; color: var(--ens-text-accent); }
+.font-guides h1 { font-size: 34px; margin: 8px 0; letter-spacing: -.035em; }
+.font-guides p { color: var(--ens-text-secondary); line-height: 1.6; margin: 0; }
+.font-guides-count { display: grid; gap: 5px; max-width: 190px; color: var(--ens-text-muted); font-size: 12px; }
+.font-guides-count strong { font-size: 30px; color: var(--ens-text-accent); }
+.font-guides-count strong span { font-size: 18px; color: var(--ens-text-muted); }
+.font-guides-groups { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 22px; border-bottom: 1px solid var(--ens-border-default); }
+.font-guides-groups button { display: flex; align-items: center; gap: 12px; background: var(--ens-surface-1); border: 1px solid var(--ens-border-default); color: var(--ens-text-secondary); padding: 10px 14px; border-radius: 7px; cursor: pointer; }
+.font-guides-groups button[aria-pressed="true"] { background: var(--ens-action-primary); border-color: var(--ens-action-primary); color: var(--ens-text-on-accent); }
+.font-guides-groups button span { font-size: 11px; opacity: .7; }
+.font-guides-section-heading { margin: 24px 0 18px; }
+.font-guides h2 { margin: 0 0 6px; font-size: 23px; }
+.font-guides-controls { display: grid; grid-template-columns: 1fr 1fr minmax(150px, .55fr); gap: 16px; }
+.font-guides-controls label { display: grid; gap: 7px; font-size: 12px; color: var(--ens-text-secondary); min-width: 0; }
+.font-guides-controls input, .font-guides-controls select { width: 100%; min-width: 0; box-sizing: border-box; padding: 11px 12px; background: var(--ens-surface-1); color: var(--ens-text-primary); border: 1px solid var(--ens-border-default); border-radius: 6px; font: inherit; }
+.font-guides-search { position: relative; }
+.font-guides-search svg { position: absolute; left: 11px; top: 11px; pointer-events: none; }
+.font-guides-search input { padding-left: 36px; }
+.font-guides .font-guides-note { font-size: 12px; margin: 15px 0 22px; max-width: 1000px; }
+.font-guides-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 18px; }
+.font-guide-card { min-width: 0; border: 1px solid var(--ens-border-default); border-radius: 10px; overflow: hidden; background: var(--ens-surface-1); }
+.font-guide-card-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 14px 16px; }
+.font-guide-number { font-size: 12px; font-weight: 700; color: var(--ens-text-accent); }
+.font-guide-status { font-size: 11px; color: var(--ens-success); }
+.font-guide-status--missing { color: var(--ens-warning); }
+.font-guide-specimen { background: #fffefb; min-height: 145px; display: flex; align-items: center; justify-content: center; padding: 22px; box-sizing: border-box; }
+.font-guide-specimen .font-name-preview-wrap { width: 100%; text-align: center; }
+.font-guide-specimen .font-name-preview { font-size: 47px; line-height: 1.8; color: #0089b0; overflow-wrap: anywhere; }
+.font-guide-specimen--capitals .font-name-preview { font-size: 25px; letter-spacing: .035em; color: #1c242b; }
+.font-guide-specimen--numbers .font-name-preview { font-size: 35px; color: #1c242b; }
+.font-guide-specimen--ampersands .font-name-preview { font-size: 82px; line-height: 1.4; color: #1c242b; }
+.font-guide-specimen--scripts .font-name-preview, .font-guide-specimen--happy .font-name-preview { color: #1c242b; }
+.font-guide-specimen .font-preview-status { color: #80541b; font-size: 12px; }
+.font-guide-unavailable { display: grid; text-align: center; gap: 10px; color: #5b6268; }
+.font-guide-unavailable strong { font-size: 17px; font-weight: 500; }
+.font-guide-unavailable span { font-size: 12px; }
+.font-guide-caption { padding: 16px; }
+.font-guide-caption h3 { margin: 0 0 5px; font-size: 15px; color: var(--ens-text-primary); }
+.font-guide-caption h3 span { font-weight: 400; }
+.font-guide-caption p { font-size: 12px; }
+.font-guides-footnote, .font-guides-empty { padding-top: 24px; font-size: 12px; }
+.font-guides button:focus-visible, .font-guides input:focus-visible, .font-guides select:focus-visible { outline: 2px solid var(--ens-border-active); outline-offset: 3px; }
+@media (max-width: 700px) { .font-guides { padding: 18px 12px; } .font-guides-heading { align-items: start; } .font-guides-count { max-width: 125px; } .font-guides-controls { grid-template-columns: 1fr; } .font-guides h1 { font-size: 28px; } }

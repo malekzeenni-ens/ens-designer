@@ -4,6 +4,7 @@ import { Check, ChevronDown } from "lucide-react";
 import type { FontInfo } from "../types/design";
 import { FONT_CATEGORY_LABELS, getFontClassification } from "../config/cakeTopperFontRecommendations";
 import { fontDisplayName, fontSearchText } from "../utils/fontIdentity";
+import { fontGuideLabels } from "../config/fontGuides";
 import { FontNamePreview } from "./FontNamePreview";
 import "./FontPicker.css";
 
@@ -28,7 +29,7 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(value);
   const [position, setPosition] = useState({ left: 8, top: 8, width: 320, maxHeight: 400 });
-  const filtered = useMemo(() => groups.map((group) => ({ ...group, fonts: group.fonts.filter((font) => fontSearchText(font).includes(query.trim().toLowerCase())) })).filter((group) => group.fonts.length), [groups, query]);
+  const filtered = useMemo(() => groups.map((group) => ({ ...group, fonts: group.fonts.filter((font) => `${fontSearchText(font)} ${fontGuideLabels(font).join(" ")}`.toLowerCase().includes(query.trim().toLowerCase())) })).filter((group) => group.fonts.length), [groups, query]);
   const fonts = filtered.flatMap((group) => group.fonts);
   const selected = selectedFont ?? groups.flatMap((group) => group.fonts).find((font) => font.id === value);
   const active = fonts.find((font) => font.id === activeId) ?? fonts[0];
@@ -77,7 +78,7 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
         setQuery(""); setActiveId(value); setOpen(true);
       }}
       onKeyDown={(event) => { if (["ArrowDown", "ArrowUp"].includes(event.key)) { event.preventDefault(); setQuery(""); setActiveId(value); setOpen(true); } }}>
-      {selected ? <FontNamePreview key={selected.id} font={selected} /> : <span>No fonts available</span>}<ChevronDown size={16} aria-hidden="true" />
+      {selected ? <FontNamePreview key={selected.id} font={selected} /> : <span>No fonts available</span>}{selected && fontGuideLabels(selected).length > 0 && <span className="font-picker-detail">{fontGuideLabels(selected).join(" / ")}</span>}<ChevronDown size={16} aria-hidden="true" />
     </button>
     {open && createPortal(<div ref={popup} id={`${id}-popup`} className="font-picker-popup" role="dialog" aria-label={`Choose ${label.toLowerCase()}`} style={position}
       onKeyDown={(event) => {
@@ -103,8 +104,9 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
           <div className="font-picker-group" id={`${id}-group-${groupIndex}`}>{group.label}</div>
           {group.fonts.map((font) => {
             const classification = getFontClassification(font);
-            return <div key={font.id} id={optionId(font.id)} role="option" aria-selected={font.id === value} aria-label={`${fontDisplayName(font)}, ${font.style}, ${FONT_CATEGORY_LABELS[classification.category]}, score ${classification.score}`} className={`font-picker-option${font.id === active?.id ? " is-active" : ""}`} onPointerMove={() => setActiveId(font.id)} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(font.id)}>
+            return <div key={font.id} id={optionId(font.id)} role="option" aria-selected={font.id === value} aria-label={`${fontGuideLabels(font).join(", ")}${fontGuideLabels(font).length ? ", " : ""}${fontDisplayName(font)}, ${font.style}, ${FONT_CATEGORY_LABELS[classification.category]}, score ${classification.score}`} className={`font-picker-option${font.id === active?.id ? " is-active" : ""}`} onPointerMove={() => setActiveId(font.id)} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(font.id)}>
               <FontNamePreview font={font} text={previewText} />
+              {fontGuideLabels(font).length > 0 && <span className="font-picker-detail">{fontGuideLabels(font).join(" / ")}</span>}
               {previewText && <span className="font-picker-detail">{fontDisplayName(font)}</span>}
               <div className="font-picker-detail"><span>{font.style} · {FONT_CATEGORY_LABELS[classification.category]} · {classification.score}</span>{font.id === value && <Check size={16} aria-hidden="true" />}</div>
             </div>;

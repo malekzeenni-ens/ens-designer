@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  BookOpen,
   Clock3,
   KeyRound,
   PenTool,
@@ -15,13 +16,14 @@ import { readAppearance, saveAppearance, type Appearance } from "./appearance";
 import { ConfigurationPanel } from "./components/ConfigurationPanel";
 import { FontAdvisorPanel } from "./components/FontAdvisorPanel";
 import { FontsPanel } from "./components/FontsPanel";
+import { FontGuidesPanel } from "./components/FontGuidesPanel";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { SizingAssistantTab } from "./features/sizing-assistant/components/SizingAssistantTab";
 import { KeychainTab } from "./features/keychain/components/KeychainTab";
 import { deleteFonts, fetchFonts, fetchManualFonts, fetchUploadedFonts, saveManualFonts } from "./services/generationApi";
 import type { FontInfo } from "./types/design";
 
-type WorkspaceTab = "designer" | "keychain" | "sizingAssistant" | "advisor" | "fonts" | "configuration" | "history";
+type WorkspaceTab = "designer" | "keychain" | "sizingAssistant" | "advisor" | "fonts" | "fontGuides" | "configuration" | "history";
 
 const WORKSPACES = [
   { id: "designer", label: "Designer", icon: PenTool },
@@ -29,6 +31,7 @@ const WORKSPACES = [
   { id: "sizingAssistant", label: "Sizing", fullLabel: "Sizing Assistant", icon: Ruler },
   { id: "advisor", label: "Advisor", fullLabel: "Font Advisor", icon: BadgeCheck },
   { id: "fonts", label: "Fonts", icon: Type },
+  { id: "fontGuides", label: "Guides", fullLabel: "Font Guides", icon: BookOpen },
   { id: "configuration", label: "Settings", fullLabel: "Configuration", icon: Settings2 },
   { id: "history", label: "History", icon: Clock3 },
 ] satisfies Array<{
@@ -143,6 +146,7 @@ export function App() {
             {activeTab === "fonts" && (
               <FontsPanel uploadedFonts={uploadedFonts} onUploadComplete={reloadFonts} />
             )}
+            {activeTab === "fontGuides" && <FontGuidesPanel fonts={fonts} />}
             {activeTab === "configuration" && (
               <div className="configuration-workspace">
                 <section className="appearance-settings" aria-labelledby="appearance-settings-title">

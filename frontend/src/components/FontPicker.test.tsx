@@ -121,3 +121,17 @@ it("R1 F7: closing the picker with its trigger clears the hover preview", async 
   expect(onPreview).toHaveBeenLastCalledWith(null);
   expect(onChange).not.toHaveBeenCalled();
 });
+
+it("finds a customer chart number and selects the underlying font ID", async () => {
+  fonts = [
+    { id: "back", family: "Back to Black Bold Demo", full_name: "Back to Black Bold Demo", style: "Regular", source: "project" },
+    { id: "pacifico", family: "Pacifico", full_name: "Pacifico", style: "Regular", source: "project" },
+  ];
+  await render(); await act(async () => trigger().click());
+  await type("Happy Option 2");
+  const options = document.querySelectorAll<HTMLElement>('[role="option"]');
+  expect(options).toHaveLength(1);
+  expect(options[0].textContent).toContain("Back to Black");
+  await act(async () => options[0].click());
+  expect(onChange).toHaveBeenCalledExactlyOnceWith("back");
+});

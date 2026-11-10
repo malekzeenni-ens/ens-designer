@@ -1,3 +1,4 @@
+import { fontGuideLabels } from "../config/fontGuides";
 import type { FontInfo } from "../types/design";
 
 interface FontSelectorProps {
@@ -28,7 +29,7 @@ export function FontSelector({ fonts, value, onChange, search, onSearchChange }:
           ) : (
             fonts.map((font) => (
               <option key={font.id} value={font.id}>
-                {font.full_name} ({font.style})
+                {fontGuideLabels(font).length ? `${fontGuideLabels(font).join(" / ")} - ` : ""}{font.full_name} ({font.style})
               </option>
             ))
           )}
