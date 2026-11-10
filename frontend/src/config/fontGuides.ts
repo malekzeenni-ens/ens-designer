@@ -34,7 +34,7 @@ const names: Array<[string, string, string[]?]> = [
   ["Pacifico", "Sarah"],
   ["Lobster", "Suzanna"],
   ["Anton", "Arthur"],
-  ["Black Wild", "DAISY"],
+  ["Back Wild", "DAISY"],
   ["Cheery Note", "Myriam", ["Cheerynote"]],
   ["Sunday Unicorn", "ARCHIE"],
   ["Positive Mindset", "Sophie"],

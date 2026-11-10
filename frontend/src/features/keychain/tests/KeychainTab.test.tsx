@@ -110,3 +110,19 @@ it("does not silently substitute fonts for an unavailable saved recipe", async (
   await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Load Ali from history"]')!.click());
   expect(container.querySelector<HTMLInputElement>("#kc-name")!.value).toBe("Sarah"); expect(container.textContent).toContain("Restore it in Fonts");
 });
+
+it("puts downloads in the shared toolbar and removes them when Keychain is inactive", async () => {
+  const host = document.createElement("div"); document.body.append(host);
+  try {
+    await act(async () => root.render(<KeychainTab active fonts={fonts} manualFonts={fonts} toolbarHost={host} />));
+    await act(async () => vi.advanceTimersByTimeAsync(300));
+    expect(host.querySelector('[aria-label="Download SVG"]')).not.toBeNull();
+    expect(host.querySelector('[aria-label="Download PNG"]')).not.toBeNull();
+    expect(container.querySelector('.kc-exportbar button[aria-label="Download SVG"]')).toBeNull();
+    await name("Sarah");
+    await act(async () => host.querySelector<HTMLButtonElement>('[aria-label="Download SVG"]')!.click());
+    expect(exportKeychain).toHaveBeenCalledTimes(1);
+    await act(async () => root.render(<KeychainTab active={false} fonts={fonts} manualFonts={fonts} toolbarHost={host} />));
+    expect(host.childElementCount).toBe(0);
+  } finally { host.remove(); }
+});

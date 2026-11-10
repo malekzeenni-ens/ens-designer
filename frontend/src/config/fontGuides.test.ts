@@ -47,3 +47,8 @@ it("maps missing name fonts and keeps customer chart numbers independent", () =>
   expect(fontGuideLabels(font("pacifico", "Pacifico"))).toEqual(["Name Font 10", "Acrylic Font 12", "Happy Option 4"]);
   expect(FONT_GUIDES.filter(item => item.group === "scripts").map(item => item.number)).toEqual(Array.from({length: 13}, (_, i) => i + 1));
 });
+
+it("matches the installed Thick Black and Back Wild name faces", () => {
+  expect(fontGuideLabels(font("thick", "Thick Black"))).toContain("Name Font 6");
+  expect(fontGuideLabels(font("back-wild", "Back Wild"))).toContain("Name Font 13");
+});

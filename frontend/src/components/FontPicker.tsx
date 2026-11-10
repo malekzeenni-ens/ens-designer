@@ -71,14 +71,17 @@ export function FontPicker({ groups, value, onChange, label, selectedFont, disab
   useEffect(() => () => onPreview?.(null), [onPreview]);
 
   return <div className="font-picker">
-    <button ref={trigger} type="button" className="font-picker-trigger" aria-label={label} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-popup` : undefined} disabled={disabled}
+    <button ref={trigger} type="button" className="font-picker-trigger" title={selected ? fontDisplayName(selected) : undefined} aria-label={label} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-popup` : undefined} disabled={disabled}
       onClick={() => {
         // R1 F7: toggling closed goes through close() so the hover preview ends.
         if (open) { close(); return; }
         setQuery(""); setActiveId(value); setOpen(true);
       }}
       onKeyDown={(event) => { if (["ArrowDown", "ArrowUp"].includes(event.key)) { event.preventDefault(); setQuery(""); setActiveId(value); setOpen(true); } }}>
-      {selected ? <FontNamePreview key={selected.id} font={selected} /> : <span>No fonts available</span>}{selected && fontGuideLabels(selected).length > 0 && <span className="font-picker-detail">{fontGuideLabels(selected).join(" / ")}</span>}<ChevronDown size={16} aria-hidden="true" />
+      <span className="font-picker-selection">
+        {selected ? <FontNamePreview key={selected.id} font={selected} /> : <span>No fonts available</span>}
+        {selected && fontGuideLabels(selected).length > 0 && <span className="font-picker-detail">{fontGuideLabels(selected).join(" / ")}</span>}
+      </span><ChevronDown size={16} aria-hidden="true" />
     </button>
     {open && createPortal(<div ref={popup} id={`${id}-popup`} className="font-picker-popup" role="dialog" aria-label={`Choose ${label.toLowerCase()}`} style={position}
       onKeyDown={(event) => {

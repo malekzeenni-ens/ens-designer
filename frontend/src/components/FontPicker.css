@@ -18,3 +18,13 @@
 .font-picker-detail svg { color: var(--ens-text-accent); flex-shrink: 0; }
 .font-picker-empty { padding: 24px 12px; text-align: center; color: var(--ens-text-muted); }
 .font-picker-trigger:focus-visible, .font-picker-search input:focus-visible { outline: 2px solid var(--ens-border-active); outline-offset: 2px; }
+
+/* Keep the specimen and its chart references on separate rows. */
+.font-picker-selection { display: grid; flex: 1 1 auto; min-width: 0; gap: 4px; }
+.font-picker-trigger > svg { flex: 0 0 16px; }
+.font-picker-selection .font-picker-detail { display: block; margin: 0; overflow-wrap: break-word; }
+.font-picker .font-name-preview { overflow-wrap: normal; word-break: normal; }
+.font-picker-trigger .font-name-preview { font-size: 25px; line-height: 1.65; }
+.font-picker-trigger .font-name-preview-wrap { overflow: hidden; }
+.font-picker-trigger .font-name-preview { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kc-workspace .font-picker-trigger { height: auto; min-height: 76px; padding: 10px 12px; }

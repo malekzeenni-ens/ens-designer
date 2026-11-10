@@ -72,3 +72,22 @@ it("R1 E3: the window keyboard listener is registered once while active, not on 
   expect(add.mock.calls.filter(([type]) => type === "keydown")).toHaveLength(1);
   add.mockRestore();
 });
+
+it("keeps the preview before the inspector and switches tabs without changing the design", async () => {
+  await act(async () => root.render(<KeychainTab active fonts={fonts} manualFonts={fonts} />));
+  await tick();
+  const body = container.querySelector(".kc-body")!;
+  expect(body.firstElementChild?.className).toBe("kc-stage");
+  expect(body.lastElementChild?.className).toBe("kc-controls");
+  const count = vi.mocked(previewKeychain).mock.calls.length;
+  const tab = container.querySelector<HTMLButtonElement>("#kc-tab-design")!;
+  await act(async () => tab.dispatchEvent(new KeyboardEvent("keydown", {key: "ArrowRight", bubbles: true})));
+  expect(container.querySelector("#kc-tab-letters")?.getAttribute("aria-selected")).toBe("true");
+  expect(container.querySelector<HTMLElement>("#kc-panel-design")?.hidden).toBe(true);
+  expect(container.querySelector<HTMLElement>("#kc-panel-letters")?.hidden).toBe(false);
+  expect(document.activeElement?.id).toBe("kc-tab-letters");
+  await act(async () => container.querySelector<HTMLButtonElement>("#kc-tab-structure")!.click());
+  expect(container.querySelector<HTMLElement>("#kc-panel-structure")?.hidden).toBe(false);
+  await tick();
+  expect(vi.mocked(previewKeychain).mock.calls).toHaveLength(count);
+});

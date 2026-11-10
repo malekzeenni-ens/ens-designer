@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Clock3, Download, KeyRound, LoaderCircle, Redo2, Shapes, Undo2 } from "lucide-react";
 import type { FontInfo } from "../../../types/design";
@@ -8,7 +9,7 @@ import { useUndoRedo } from "../state/useUndoRedo";
 import { useKeychainPreview } from "../hooks/useKeychainPreview";
 import { downloadBlob, downloadPng, exportKeychain } from "../services/keychainApi";
 import { dimension, toRequest } from "../utils/units";
-import { KeychainControls } from "./KeychainControls";
+import { KeychainControls, type KeychainInspectorTab } from "./KeychainControls";
 import { KeychainPreview, type Selection } from "./KeychainPreview";
 import { ProductionCheckPanel, type FixStatus } from "./ProductionCheckPanel";
 import { ExportConfirmDialog } from "./ExportConfirmDialog";
@@ -17,13 +18,14 @@ import { LetterInspector } from "./LetterInspector";
 import { KeychainHistoryList } from "./KeychainHistoryList";
 import "../keychain.css";
 
-export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[]; manualFonts: FontInfo[]; active: boolean }) {
+export function KeychainTab({ fonts, manualFonts, active, toolbarHost = null }: { fonts: FontInfo[]; manualFonts: FontInfo[]; active: boolean; toolbarHost?: HTMLElement | null }) {
   const history = useUndoRedo(DEFAULT_DESIGN);
   const { design } = history;
   const designRef = useRef(design);
   designRef.current = design;
   const [delay, setDelay] = useState(0);
   const [hoverFont, setHoverFont] = useState<string | null>(null);
+  const [inspectorTab, setInspectorTab] = useState<KeychainInspectorTab>("design");
   const [unit, setUnit] = useState<Unit>("mm");
   const [selection, setSelection] = useState<Selection>(null);
   const [exporting, setExporting] = useState(false);
@@ -201,6 +203,7 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
     const plan = planFix(check, design, unit);
     if (plan.kind === "none") { setFixStatus({ checkId: check.id, state: "remaining", message: plan.reason, expected: JSON.stringify(design) }); return; }
     if (plan.kind === "filter-fonts") {
+      setInspectorTab("design");
       setSupportRequest(value => value+1);
       setFixStatus({ checkId: check.id, state: "remaining", expected: JSON.stringify(design),
         message: "Showing fonts that support every character. Your design is unchanged until you choose one of them." });
@@ -230,7 +233,15 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
   const problemCheck = highlight ? preview.result?.checks.find(check => check.id === highlight && check.severity !== "pass" && check.highlight_bbox_mm) : null;
   const problem = problemCheck?.highlight_bbox_mm ? { id: problemCheck.id, label: problemCheck.message, bbox: problemCheck.highlight_bbox_mm } : null;
   const modal = Boolean(confirmation);
+  const exportTools = <div className="export-controls kc-export-tools" aria-label="Keychain downloads" inert={modal}>
+    <button type="button" ref={exportButton} aria-label={design.style === "layered" && design.layered_export === "separate" ? "Prepare SVGs" : "Download SVG"} disabled={!canExport} onClick={() => startExport("svg")}>
+      {exporting ? <LoaderCircle className="kc-spin" size={18} /> : <Download size={18} aria-hidden="true" />}
+      {design.style === "layered" && design.layered_export === "separate" ? "Prepare SVGs" : toolbarHost ? "SVG" : "Download SVG"}
+    </button>
+    <button type="button" aria-label="Download PNG" disabled={!canExport} onClick={() => startExport("png")}><Download size={18} aria-hidden="true" />{toolbarHost ? "PNG" : "Download PNG"}</button>
+  </div>;
   return <section className="kc-workspace" aria-label="Keychain designer">
+    {toolbarHost && active ? createPortal(exportTools, toolbarHost) : null}
     <header className="kc-topbar" inert={modal}>
       <div className="kc-heading"><KeyRound size={24} /><div><span className="kc-eyebrow">PERSONALISED · READY TO CUT</span><h1>Keychain designer</h1></div></div>
       <div className="kc-name"><label htmlFor="kc-name">Name</label><input id="kc-name" ref={nameInput} value={design.text} maxLength={40} placeholder="Type a name…" autoComplete="off"
@@ -244,26 +255,36 @@ export function KeychainTab({ fonts, manualFonts, active }: { fonts: FontInfo[];
       <div className="kc-edit-actions"><button type="button" aria-label="Undo keychain change" title="Undo · Ctrl+Z" disabled={!history.canUndo} onClick={() => undoRedo()}><Undo2 size={16} /></button>
         <button type="button" aria-label="Redo keychain change" title="Redo · Ctrl+Y" disabled={!history.canRedo} onClick={() => undoRedo(true)}><Redo2 size={16} /></button>
         <button type="button" aria-label="Keychain history" aria-expanded={historyOpen} onClick={() => setHistoryOpen(open => !open)}><Clock3 size={16} /><span>History</span></button></div>
+      {!toolbarHost && exportTools}
     </header>
     <div className="kc-modal-scope" inert={modal}>
     {historyOpen && <KeychainHistoryList active={active} version={historyVersion} unit={unit} onClose={() => setHistoryOpen(false)} onLoad={loadRecipe} />}
     {notice && <div className="kc-notice" role="status">{notice}<button type="button" aria-label="Dismiss message" onClick={() => setNotice("")}>×</button></div>}
     {(preview.error || exportError) && <div className="kc-error" role="alert"><span>{exportError ?? preview.error}</span><button type="button" onClick={() => { setExportError(null); preview.retry(); }}>Retry preview</button></div>}
-    <div className="kc-body"><aside className="kc-controls" aria-label="Keychain settings">
-      <KeychainControls design={design} change={change} fonts={fonts} manualFonts={manualFonts} unit={unit} setUnit={setUnit} result={layoutResult}
-        supportRequest={supportRequest}
-        onFont={id => { setHoverFont(null); if (id === design.font_id) return; pendingFont.current = design; change({ type: "patch", value: { font_id: id, gap_configs: [], glyph_transforms: [], dots: { ...design.dots, manual_offsets: [] } } }); setSelection(null); }} onFontPreview={onFontPreview} />
-      <LetterInspector index={typeof selection === "number" ? selection : null} design={design} result={layoutResult} change={change} unit={unit} />
-    </aside><div className="kc-stage"><KeychainPreview result={preview.result} unit={unit} placeholder={!design.text.trim()} current={preview.current && !previewingFont} selection={selection} onSelect={setSelection} onMove={move} editableGlyphs problem={problem} />
+    <div className="kc-body"><div className="kc-stage"><KeychainPreview result={preview.result} unit={unit} placeholder={!design.text.trim()} current={preview.current && !previewingFont} selection={selection} onSelect={selected => { setSelection(selected); if (typeof selected === "number") setInspectorTab("letters"); else if (selected === "ring") setInspectorTab("structure"); }} onMove={move} editableGlyphs problem={problem} />
       <ProductionCheckPanel result={preview.result} stale={!preview.current || previewingFont} design={design} unit={unit} highlighted={problem ? highlight : null}
         fixStatus={fixStatus} onFix={applyFix} onShow={check => setHighlight(current => current === check.id ? null : check.id)} />
       <footer className="kc-exportbar"><div><strong>{preview.result ? `${dimension(preview.result.width_mm, unit)} × ${dimension(preview.result.height_mm, unit)}` : "Your keychain"}</strong><small>{design.style === "engraved" ? "Cut backing + engraved name" : "Two layers for assembly"}</small></div>
-        <button type="button" disabled={!canExport} onClick={() => startExport("png")}>Download PNG</button>
-        <button type="button" ref={exportButton} className="kc-primary" disabled={!canExport} onClick={() => startExport("svg")}>{exporting ? <LoaderCircle className="kc-spin" size={17} /> : <Download size={17} />}{design.style === "layered" && design.layered_export === "separate" ? "Prepare SVGs" : "Download SVG"}</button>
         <button type="button" className="kc-next-name" disabled={!design.text.trim() || exporting} onClick={nextName}>Next name <ArrowRight size={16} /></button>
       </footer>
       {lastExport && lastExport.files.length > 1 && <div className="kc-file-links" aria-label={`Prepared SVG files for ${lastExport.recipe.text}`}><span>{lastExport.recipe.text}</span>{lastExport.files.map(file => <button type="button" key={file.filename} onClick={() => downloadBlob(new Blob([file.svg], { type: "image/svg+xml" }), file.filename)}><Download size={15} />{file.filename.endsWith("-backing.svg") ? "Download backing SVG" : "Download text SVG"}</button>)}</div>}
-    </div></div>
+    </div><aside className="kc-controls" aria-label="Keychain settings">
+      <div className="kc-inspector-heading"><strong>Design properties</strong></div>
+      <div className="kc-inspector-tabs" role="tablist" aria-label="Keychain properties">
+        {(["design", "letters", "structure"] as const).map((tab, index, tabs) => <button key={tab} id={`kc-tab-${tab}`} type="button" role="tab" aria-selected={inspectorTab === tab} aria-controls={`kc-panel-${tab}`} tabIndex={inspectorTab === tab ? 0 : -1}
+          onClick={() => setInspectorTab(tab)} onKeyDown={event => {
+            const next = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : -1;
+            if (next >= 0) { event.preventDefault(); setInspectorTab(tabs[next]); document.getElementById(`kc-tab-${tabs[next]}`)?.focus(); }
+          }}>{tab[0].toUpperCase() + tab.slice(1)}</button>)}
+      </div>
+      <div className="kc-inspector-scroll">
+      <KeychainControls tab={inspectorTab} design={design} change={change} fonts={fonts} manualFonts={manualFonts} unit={unit} setUnit={setUnit} result={layoutResult}
+        supportRequest={supportRequest}
+        onFont={id => { setHoverFont(null); if (id === design.font_id) return; pendingFont.current = design; change({ type: "patch", value: { font_id: id, gap_configs: [], glyph_transforms: [], dots: { ...design.dots, manual_offsets: [] } } }); setSelection(null); }} onFontPreview={onFontPreview}>
+      <LetterInspector index={typeof selection === "number" ? selection : null} design={design} result={layoutResult} change={change} unit={unit} />
+      </KeychainControls></div>
+    </aside></div>
+
     </div>
     {confirmation && <ExportConfirmDialog name={confirmation.request.text} errors={confirmation.errors} held={Boolean(confirmation.held)}
       onCancel={cancelExport} onConfirm={confirmExport} returnFocus={() => exportButton.current} />}

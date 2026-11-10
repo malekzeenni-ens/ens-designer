@@ -83,7 +83,7 @@ export function App() {
 
   return (
     <main className={activeTab === "designer" ? "app-shell app-shell--designer" : "app-shell"}>
-      <header className={activeTab === "designer" ? "app-header app-header--designer" : "app-header"}>
+      <header className={activeTab === "designer" || activeTab === "keychain" ? "app-header app-header--designer" : "app-header"}>
         <div className="app-brand">
           <img
             className="app-brand-logo"
@@ -117,7 +117,7 @@ export function App() {
             );
           })}
         </nav>
-        <div className="app-design-tools" ref={setToolbarHost} hidden={activeTab !== "designer"} />
+        <div className="app-design-tools" ref={setToolbarHost} hidden={activeTab !== "designer" && activeTab !== "keychain"} />
         <div className="app-header-utilities">
           <AppearanceSwitch appearance={appearance} onChange={changeAppearance} />
 
@@ -138,7 +138,7 @@ export function App() {
         ) : (
           <>
             <Activity mode={activeTab === "designer" ? "visible" : "hidden"}><CakeTopperPanel fonts={fonts} manualFonts={manualFonts} toolbarHost={toolbarHost} active={activeTab === "designer"} /></Activity>
-            <Activity mode={activeTab === "keychain" ? "visible" : "hidden"}><KeychainTab fonts={fonts} manualFonts={manualFonts} active={activeTab === "keychain"} /></Activity>
+            <Activity mode={activeTab === "keychain" ? "visible" : "hidden"}><KeychainTab fonts={fonts} manualFonts={manualFonts} toolbarHost={toolbarHost} active={activeTab === "keychain"} /></Activity>
             {activeTab === "sizingAssistant" && <SizingAssistantTab />}
             {activeTab === "advisor" && (
               <FontAdvisorPanel fonts={fonts} uploadedFonts={uploadedFonts} />
